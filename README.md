@@ -152,7 +152,7 @@ dotnet publish -p:PublishProfile=win-x64
 # bin\publish\win-x64\XamppControl.exe
 ```
 
-Tagging a commit `v*` builds the release zip with GitHub Actions.
+Pushing a tag like `v0.2.0` builds the exe with GitHub Actions and publishes it as a release.
 
 ## Contributing
 
@@ -169,7 +169,7 @@ and make sure neither reports anything.
 
 ## License
 
-[MIT](LICENSE) © ClearanceClarence Software.
+[MIT](LICENSE) © ClearanceClarence.
 
 XAMPP and the XAMPP logo are trademarks of [Apache Friends](https://www.apachefriends.org/).
 Apache, MariaDB, MySQL and PHP are trademarks of their respective owners.

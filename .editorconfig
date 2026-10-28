@@ -1,6 +1,6 @@
 # EditorConfig for Modern XAMPP Control Panel: https://editorconfig.org
 # Rider, Visual Studio and VS Code read this; dotnet format applies the C# rules.
-# Same house rules as SpaceSharp.
+# The written rules behind these settings are in CODING_STANDARDS.md.
 root = true
 
 # ------------------------------------------------------------------ everything

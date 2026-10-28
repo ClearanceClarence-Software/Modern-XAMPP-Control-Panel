@@ -9,10 +9,14 @@ using XamppControl.ViewModels;
 
 namespace XamppControl.Views;
 
+/// <summary>
+/// The control panel's main window: the module rows, the toolbar and the log, bound to a <see cref="MainViewModel"/>.
+/// </summary>
 public partial class MainWindow : Window
 {
-    private MainViewModel? _subscribed;
+    private MainViewModel? _subscribedViewModel;
 
+    /// <summary>Sets up the title, icon and logo, and asks for the XAMPP folder on open when none is found.</summary>
     public MainWindow()
     {
         InitializeComponent();
@@ -32,96 +36,147 @@ public partial class MainWindow : Window
         Opened += async (_, _) =>
         {
             if (ViewModel is { HasXampp: false })
-                await PickRootAsync(missing: true);
+            {
+                await PickRootAsync(isXamppMissing: true);
+            }
         };
-    }
-
-    private async void ChangeRoot_Click(object? sender, RoutedEventArgs e) => await PickRootAsync(missing: false);
-
-    private async Task PickRootAsync(bool missing)
-    {
-        if (ViewModel is not { } vm)
-            return;
-
-        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = missing ? "XAMPP not found - choose your XAMPP folder" : "Choose your XAMPP folder",
-            AllowMultiple = false,
-        });
-        if (folders.Count == 0 || folders[0].TryGetLocalPath() is not { } path)
-            return;
-
-        if (!XamppPaths.IsXampp(path))
-        {
-            vm.Write("main", $"\"{path}\" is not a XAMPP folder (no apache or mysql folder inside).", LogLevel.Error);
-            return;
-        }
-
-        await vm.ChangeRootAsync(path);
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
-    private void Subscribe()
+    private async void ChangeRoot_Click(object? sender, RoutedEventArgs e) =>
+        await PickRootAsync(isXamppMissing: false);
+
+    /// <summary>Asks for a XAMPP folder and switches to it; logs an error when the folder is not XAMPP.</summary>
+    /// <param name="isXamppMissing">True when no XAMPP was found, which the picker's title tells the user.</param>
+    /// <returns>A task that completes when the picker is closed and any root change has been applied.</returns>
+    private async Task PickRootAsync(bool isXamppMissing)
     {
-        if (_subscribed is not null)
-            _subscribed.Log.CollectionChanged -= OnLogChanged;
-        _subscribed = ViewModel;
-        if (_subscribed is not null)
-            _subscribed.Log.CollectionChanged += OnLogChanged;
+        if (ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = isXamppMissing ? "XAMPP not found - choose your XAMPP folder" : "Choose your XAMPP folder",
+            AllowMultiple = false,
+        });
+        if (folders.Count == 0 || folders[0].TryGetLocalPath() is not { } path)
+        {
+            return;
+        }
+
+        if (!XamppPaths.IsXampp(path))
+        {
+            viewModel.Write(
+                "main",
+                $"\"{path}\" is not a XAMPP folder (no apache or mysql folder inside).",
+                LogLevel.Error);
+            return;
+        }
+
+        await viewModel.ChangeRootAsync(path);
     }
 
-    /// <summary>Keep the newest log line in view.</summary>
+    /// <summary>Moves the log subscription from the previous view model to the current one.</summary>
+    private void Subscribe()
+    {
+        if (_subscribedViewModel is not null)
+        {
+            _subscribedViewModel.Log.CollectionChanged -= OnLogChanged;
+        }
+
+        _subscribedViewModel = ViewModel;
+        if (_subscribedViewModel is not null)
+        {
+            _subscribedViewModel.Log.CollectionChanged += OnLogChanged;
+        }
+    }
+
+    /// <summary>Keeps the newest log line in view when lines are added.</summary>
+    /// <param name="sender">The view model's log collection.</param>
+    /// <param name="e">
+    /// Only an <see cref="NotifyCollectionChangedAction.Add"/> scrolls; trimming and clearing do not.
+    /// </param>
     private void OnLogChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action != NotifyCollectionChangedAction.Add || ViewModel is not { } vm || vm.Log.Count == 0)
+        if (e.Action != NotifyCollectionChangedAction.Add)
+        {
             return;
-        var last = vm.Log[^1];
-        Dispatcher.UIThread.Post(() => LogList.ScrollIntoView(last), DispatcherPriority.Background);
+        }
+        if (ViewModel is not { } viewModel || viewModel.Log.Count == 0)
+        {
+            return;
+        }
+
+        LogEntry newestEntry = viewModel.Log[^1];
+        // Background priority lets the list handle the added item before it is asked to scroll to it.
+        Dispatcher.UIThread.Post(() => LogList.ScrollIntoView(newestEntry), DispatcherPriority.Background);
     }
 
     private async void Settings_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is not { } vm)
+        if (ViewModel is not { } viewModel)
+        {
             return;
-        var edited = vm.Settings.Clone();
-        var dialog = new SettingsWindow(edited, vm.Root);
-        if (await dialog.ShowDialog<bool>(this))
-            await vm.ApplySettingsAsync(edited);
+        }
+
+        AppSettings edited = viewModel.Settings.Clone();
+        var dialog = new SettingsWindow(edited, viewModel.Root);
+        bool isSaved = await dialog.ShowDialog<bool>(this);
+        if (isSaved)
+        {
+            await viewModel.ApplySettingsAsync(edited);
+        }
     }
 
     private void Netstat_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is not { } vm)
+        if (ViewModel is not { } viewModel)
+        {
             return;
-        new NetstatWindow { DataContext = new NetstatViewModel(vm.Root) }.Show(this);
+        }
+
+        new NetstatWindow { DataContext = new NetstatViewModel(viewModel.Root) }.Show(this);
     }
 
     private async void Updates_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is not { } vm)
+        if (ViewModel is not { } viewModel)
+        {
             return;
-        await new UpdatesWindow { DataContext = new UpdatesViewModel(vm) }.ShowDialog(this);
+        }
+
+        await new UpdatesWindow { DataContext = new UpdatesViewModel(viewModel) }.ShowDialog(this);
     }
 
     private void Quit_Click(object? sender, RoutedEventArgs e) => Close();
 
     private async void CopySelected_Click(object? sender, RoutedEventArgs e)
     {
-        var lines = LogList.SelectedItems?.OfType<LogEntry>().Select(l => l.ToString()) ?? [];
+        IEnumerable<string> lines = LogList.SelectedItems?.OfType<LogEntry>().Select(entry => entry.ToString()) ?? [];
         await CopyAsync(string.Join(Environment.NewLine, lines));
     }
 
     private async void CopyAll_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is { } vm)
-            await CopyAsync(string.Join(Environment.NewLine, vm.Log.Select(l => l.ToString())));
+        if (ViewModel is { } viewModel)
+        {
+            await CopyAsync(string.Join(Environment.NewLine, viewModel.Log.Select(entry => entry.ToString())));
+        }
     }
 
+    /// <summary>Puts the text on the clipboard; does nothing when it is empty or no clipboard is available.</summary>
+    /// <param name="text">The log lines to copy, already joined with newlines.</param>
+    /// <returns>A task that completes when the clipboard has been set or skipped.</returns>
     private async Task CopyAsync(string text)
     {
         if (string.IsNullOrEmpty(text) || GetTopLevel(this)?.Clipboard is not { } clipboard)
+        {
             return;
+        }
+
         await clipboard.SetTextAsync(text);
     }
 }

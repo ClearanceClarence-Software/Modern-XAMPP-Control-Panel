@@ -1,7 +1,11 @@
+using System.Diagnostics;
 using XamppControl.Core;
 
 namespace XamppControl.Modules;
 
+/// <summary>Apache httpd: started as a hidden process and stopped by ending its process tree.</summary>
+/// <param name="root">The XAMPP installation folder.</param>
+/// <param name="settings">The panel's live settings.</param>
 public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriver(root, settings)
 {
     public override string DisplayName => "Apache";
@@ -19,6 +23,7 @@ public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriv
     public override IReadOnlyList<int> ConfiguredPorts => [Services.ApachePort, Services.ApacheSslPort];
 
     public override bool HasAdmin => true;
+
     public override void OpenAdmin(IModuleHost host) =>
         Shell.OpenUrl(LocalUrl(Services.ApachePort), host.Settings.Browser);
 
@@ -51,13 +56,14 @@ public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriv
 
         host.Write(Tag, "Attempting to start Apache app...");
         host.Debug(Tag, $"Executing \"{Exe}\"");
-        using var process = Shell.StartHidden(Exe, "", Root);
+        using Process? process = Shell.StartHidden(Exe, "", Root);
         if (process is null)
         {
             host.Write(Tag, "Could not launch httpd.exe", LogLevel.Error);
             return;
         }
 
+        // A bad config makes httpd exit within a second or two; a healthy server keeps running.
         if (await Shell.ExitsWithinAsync(process, TimeSpan.FromSeconds(3)))
         {
             host.Write(Tag,
@@ -69,7 +75,7 @@ public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriv
 
     public override async Task<bool> StopAsync(IModuleHost host)
     {
-        var pids = await PidsAsync();
+        IReadOnlyList<int> pids = await PidsAsync();
         host.Write(Tag, $"Attempting to stop Apache{PidText(pids)}");
         return await KillAllAsync(host);
     }

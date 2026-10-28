@@ -7,20 +7,30 @@ using XamppControl.Modules;
 
 namespace XamppControl.Views;
 
+/// <summary>
+/// Edits the extra files shown in each module's Config menu; works on a copy of the list and closes with true on Save.
+/// </summary>
 public partial class UserFilesWindow : Window
 {
     private readonly AppSettings _settings;
     private readonly ObservableCollection<UserFile> _files;
 
-    public UserFilesWindow() : this(new AppSettings()) { }
+    /// <summary>Opens the window on default settings, for the XAML previewer.</summary>
+    public UserFilesWindow() : this(new AppSettings())
+    {
+    }
 
+    /// <summary>Copies the settings' file list into the window and fills the module choices.</summary>
+    /// <param name="settings">
+    /// Its <see cref="AppSettings.UserFiles"/> is replaced only on Save; the window edits copies of the entries.
+    /// </param>
     public UserFilesWindow(AppSettings settings)
     {
         InitializeComponent();
         AppIcon.Apply(this);
         _settings = settings;
         _files = new ObservableCollection<UserFile>(
-            settings.UserFiles.Select(f => new UserFile { Module = f.Module, Path = f.Path }));
+            settings.UserFiles.Select(userFile => new UserFile { Module = userFile.Module, Path = userFile.Path }));
 
         FileList.ItemsSource = _files;
         ModuleBox.ItemsSource = ModuleCatalog.Names;
@@ -29,20 +39,25 @@ public partial class UserFilesWindow : Window
 
     private async void Browse_Click(object? sender, RoutedEventArgs e)
     {
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        IReadOnlyList<IStorageFile> pickedFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Choose a file",
             AllowMultiple = false,
         });
-        if (files.Count > 0 && files[0].TryGetLocalPath() is { } path)
+        if (pickedFiles.Count > 0 && pickedFiles[0].TryGetLocalPath() is { } path)
+        {
             PathBox.Text = path;
+        }
     }
 
     private void Add_Click(object? sender, RoutedEventArgs e)
     {
-        var path = PathBox.Text?.Trim();
+        string? path = PathBox.Text?.Trim();
         if (string.IsNullOrEmpty(path) || ModuleBox.SelectedItem is not string module)
+        {
             return;
+        }
+
         _files.Add(new UserFile { Module = module, Path = path });
         PathBox.Text = "";
     }
@@ -50,7 +65,9 @@ public partial class UserFilesWindow : Window
     private void Remove_Click(object? sender, RoutedEventArgs e)
     {
         if (FileList.SelectedItem is UserFile file)
+        {
             _files.Remove(file);
+        }
     }
 
     private void Save_Click(object? sender, RoutedEventArgs e)

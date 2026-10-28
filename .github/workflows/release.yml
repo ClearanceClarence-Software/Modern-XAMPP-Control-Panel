@@ -1,5 +1,7 @@
 name: Release
 
+# Pushing a tag like v0.2.0 builds the exe and publishes it as a release.
+# The version comes from the tag (v0.2.0 -> 0.2.0), so the title bar matches the release.
 on:
   push:
     tags: ["v*"]
@@ -8,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,17 +19,30 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Work out the version
+        id: version
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+              throw "Tag ${{ github.ref_name }} isn't a version like v1.2.3"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
       - name: Check formatting
         run: dotnet format --verify-no-changes
 
       - name: Publish
-        run: dotnet publish -p:PublishProfile=win-x64
+        run: dotnet publish -p:PublishProfile=win-x64 -p:Version=${{ steps.version.outputs.version }}
 
       - name: Package
         shell: pwsh
-        run: Compress-Archive bin/publish/win-x64/XamppControl.exe "ModernXamppControlPanel-${{ github.ref_name }}-win-x64.zip"
+        run: >
+          Compress-Archive bin/publish/win-x64/XamppControl.exe
+          "ModernXamppControlPanel-${{ github.ref_name }}-win-x64.zip"
 
       - uses: softprops/action-gh-release@v2
         with:
           files: ModernXamppControlPanel-*-win-x64.zip
           generate_release_notes: true
+          make_latest: true

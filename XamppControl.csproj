@@ -8,8 +8,11 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>XamppControl</AssemblyName>
     <RootNamespace>XamppControl</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Product>Modern XAMPP Control Panel</Product>
+    <Authors>ClearanceClarence</Authors>
+    <Company>ClearanceClarence</Company>
+    <Copyright>Copyright (c) 2026 ClearanceClarence</Copyright>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
 

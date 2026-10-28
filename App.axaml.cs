@@ -7,6 +7,7 @@ using XamppControl.Views;
 
 namespace XamppControl;
 
+/// <summary>The Avalonia application: loads the settings and opens the main window.</summary>
 public partial class App : Application
 {
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
@@ -16,7 +17,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var viewModel = new MainViewModel(AppSettings.Load());
-            var settings = viewModel.Settings;
+            AppSettings settings = viewModel.Settings;
             desktop.MainWindow = new MainWindow
             {
                 DataContext = viewModel,

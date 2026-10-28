@@ -4,66 +4,84 @@ using XamppControl.Core;
 
 namespace XamppControl.Views;
 
+/// <summary>
+/// Edits the service names, ports and MySQL root password the panel uses; closes with true on Save.
+/// </summary>
 public partial class ServicePortsWindow : Window
 {
     private readonly AppSettings _settings;
 
-    public ServicePortsWindow() : this(new AppSettings()) { }
+    /// <summary>Opens the window on default settings, for the XAML previewer.</summary>
+    public ServicePortsWindow() : this(new AppSettings())
+    {
+    }
 
+    /// <summary>Fills the fields from the settings that Save writes back to.</summary>
+    /// <param name="settings">
+    /// Its services and root password are replaced only on Save, and only when every port is valid.
+    /// </param>
     public ServicePortsWindow(AppSettings settings)
     {
         InitializeComponent();
         AppIcon.Apply(this);
         _settings = settings;
-        Fill(settings.Services, settings.MySqlRootPassword);
+        FillControls(settings.Services, settings.MySqlRootPassword);
     }
 
-    private void Fill(ServiceSettings s, string? password)
+    /// <summary>Shows the service settings and the password in the text boxes.</summary>
+    /// <param name="services">The names and ports to show; Defaults passes new <see cref="ServiceSettings"/>.</param>
+    /// <param name="mySqlPassword">The MySQL root password to show; null leaves the box empty.</param>
+    private void FillControls(ServiceSettings services, string? mySqlPassword)
     {
-        ApacheService.Text = s.ApacheServiceName;
-        ApachePort.Text = s.ApachePort.ToString();
-        ApacheSslPort.Text = s.ApacheSslPort.ToString();
-        MySqlService.Text = s.MySqlServiceName;
-        MySqlPort.Text = s.MySqlPort.ToString();
-        MySqlPassword.Text = password;
-        FileZillaPort.Text = s.FileZillaPort.ToString();
-        FileZillaAdminPort.Text = s.FileZillaAdminPort.ToString();
-        TomcatPort.Text = s.TomcatPort.ToString();
-        TomcatShutdownPort.Text = s.TomcatShutdownPort.ToString();
-        TomcatAjpPort.Text = s.TomcatAjpPort.ToString();
-        MercuryPorts.Text = s.MercuryPorts;
+        ApacheService.Text = services.ApacheServiceName;
+        ApachePort.Text = services.ApachePort.ToString();
+        ApacheSslPort.Text = services.ApacheSslPort.ToString();
+        MySqlService.Text = services.MySqlServiceName;
+        MySqlPort.Text = services.MySqlPort.ToString();
+        MySqlPassword.Text = mySqlPassword;
+        FileZillaPort.Text = services.FileZillaPort.ToString();
+        FileZillaAdminPort.Text = services.FileZillaAdminPort.ToString();
+        TomcatPort.Text = services.TomcatPort.ToString();
+        TomcatShutdownPort.Text = services.TomcatShutdownPort.ToString();
+        TomcatAjpPort.Text = services.TomcatAjpPort.ToString();
+        MercuryPorts.Text = services.MercuryPorts;
     }
 
+    // The password is not a default, so resetting keeps what is typed in its box.
     private void Defaults_Click(object? sender, RoutedEventArgs e) =>
-        Fill(new ServiceSettings(), MySqlPassword.Text);
+        FillControls(new ServiceSettings(), MySqlPassword.Text);
 
     private void Save_Click(object? sender, RoutedEventArgs e)
     {
         var errors = new List<string>();
 
-        int Port(TextBox box, string name)
+        // Collects an error instead of returning early, so every bad port is reported at once.
+        int ParsePort(TextBox box, string fieldName)
         {
-            if (int.TryParse(box.Text?.Trim(), out var port) && port is > 0 and < 65536)
+            if (int.TryParse(box.Text?.Trim(), out int port) && port is > 0 and < 65536)
+            {
                 return port;
-            errors.Add($"{name} must be a number between 1 and 65535.");
+            }
+
+            errors.Add($"{fieldName} must be a number between 1 and 65535.");
             return 0;
         }
 
-        string NameOr(TextBox box, string fallback) =>
+        static string NameOrDefault(TextBox box, string fallback) =>
             string.IsNullOrWhiteSpace(box.Text) ? fallback : box.Text.Trim();
 
-        var s = new ServiceSettings
+        var services = new ServiceSettings
         {
-            ApacheServiceName = NameOr(ApacheService, "Apache2.4"),
-            ApachePort = Port(ApachePort, "Apache main port"),
-            ApacheSslPort = Port(ApacheSslPort, "Apache SSL port"),
-            MySqlServiceName = NameOr(MySqlService, "mysql"),
-            MySqlPort = Port(MySqlPort, "MySQL port"),
-            FileZillaPort = Port(FileZillaPort, "FileZilla main port"),
-            FileZillaAdminPort = Port(FileZillaAdminPort, "FileZilla admin port"),
-            TomcatPort = Port(TomcatPort, "Tomcat main port"),
-            TomcatShutdownPort = Port(TomcatShutdownPort, "Tomcat shutdown port"),
-            TomcatAjpPort = Port(TomcatAjpPort, "Tomcat AJP port"),
+            ApacheServiceName = NameOrDefault(ApacheService, "Apache2.4"),
+            ApachePort = ParsePort(ApachePort, "Apache main port"),
+            ApacheSslPort = ParsePort(ApacheSslPort, "Apache SSL port"),
+            MySqlServiceName = NameOrDefault(MySqlService, "mysql"),
+            MySqlPort = ParsePort(MySqlPort, "MySQL port"),
+            FileZillaPort = ParsePort(FileZillaPort, "FileZilla main port"),
+            FileZillaAdminPort = ParsePort(FileZillaAdminPort, "FileZilla admin port"),
+            TomcatPort = ParsePort(TomcatPort, "Tomcat main port"),
+            TomcatShutdownPort = ParsePort(TomcatShutdownPort, "Tomcat shutdown port"),
+            TomcatAjpPort = ParsePort(TomcatAjpPort, "Tomcat AJP port"),
             MercuryPorts = MercuryPorts.Text?.Trim() ?? "",
         };
 
@@ -74,8 +92,9 @@ public partial class ServicePortsWindow : Window
             return;
         }
 
-        _settings.Services = s;
-        _settings.MySqlRootPassword = string.IsNullOrEmpty(MySqlPassword.Text) ? null : MySqlPassword.Text;
+        string? password = MySqlPassword.Text;
+        _settings.Services = services;
+        _settings.MySqlRootPassword = string.IsNullOrEmpty(password) ? null : password;
         Close(true);
     }
 
