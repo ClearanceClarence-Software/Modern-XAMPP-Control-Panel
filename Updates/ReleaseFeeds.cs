@@ -217,6 +217,19 @@ public static partial class ReleaseFeeds
         return null;
     }
 
+    // ── FileZilla Server ─────────────────────────────────────
+
+    /// <summary>The newest stable FileZilla Server version, as filezilla-project.org states it.</summary>
+    /// <returns>The version, such as "1.12.6"; null when the page doesn't state one.</returns>
+    /// <exception cref="HttpRequestException">The page cannot be read.</exception>
+    /// <exception cref="OperationCanceledException">The page doesn't answer within 20 seconds.</exception>
+    public static async Task<string?> GetFileZillaServerLatestAsync()
+    {
+        string page = await GetStringAsync("https://filezilla-project.org/download.php?show_all=1&type=server");
+        Match latest = FileZillaLatest().Match(page);
+        return latest.Success ? latest.Groups["v"].Value : null;
+    }
+
     // ── MariaDB ──────────────────────────────────────────────
 
     /// <summary>Stable release series, newest first.</summary>
@@ -406,6 +419,9 @@ public static partial class ReleaseFeeds
 
     [GeneratedRegex(@"^mariadb-(?<v>\d+\.\d+\.\d+)-winx64\.zip$", RegexOptions.IgnoreCase)]
     private static partial Regex MariaDbZipName();
+
+    [GeneratedRegex(@"latest stable version of FileZilla Server is (?<v>\d+(\.\d+){1,3})", RegexOptions.IgnoreCase)]
+    private static partial Regex FileZillaLatest();
 }
 
 /// <summary>Finds and compares the dotted version numbers in feed entries, file names and labels.</summary>

@@ -31,6 +31,9 @@ public sealed class UpdatesViewModel : ObservableObject
     private string _rollbackLabel = "";
     private string? _pendingRemove;
     private bool _importedLegacy;
+    private string _fileZillaInstalled = "";
+    private string _fileZillaAvailable = "Checking…";
+    private string? _fileZillaLatest;
 
     /// <summary>
     /// Creates the dialog's state and reads the installed versions; the feeds load in <see cref="CheckAsync"/>.
@@ -66,6 +69,20 @@ public sealed class UpdatesViewModel : ObservableObject
     {
         get => _mariaInstalled;
         private set => SetField(ref _mariaInstalled, value);
+    }
+
+    /// <summary>The installed FileZilla Server, such as "FileZilla Server 0.9.41 (bundled with XAMPP)".</summary>
+    public string FileZillaInstalled
+    {
+        get => _fileZillaInstalled;
+        private set => SetField(ref _fileZillaInstalled, value);
+    }
+
+    /// <summary>One line comparing the newest FileZilla Server with the installed one, or why it can't.</summary>
+    public string FileZillaAvailable
+    {
+        get => _fileZillaAvailable;
+        private set => SetField(ref _fileZillaAvailable, value);
     }
 
     /// <summary>
@@ -206,8 +223,44 @@ public sealed class UpdatesViewModel : ObservableObject
         string? mariaVersion = XamppPaths.FileVersion(server);
         MariaInstalled = mariaVersion is null ? "Not found" : $"MariaDB {mariaVersion}";
 
+        FileZillaInstalled = DescribeInstalledFileZilla(root);
+
         UpdatePhpAvailable();
         UpdateMariaAvailable();
+        UpdateFileZillaAvailable();
+    }
+
+    /// <summary>Names the FileZilla Server the FileZilla row controls.</summary>
+    /// <param name="root">The XAMPP folder, where the bundled 0.9.41 lives.</param>
+    /// <returns>The server and version, or "Not installed".</returns>
+    private static string DescribeInstalledFileZilla(string root)
+    {
+        if (FileZillaServer.FindInstallFolder() is { } installFolder)
+        {
+            return $"FileZilla Server {FileZillaServer.VersionOf(installFolder) ?? "1.x"} (Windows service)";
+        }
+
+        string legacyExe = Path.Combine(root, "FileZillaFTP", "FileZillaServer.exe");
+        if (XamppPaths.FileVersion(legacyExe) is { } legacyVersion)
+        {
+            return $"FileZilla Server {legacyVersion} (bundled with XAMPP, from 2012)";
+        }
+        return File.Exists(legacyExe) ? "FileZilla Server 0.9 (bundled with XAMPP)" : "Not installed";
+    }
+
+    /// <summary>Sets <see cref="FileZillaAvailable"/> from the version the website states.</summary>
+    private void UpdateFileZillaAvailable()
+    {
+        if (_fileZillaLatest is not { } latest)
+        {
+            return;
+        }
+
+        bool isCurrent = FileZillaServer.FindInstallFolder() is { } installFolder
+            && VersionUtil.Parse(FileZillaServer.VersionOf(installFolder)) >= VersionUtil.Parse(latest);
+        FileZillaAvailable = isCurrent
+            ? $"You're on the newest version ({latest})."
+            : $"FileZilla Server {latest} is available.";
     }
 
     /// <summary>
@@ -364,7 +417,29 @@ public sealed class UpdatesViewModel : ObservableObject
         RefreshInstalled();
         PhpAvailable = "Checking…";
         MariaAvailable = "Checking…";
-        await Task.WhenAll(LoadPhpAsync(), LoadMariaMajorsAsync());
+        FileZillaAvailable = "Checking…";
+        await Task.WhenAll(LoadPhpAsync(), LoadMariaMajorsAsync(), LoadFileZillaLatestAsync());
+    }
+
+    /// <summary>Reads the newest FileZilla Server version from filezilla-project.org.</summary>
+    private async Task LoadFileZillaLatestAsync()
+    {
+        try
+        {
+            _fileZillaLatest = await ReleaseFeeds.GetFileZillaServerLatestAsync();
+            if (_fileZillaLatest is null)
+            {
+                FileZillaAvailable = "The download page didn't say which version is newest.";
+                return;
+            }
+            UpdateFileZillaAvailable();
+        }
+        catch (Exception ex)
+        {
+            // An update check: whatever goes wrong with the network or the page is shown in the line and the
+            // dialog stays usable (installing a downloaded installer still works).
+            FileZillaAvailable = "Couldn't reach filezilla-project.org: " + ex.Message;
+        }
     }
 
     /// <summary>Fills <see cref="PhpBranches"/> and selects the active PHP's branch, or the newest one.</summary>
@@ -520,6 +595,18 @@ public sealed class UpdatesViewModel : ObservableObject
     /// </returns>
     public Task InstallMariaFromZipAsync(string zip) =>
         RunAsync(ctx => MariaDbUpdater.InstallAsync(ctx, zip, MakeSqlDump));
+
+    /// <summary>Runs a FileZilla Server installer the user downloaded and switches the FileZilla row to it.</summary>
+    /// <param name="installer">Full path of FileZilla_Server_…_win64-setup.exe.</param>
+    /// <returns>
+    /// A task that completes when the installer has closed and the result is known; the outcome is in
+    /// <see cref="Status"/>.
+    /// </returns>
+    public Task InstallFileZillaAsync(string installer) =>
+        RunAsync(ctx => FileZillaUpdater.InstallAsync(ctx, installer));
+
+    /// <summary>Opens FileZilla Server's official download page in the configured browser.</summary>
+    public void OpenFileZillaDownloadPage() => Shell.OpenUrl(FileZillaServer.DownloadPage, _main.Settings.Browser);
 
     /// <summary>Runs the rollback the last update offered; does nothing while busy or when there is none.</summary>
     /// <returns>

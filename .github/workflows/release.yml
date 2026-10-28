@@ -41,8 +41,27 @@ jobs:
           Compress-Archive bin/publish/win-x64/XamppControl.exe
           "ModernXamppControlPanel-${{ github.ref_name }}-win-x64.zip"
 
+      # The tag's section of CHANGELOG.md becomes the top of the release notes.
+      - name: Release notes
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $notes = @()
+          $inSection = $false
+          foreach ($line in Get-Content CHANGELOG.md) {
+              if ($line -match '^## \[(.+?)\]') {
+                  if ($inSection) { break }
+                  $inSection = $Matches[1] -eq $version
+                  continue
+              }
+              if ($inSection) { $notes += $line }
+          }
+          if ($notes.Count -eq 0) { $notes = @("See CHANGELOG.md.") }
+          ($notes -join "`n").Trim() | Set-Content release-notes.md -Encoding utf8
+
       - uses: softprops/action-gh-release@v2
         with:
           files: ModernXamppControlPanel-*-win-x64.zip
+          body_path: release-notes.md
           generate_release_notes: true
           make_latest: true

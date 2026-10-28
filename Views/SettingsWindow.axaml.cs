@@ -10,6 +10,9 @@ namespace XamppControl.Views;
 /// </summary>
 public partial class SettingsWindow : Window
 {
+    // The theme box's items in order, as AppSettings.Theme stores them.
+    private static readonly string[] _themeNames = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
+
     private readonly AppSettings _settings;
 
     /// <summary>Opens the window on default settings and the default XAMPP folder, for the XAML previewer.</summary>
@@ -71,7 +74,10 @@ public partial class SettingsWindow : Window
     /// <param name="settings">The settings being edited.</param>
     private void FillOptions(AppSettings settings)
     {
+        ThemeBox.SelectedIndex = Math.Max(Array.IndexOf(_themeNames, settings.Theme), 0);
         StartMinimizedBox.IsChecked = settings.StartMinimized;
+        MinimizeToTrayBox.IsChecked = settings.MinimizeToTray;
+        CheckUpdatesBox.IsChecked = settings.CheckForAppUpdates;
         TomcatWindowBox.IsChecked = settings.TomcatOutputWindow;
         CheckPortsBox.IsChecked = settings.CheckPortsOnStartup;
         DebugBox.IsChecked = settings.ShowDebug;
@@ -97,9 +103,7 @@ public partial class SettingsWindow : Window
             RootHint.Text = "No apache or mysql folder here.";
         }
 
-        RootHint.Foreground = isRootAccepted
-            ? Avalonia.Media.Brush.Parse("#5D6470")
-            : Avalonia.Media.Brush.Parse("#B42318");
+        RootHint.Classes.Set("error", !isRootAccepted);
     }
 
     // ── browse buttons ───────────────────────────────────────
@@ -202,7 +206,10 @@ public partial class SettingsWindow : Window
     /// <summary>Writes the general on/off options back.</summary>
     private void SaveOptions()
     {
+        _settings.Theme = _themeNames[Math.Clamp(ThemeBox.SelectedIndex, 0, _themeNames.Length - 1)];
         _settings.StartMinimized = StartMinimizedBox.IsChecked == true;
+        _settings.MinimizeToTray = MinimizeToTrayBox.IsChecked == true;
+        _settings.CheckForAppUpdates = CheckUpdatesBox.IsChecked == true;
         _settings.TomcatOutputWindow = TomcatWindowBox.IsChecked == true;
         _settings.CheckPortsOnStartup = CheckPortsBox.IsChecked == true;
         _settings.ShowDebug = DebugBox.IsChecked == true;

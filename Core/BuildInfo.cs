@@ -8,7 +8,7 @@ public static class BuildInfo
 {
     private static readonly Assembly _assembly = typeof(BuildInfo).Assembly;
 
-    /// <summary>The assembly version as "v0.1.1" (major, minor, build); "v0.0.0" when it has none.</summary>
+    /// <summary>The assembly version as "v0.2.0" (major, minor, build); "v0.0.0" when it has none.</summary>
     public static string Version
     {
         get
@@ -53,7 +53,7 @@ public static class BuildInfo
     /// <summary>The product name, without version.</summary>
     public const string AppName = "Modern XAMPP Control Panel";
 
-    /// <summary>"Modern XAMPP Control Panel v0.1.1   [ Compiled: Oct 27th 2026 ]"</summary>
+    /// <summary>"Modern XAMPP Control Panel v0.2.0   [ Compiled: Oct 27th 2026 ]"</summary>
     public static string WindowTitle => $"{AppName} {Version}   [ Compiled: {CompiledOn} ]";
 
     /// <summary>The English ordinal suffix for a day of the month.</summary>

@@ -2,36 +2,154 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Styles.Resources>
-        <SolidColorBrush x:Key="AccentBrush" Color="#FB7A24" />
-        <SolidColorBrush x:Key="PageBrush" Color="#F4F5F7" />
-        <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
-        <SolidColorBrush x:Key="LineBrush" Color="#E0E3E8" />
-        <SolidColorBrush x:Key="RowLineBrush" Color="#EEF0F3" />
-        <SolidColorBrush x:Key="TextBrush" Color="#1F2329" />
-        <SolidColorBrush x:Key="MutedBrush" Color="#5D6470" />
-        <SolidColorBrush x:Key="FaintBrush" Color="#8A909A" />
+        <ResourceDictionary>
+            <!-- Colors per theme. Everything that uses them takes DynamicResource, so switching the theme
+                 repaints open windows at once. -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="AccentBrush" Color="#FB7A24" />
+                    <SolidColorBrush x:Key="AccentHoverBrush" Color="#E8691A" />
+                    <SolidColorBrush x:Key="PageBrush" Color="#F4F5F7" />
+                    <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="LineBrush" Color="#E0E3E8" />
+                    <SolidColorBrush x:Key="RowLineBrush" Color="#EEF0F3" />
+                    <SolidColorBrush x:Key="TextBrush" Color="#1F2329" />
+                    <SolidColorBrush x:Key="MutedBrush" Color="#5D6470" />
+                    <SolidColorBrush x:Key="FaintBrush" Color="#8A909A" />
+                    <SolidColorBrush x:Key="HeaderBrush" Color="#F8F9FA" />
+                    <SolidColorBrush x:Key="ControlBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ControlBorderBrush" Color="#D5D9DF" />
+                    <SolidColorBrush x:Key="ControlHoverBrush" Color="#F1F3F6" />
+                    <SolidColorBrush x:Key="ControlHoverBorderBrush" Color="#C3C8D0" />
+                    <SolidColorBrush x:Key="ControlPressedBrush" Color="#E7EAEE" />
+                    <SolidColorBrush x:Key="StartBgBrush" Color="#EEFAF2" />
+                    <SolidColorBrush x:Key="StartBorderBrush" Color="#C9E6D2" />
+                    <SolidColorBrush x:Key="StartFgBrush" Color="#15803D" />
+                    <SolidColorBrush x:Key="StartHoverBgBrush" Color="#DDF3E4" />
+                    <SolidColorBrush x:Key="StartHoverBorderBrush" Color="#A9D8B8" />
+                    <SolidColorBrush x:Key="StopBgBrush" Color="#FDF0F0" />
+                    <SolidColorBrush x:Key="StopBorderBrush" Color="#F1C6C6" />
+                    <SolidColorBrush x:Key="StopFgBrush" Color="#B42318" />
+                    <SolidColorBrush x:Key="StopHoverBgBrush" Color="#FBE1E1" />
+                    <SolidColorBrush x:Key="StopHoverBorderBrush" Color="#E9A9A9" />
+                    <SolidColorBrush x:Key="DotStoppedBrush" Color="#9AA1AB" />
+                    <SolidColorBrush x:Key="DotRunningBrush" Color="#16A34A" />
+                    <SolidColorBrush x:Key="DotBusyBrush" Color="#F59E0B" />
+                    <SolidColorBrush x:Key="LinkBrush" Color="#C2410C" />
+                    <SolidColorBrush x:Key="UpdatePillBrush" Color="#FFF4EC" />
+                    <SolidColorBrush x:Key="UpdatePillBorderBrush" Color="#FBC9A4" />
+                    <SolidColorBrush x:Key="InfoBrush" Color="#1D4ED8" />
+                    <SolidColorBrush x:Key="ErrorBrush" Color="#B42318" />
+                    <SolidColorBrush x:Key="WarnBrush" Color="#A15C07" />
+                    <SolidColorBrush x:Key="OkBrush" Color="#15803D" />
+                    <SolidColorBrush x:Key="DebugBrush" Color="#6B7280" />
+                    <SolidColorBrush x:Key="LogTimeBrush" Color="#7A808A" />
+                    <SolidColorBrush x:Key="CellTextBrush" Color="#3B4048" />
+                    <SolidColorBrush x:Key="VersionBrush" Color="#FAFBFC" />
+                    <SolidColorBrush x:Key="VersionActiveBrush" Color="#F3FBF5" />
+                    <SolidColorBrush x:Key="VersionActiveBorderBrush" Color="#C9E6D2" />
+                    <SolidColorBrush x:Key="ActivePillBrush" Color="#DDF3E4" />
+                    <SolidColorBrush x:Key="ActivePillTextBrush" Color="#15803D" />
+                    <SolidColorBrush x:Key="SourceApacheBrush" Color="#1D4ED8" />
+                    <SolidColorBrush x:Key="SourceUpdateBrush" Color="#0369A1" />
+                    <SolidColorBrush x:Key="SourceSitesBrush" Color="#BE185D" />
+                    <SolidColorBrush x:Key="SourcePhpBrush" Color="#4F46E5" />
+                    <SolidColorBrush x:Key="SourceMySqlBrush" Color="#C2410C" />
+                    <SolidColorBrush x:Key="SourceFileZillaBrush" Color="#7C3AED" />
+                    <SolidColorBrush x:Key="SourceMercuryBrush" Color="#0F766E" />
+                    <SolidColorBrush x:Key="SourceTomcatBrush" Color="#B45309" />
+                    <SolidColorBrush x:Key="SourceOtherBrush" Color="#5D6470" />
+                    <SolidColorBrush x:Key="NetstatNewBrush" Color="#22C55E" />
+                    <SolidColorBrush x:Key="NetstatNewTextBrush" Color="#052E16" />
+                    <SolidColorBrush x:Key="NetstatOldBrush" Color="#7F1D1D" />
+                    <SolidColorBrush x:Key="NetstatOldTextBrush" Color="#FFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AccentBrush" Color="#FB7A24" />
+                    <SolidColorBrush x:Key="AccentHoverBrush" Color="#FF8A3D" />
+                    <SolidColorBrush x:Key="PageBrush" Color="#17181B" />
+                    <SolidColorBrush x:Key="CardBrush" Color="#1F2125" />
+                    <SolidColorBrush x:Key="LineBrush" Color="#2E3137" />
+                    <SolidColorBrush x:Key="RowLineBrush" Color="#272A2F" />
+                    <SolidColorBrush x:Key="TextBrush" Color="#E6E8EB" />
+                    <SolidColorBrush x:Key="MutedBrush" Color="#A0A6B0" />
+                    <SolidColorBrush x:Key="FaintBrush" Color="#737A85" />
+                    <SolidColorBrush x:Key="HeaderBrush" Color="#24272C" />
+                    <SolidColorBrush x:Key="ControlBrush" Color="#2A2D33" />
+                    <SolidColorBrush x:Key="ControlBorderBrush" Color="#3A3E45" />
+                    <SolidColorBrush x:Key="ControlHoverBrush" Color="#33373E" />
+                    <SolidColorBrush x:Key="ControlHoverBorderBrush" Color="#4A4F57" />
+                    <SolidColorBrush x:Key="ControlPressedBrush" Color="#3B3F46" />
+                    <SolidColorBrush x:Key="StartBgBrush" Color="#15301F" />
+                    <SolidColorBrush x:Key="StartBorderBrush" Color="#24543A" />
+                    <SolidColorBrush x:Key="StartFgBrush" Color="#4ADE80" />
+                    <SolidColorBrush x:Key="StartHoverBgBrush" Color="#1B3D28" />
+                    <SolidColorBrush x:Key="StartHoverBorderBrush" Color="#2F6B49" />
+                    <SolidColorBrush x:Key="StopBgBrush" Color="#3A1A1A" />
+                    <SolidColorBrush x:Key="StopBorderBrush" Color="#6B2B2B" />
+                    <SolidColorBrush x:Key="StopFgBrush" Color="#F87171" />
+                    <SolidColorBrush x:Key="StopHoverBgBrush" Color="#4A2020" />
+                    <SolidColorBrush x:Key="StopHoverBorderBrush" Color="#853434" />
+                    <SolidColorBrush x:Key="DotStoppedBrush" Color="#6B7280" />
+                    <SolidColorBrush x:Key="DotRunningBrush" Color="#22C55E" />
+                    <SolidColorBrush x:Key="DotBusyBrush" Color="#FBBF24" />
+                    <SolidColorBrush x:Key="LinkBrush" Color="#FB923C" />
+                    <SolidColorBrush x:Key="UpdatePillBrush" Color="#3A2414" />
+                    <SolidColorBrush x:Key="UpdatePillBorderBrush" Color="#7C3A12" />
+                    <SolidColorBrush x:Key="InfoBrush" Color="#60A5FA" />
+                    <SolidColorBrush x:Key="ErrorBrush" Color="#F87171" />
+                    <SolidColorBrush x:Key="WarnBrush" Color="#FBBF24" />
+                    <SolidColorBrush x:Key="OkBrush" Color="#4ADE80" />
+                    <SolidColorBrush x:Key="DebugBrush" Color="#8B93A0" />
+                    <SolidColorBrush x:Key="LogTimeBrush" Color="#7E8590" />
+                    <SolidColorBrush x:Key="CellTextBrush" Color="#C9CDD3" />
+                    <SolidColorBrush x:Key="VersionBrush" Color="#24272C" />
+                    <SolidColorBrush x:Key="VersionActiveBrush" Color="#16281D" />
+                    <SolidColorBrush x:Key="VersionActiveBorderBrush" Color="#24543A" />
+                    <SolidColorBrush x:Key="ActivePillBrush" Color="#1B3D28" />
+                    <SolidColorBrush x:Key="ActivePillTextBrush" Color="#4ADE80" />
+                    <SolidColorBrush x:Key="SourceApacheBrush" Color="#60A5FA" />
+                    <SolidColorBrush x:Key="SourceUpdateBrush" Color="#38BDF8" />
+                    <SolidColorBrush x:Key="SourceSitesBrush" Color="#F472B6" />
+                    <SolidColorBrush x:Key="SourcePhpBrush" Color="#A5B4FC" />
+                    <SolidColorBrush x:Key="SourceMySqlBrush" Color="#FB923C" />
+                    <SolidColorBrush x:Key="SourceFileZillaBrush" Color="#C4B5FD" />
+                    <SolidColorBrush x:Key="SourceMercuryBrush" Color="#2DD4BF" />
+                    <SolidColorBrush x:Key="SourceTomcatBrush" Color="#FBBF24" />
+                    <SolidColorBrush x:Key="SourceOtherBrush" Color="#A0A6B0" />
+                    <SolidColorBrush x:Key="NetstatNewBrush" Color="#166534" />
+                    <SolidColorBrush x:Key="NetstatNewTextBrush" Color="#DCFCE7" />
+                    <SolidColorBrush x:Key="NetstatOldBrush" Color="#7F1D1D" />
+                    <SolidColorBrush x:Key="NetstatOldTextBrush" Color="#FFFFFF" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
 
-        <!-- Line icons on a 24-unit grid, drawn with Path.icon -->
-        <StreamGeometry x:Key="IconStack">M12,3 L3,8 L12,13 L21,8 Z M3,13 L12,18 L21,13</StreamGeometry>
-        <StreamGeometry x:Key="IconGear">M12,9 A3,3 0 1 1 11.99,9 Z M12,2 L12,5 M12,19 L12,22 M4.2,4.2 L6.3,6.3 M17.7,17.7 L19.8,19.8 M2,12 L5,12 M19,12 L22,12 M4.2,19.8 L6.3,17.7 M17.7,6.3 L19.8,4.2</StreamGeometry>
-        <StreamGeometry x:Key="IconGlobe">M12,3 A9,9 0 1 1 11.99,3 Z M3,12 L21,12 M12,3 C16,7 16,17 12,21 M12,3 C8,7 8,17 12,21</StreamGeometry>
-        <StreamGeometry x:Key="IconShell">M5,4 L19,4 A2,2 0 0 1 21,6 L21,18 A2,2 0 0 1 19,20 L5,20 A2,2 0 0 1 3,18 L3,6 A2,2 0 0 1 5,4 Z M7,9 L10,12 L7,15 M13,15 L17,15</StreamGeometry>
-        <StreamGeometry x:Key="IconFolder">M3,7 A2,2 0 0 1 5,5 L9,5 L11,7 L19,7 A2,2 0 0 1 21,9 L21,17 A2,2 0 0 1 19,19 L5,19 A2,2 0 0 1 3,17 Z</StreamGeometry>
-        <StreamGeometry x:Key="IconServices">M4,6 L20,6 M4,12 L20,12 M4,18 L20,18 M8,4.5 L8,7.5 M15,10.5 L15,13.5 M10,16.5 L10,19.5</StreamGeometry>
-        <StreamGeometry x:Key="IconHelp">M12,3 A9,9 0 1 1 11.99,3 Z M9.5,9.5 A2.5,2.5 0 1 1 13,11.8 C12.4,12.1 12,12.7 12,13.4 L12,14 M12,17 L12,17.01</StreamGeometry>
-        <StreamGeometry x:Key="IconUpdate">M12,16 L12,4 M7,9 L12,4 L17,9 M5,20 L19,20</StreamGeometry>
-        <StreamGeometry x:Key="IconQuit">M15,4 L18,4 A2,2 0 0 1 20,6 L20,18 A2,2 0 0 1 18,20 L15,20 M10,17 L5,12 L10,7 M5,12 L16,12</StreamGeometry>
+            <!-- Line icons on a 24-unit grid, drawn with Path.icon -->
+            <StreamGeometry x:Key="IconStack">M12,3 L3,8 L12,13 L21,8 Z M3,13 L12,18 L21,13</StreamGeometry>
+            <StreamGeometry x:Key="IconGear">M12,9 A3,3 0 1 1 11.99,9 Z M12,2 L12,5 M12,19 L12,22 M4.2,4.2 L6.3,6.3 M17.7,17.7 L19.8,19.8 M2,12 L5,12 M19,12 L22,12 M4.2,19.8 L6.3,17.7 M17.7,6.3 L19.8,4.2</StreamGeometry>
+            <StreamGeometry x:Key="IconGlobe">M12,3 A9,9 0 1 1 11.99,3 Z M3,12 L21,12 M12,3 C16,7 16,17 12,21 M12,3 C8,7 8,17 12,21</StreamGeometry>
+            <StreamGeometry x:Key="IconShell">M5,4 L19,4 A2,2 0 0 1 21,6 L21,18 A2,2 0 0 1 19,20 L5,20 A2,2 0 0 1 3,18 L3,6 A2,2 0 0 1 5,4 Z M7,9 L10,12 L7,15 M13,15 L17,15</StreamGeometry>
+            <StreamGeometry x:Key="IconFolder">M3,7 A2,2 0 0 1 5,5 L9,5 L11,7 L19,7 A2,2 0 0 1 21,9 L21,17 A2,2 0 0 1 19,19 L5,19 A2,2 0 0 1 3,17 Z</StreamGeometry>
+            <StreamGeometry x:Key="IconServices">M4,6 L20,6 M4,12 L20,12 M4,18 L20,18 M8,4.5 L8,7.5 M15,10.5 L15,13.5 M10,16.5 L10,19.5</StreamGeometry>
+            <StreamGeometry x:Key="IconHelp">M12,3 A9,9 0 1 1 11.99,3 Z M9.5,9.5 A2.5,2.5 0 1 1 13,11.8 C12.4,12.1 12,12.7 12,13.4 L12,14 M12,17 L12,17.01</StreamGeometry>
+            <StreamGeometry x:Key="IconUpdate">M12,16 L12,4 M7,9 L12,4 L17,9 M5,20 L19,20</StreamGeometry>
+            <StreamGeometry x:Key="IconSites">M4,4 L20,4 A1,1 0 0 1 21,5 L21,19 A1,1 0 0 1 20,20 L4,20 A1,1 0 0 1 3,19 L3,5 A1,1 0 0 1 4,4 Z M3,9 L21,9 M6,6.5 L6.01,6.5 M9,6.5 L9.01,6.5</StreamGeometry>
+            <StreamGeometry x:Key="IconCode">M8,7 L3,12 L8,17 M16,7 L21,12 L16,17 M13.5,5 L10.5,19</StreamGeometry>
+            <StreamGeometry x:Key="IconSun">M12,8 A4,4 0 1 1 11.99,8 Z M12,2 L12,4 M12,20 L12,22 M4.9,4.9 L6.3,6.3 M17.7,17.7 L19.1,19.1 M2,12 L4,12 M20,12 L22,12 M4.9,19.1 L6.3,17.7 M17.7,6.3 L19.1,4.9</StreamGeometry>
+            <StreamGeometry x:Key="IconMoon">M20,14.5 A8,8 0 1 1 9.5,4 A6.5,6.5 0 0 0 20,14.5 Z</StreamGeometry>
+            <StreamGeometry x:Key="IconQuit">M15,4 L18,4 A2,2 0 0 1 20,6 L20,18 A2,2 0 0 1 18,20 L15,20 M10,17 L5,12 L10,7 M5,12 L16,12</StreamGeometry>
+        </ResourceDictionary>
     </Styles.Resources>
 
     <Style Selector=":is(Window)">
-        <Setter Property="Background" Value="{StaticResource PageBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource PageBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="FontSize" Value="13" />
     </Style>
 
     <Style Selector="Border.card">
-        <Setter Property="Background" Value="{StaticResource CardBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+        <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="ClipToBounds" Value="True" />
@@ -40,7 +158,7 @@
     <Style Selector="TextBlock.colhead">
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style Selector="TextBlock.mono">
@@ -61,7 +179,7 @@
         <Setter Property="Width" Value="15" />
         <Setter Property="Height" Value="15" />
         <Setter Property="Stretch" Value="Uniform" />
-        <Setter Property="Stroke" Value="{StaticResource MutedBrush}" />
+        <Setter Property="Stroke" Value="{DynamicResource MutedBrush}" />
         <Setter Property="StrokeThickness" Value="1.8" />
         <Setter Property="StrokeLineCap" Value="Round" />
         <Setter Property="StrokeJoin" Value="Round" />
@@ -72,17 +190,17 @@
         <Setter Property="Width" Value="8" />
         <Setter Property="Height" Value="8" />
         <Setter Property="Fill" Value="Transparent" />
-        <Setter Property="Stroke" Value="#9AA1AB" />
+        <Setter Property="Stroke" Value="{DynamicResource DotStoppedBrush}" />
         <Setter Property="StrokeThickness" Value="1.5" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style Selector="Ellipse.dot.running">
-        <Setter Property="Fill" Value="#16A34A" />
-        <Setter Property="Stroke" Value="#16A34A" />
+        <Setter Property="Fill" Value="{DynamicResource DotRunningBrush}" />
+        <Setter Property="Stroke" Value="{DynamicResource DotRunningBrush}" />
     </Style>
     <Style Selector="Ellipse.dot.busy">
-        <Setter Property="Fill" Value="#F59E0B" />
-        <Setter Property="Stroke" Value="#F59E0B" />
+        <Setter Property="Fill" Value="{DynamicResource DotBusyBrush}" />
+        <Setter Property="Stroke" Value="{DynamicResource DotBusyBrush}" />
     </Style>
 
     <!-- Row action buttons -->
@@ -92,46 +210,66 @@
         <Setter Property="Padding" Value="10,0" />
         <Setter Property="CornerRadius" Value="6" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Background" Value="#FFFFFF" />
-        <Setter Property="BorderBrush" Value="#D5D9DF" />
+        <Setter Property="Background" Value="{DynamicResource ControlBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#F1F3F6" />
-        <Setter Property="BorderBrush" Value="#C3C8D0" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlHoverBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="Button.tool:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#E7EAEE" />
+        <Setter Property="Background" Value="{DynamicResource ControlPressedBrush}" />
     </Style>
 
     <Style Selector="Button.tool.start">
         <Setter Property="Width" Value="84" />
-        <Setter Property="Background" Value="#EEFAF2" />
-        <Setter Property="BorderBrush" Value="#C9E6D2" />
-        <Setter Property="Foreground" Value="#15803D" />
+        <Setter Property="Background" Value="{DynamicResource StartBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StartBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource StartFgBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="Button.tool.start:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#DDF3E4" />
-        <Setter Property="BorderBrush" Value="#A9D8B8" />
-        <Setter Property="Foreground" Value="#15803D" />
+        <Setter Property="Background" Value="{DynamicResource StartHoverBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StartHoverBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource StartFgBrush}" />
     </Style>
 
     <Style Selector="Button.tool.stop">
         <Setter Property="Width" Value="84" />
-        <Setter Property="Background" Value="#FDF0F0" />
-        <Setter Property="BorderBrush" Value="#F1C6C6" />
-        <Setter Property="Foreground" Value="#B42318" />
+        <Setter Property="Background" Value="{DynamicResource StopBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StopBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource StopFgBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="Button.tool.stop:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#FBE1E1" />
-        <Setter Property="BorderBrush" Value="#E9A9A9" />
-        <Setter Property="Foreground" Value="#B42318" />
+        <Setter Property="Background" Value="{DynamicResource StopHoverBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StopHoverBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource StopFgBrush}" />
+    </Style>
+
+    <!-- Icon-only button that blends into the page; a soft background shows on hover -->
+    <Style Selector="Button.ghost">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="18" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+    </Style>
+    <Style Selector="Button.ghost:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ControlPressedBrush}" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover Path.icon">
+        <Setter Property="Stroke" Value="{DynamicResource TextBrush}" />
     </Style>
 
     <!-- Right-hand column buttons -->
@@ -142,30 +280,81 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Padding" Value="12,0" />
         <Setter Property="CornerRadius" Value="6" />
-        <Setter Property="Background" Value="#FFFFFF" />
-        <Setter Property="BorderBrush" Value="#D5D9DF" />
+        <Setter Property="Background" Value="{DynamicResource ControlBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="Button.side:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#F1F3F6" />
-        <Setter Property="BorderBrush" Value="#C3C8D0" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlHoverBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="Button.side:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#E7EAEE" />
+        <Setter Property="Background" Value="{DynamicResource ControlPressedBrush}" />
     </Style>
 
     <!-- Accent button (dialogs) -->
     <Style Selector="Button.accent">
-        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Foreground" Value="#FFFFFF" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="CornerRadius" Value="6" />
     </Style>
     <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#E8691A" />
+        <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
         <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+
+    <!-- Secondary text; listed before the status colors so a status class wins when both are set -->
+    <Style Selector="TextBlock.muted">
+        <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+    </Style>
+
+    <!-- Status colors for text anywhere: errors, warnings, success and info notes -->
+    <Style Selector="TextBlock.error">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+    </Style>
+    <Style Selector="TextBlock.warn">
+        <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
+    </Style>
+    <Style Selector="TextBlock.ok">
+        <Setter Property="Foreground" Value="{DynamicResource OkBrush}" />
+    </Style>
+    <Style Selector="TextBlock.debug">
+        <Setter Property="Foreground" Value="{DynamicResource DebugBrush}" />
+    </Style>
+    <Style Selector="TextBlock.info">
+        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}" />
+    </Style>
+
+    <!-- Log source tags: one color per module -->
+    <Style Selector="TextBlock.source">
+        <Setter Property="Foreground" Value="{DynamicResource SourceOtherBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.apache">
+        <Setter Property="Foreground" Value="{DynamicResource SourceApacheBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.mysql">
+        <Setter Property="Foreground" Value="{DynamicResource SourceMySqlBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.filezilla">
+        <Setter Property="Foreground" Value="{DynamicResource SourceFileZillaBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.mercury">
+        <Setter Property="Foreground" Value="{DynamicResource SourceMercuryBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.tomcat">
+        <Setter Property="Foreground" Value="{DynamicResource SourceTomcatBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.update">
+        <Setter Property="Foreground" Value="{DynamicResource SourceUpdateBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.sites">
+        <Setter Property="Foreground" Value="{DynamicResource SourceSitesBrush}" />
+    </Style>
+    <Style Selector="TextBlock.source.php">
+        <Setter Property="Foreground" Value="{DynamicResource SourcePhpBrush}" />
     </Style>
 
     <!-- Compact log rows -->

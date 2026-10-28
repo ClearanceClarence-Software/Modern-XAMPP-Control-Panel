@@ -19,10 +19,14 @@ by hard kills, cryptic "shutdown unexpectedly" errors, and no way to change PHP 
 > XAMPP and the XAMPP logo are trademarks of Apache Friends.
 
 <!--
-Screenshots: add them to docs/assets/ and remove this comment.
+Screenshots: save these in docs/assets/ (about 1100 px wide, PNG), then remove this comment.
 <p align="center">
-  <img src="docs/assets/screenshot-main.png" alt="Main window" width="49%">
-  <img src="docs/assets/screenshot-versions.png" alt="PHP and MariaDB versions" width="49%">
+  <img src="docs/assets/screenshot-light.png" alt="Main window, light theme" width="49%">
+  <img src="docs/assets/screenshot-dark.png" alt="Main window, dark theme" width="49%">
+</p>
+<p align="center">
+  <img src="docs/assets/screenshot-sites.png" alt="Sites window" width="49%">
+  <img src="docs/assets/screenshot-versions.png" alt="Versions window" width="49%">
 </p>
 -->
 
@@ -35,20 +39,26 @@ Screenshots: add them to docs/assets/ and remove this comment.
 | Ports in use | Generic warning | Names the program and PID holding the port, before starting |
 | PHP / MariaDB versions | Whatever came with XAMPP | Install, update and switch between several versions |
 | Versions at a glance | No | Apache, PHP and MariaDB versions read from the binaries |
-| Look and feel | 2010s VCL | Modern UI, same familiar layout |
+| Local sites | Edit `httpd-vhosts.conf` and the hosts file by hand | `https://myproject.test` in one click, with a trusted certificate |
+| php.ini | Open it in Notepad | Common settings and every extension on one page |
+| Broken Apache config | "Shutdown unexpectedly" | `httpd -t` runs first and names the line |
+| Look and feel | 2010s VCL | Modern UI with light and dark themes, same familiar layout |
 
 ## Features
 
 **Familiar control panel.** Module rows for Apache, MySQL, FileZilla, Mercury and Tomcat with
 Service, PID(s), Port(s), Start/Stop, Admin, Config and Logs, plus Config, Netstat, Shell, Explorer,
-Services and Help buttons, just like the original.
+Services and Help buttons, just like the original. A tray icon shows what runs, starts and stops
+modules from its menu, and keeps the panel out of the taskbar when minimized.
 
 **Safe MySQL/MariaDB handling.** Stop always tries a clean shutdown first. A hard kill is only
 offered as **Force stop** when the clean shutdown fails, and it tells you that InnoDB will run crash
 recovery on the next start.
 
-**Startup failures explained.** If Apache or MySQL exits right after starting, the panel shows the
-last lines of `error.log` or `mysql_error.log`, so you see *why* without opening files.
+**Startup failures explained.** Before Apache starts, the panel checks its configuration with
+`httpd -t` and shows the exact error instead of starting a server that dies. If Apache or MySQL
+exits right after starting anyway, the panel shows the last lines of `error.log` or
+`mysql_error.log`, so you see *why* without opening files.
 
 **Port conflict finder.** Before a module starts (and optionally when the panel opens), the panel
 checks its ports and reports exactly which program holds them:
@@ -61,11 +71,36 @@ checks its ports and reports exactly which program holds them:
 - **Switch** between installed versions in seconds; the server is stopped and restarted for you.
 - **Switch back** after any install or switch, and **remove** versions you no longer need.
 
+**FileZilla Server upgrade.** XAMPP still ships FileZilla Server 0.9.41 from 2012. The Versions
+window opens the official download page and runs the installer you downloaded: it stops the old
+server, installs FileZilla Server 1.x as a Windows service, and the FileZilla row then starts, stops
+and administers the new one. Later 1.x updates go the same way and keep your users. FileZilla's
+download links expire, so the panel can't download it for you, and 1.x can't read 0.9's settings,
+so FTP users are set up again in its Admin program.
+
+**Sites with HTTPS.** The **Sites** window gives each project its own address, such as
+`https://myproject.test`. Pick a name and a folder, and Apply:
+
+- writes the virtual hosts to `httpd-vhosts.conf` (in a marked block; your own entries are left
+  alone) and tests the config before keeping it,
+- adds the names to the Windows hosts file (one admin prompt),
+- issues a certificate for localhost and every site from a certificate authority that exists only
+  on your computer, and asks Windows to trust it, so Chrome and Edge show the padlock,
+- restarts Apache. `localhost` keeps serving `htdocs`.
+
+**PHP settings.** The **PHP** window edits the `php.ini` values everyone changes (memory limit,
+upload size, post size, execution time, input vars, display errors, time zone) and lists every
+extension in `php\ext` with a check box. Saving keeps the previous file as `php.ini.bak` and
+restarts Apache.
+
+**Update notice.** The panel checks GitHub for a newer release when it starts and shows a link in
+the header when there is one. You can turn this off in Config.
+
 **Netstat.** Listening TCP sockets with address, port, PID and process, refreshed every 3 seconds.
 New sockets show in green, closed ones in dark red, and XAMPP's own processes are marked.
 
 **XAMPP-style configuration.** Editor, browser, XAMPP folder, autostart per module, start
-minimized, port check on startup, debug output, plus Service and Port Settings, User Defined Files
+minimized, light or dark theme (or follow Windows; the sun/moon button in the header switches it), minimize to tray, update check, port check on startup, debug output, plus Service and Port Settings, User Defined Files
 and Log Options.
 
 ## Download
@@ -76,7 +111,8 @@ and Log Options.
 3. Run it. It finds XAMPP in its own folder, the folder above it, or `C:\xampp`, and asks for the
    folder if none of those has an install.
 
-It's a single self-contained exe: no installer and no .NET runtime to install.
+It's a single self-contained exe: no installer and no .NET runtime to install. See the
+[changelog](CHANGELOG.md) for what's new in each version.
 
 > [!TIP]
 > Windows SmartScreen may warn about an unrecognized app the first time. Choose
@@ -116,9 +152,16 @@ exact state from before the update. Downgrades are refused.
 |---|---|
 | Settings | `%AppData%\XamppControl\settings.json` |
 | Optional log file | `%AppData%\XamppControl\xampp-control.log` |
+| Local certificate authority | `%AppData%\XamppControl\local-ca.pfx` (private) and `local-ca.crt` (public) |
+| Site certificate | `C:\xampp\apache\conf\ssl.crt\modern-xampp-local.crt` and `ssl.key\modern-xampp-local.key` |
 | Downloads | `%TEMP%\XamppControl` |
 | Installed versions | `C:\xampp\versions\` |
 | SQL dumps | `C:\xampp\mysql_dumps\` |
+
+The local certificate authority's private key (`local-ca.pfx`) can sign certificates your browser
+trusts, the same way mkcert works. It never leaves your computer, but keep it private, and remove
+"Modern XAMPP Control Panel Local CA" from Windows' certificate manager (`certmgr.msc`, Trusted Root
+Certification Authorities) if you stop using the panel.
 
 The MySQL root password (Config › Service and Port Settings) is only used for clean shutdowns,
 dumps and upgrades. It is stored in plain text in `settings.json`, which is fine for a local
@@ -131,6 +174,13 @@ the server really is stuck, use **Force stop**.
 
 **A module runs as a Windows service.** Updates and version switches need the module to run
 normally. Untick its Service checkbox first (this asks for admin rights).
+
+**A site shows "Not secure".** Click **Trust** in the Sites window and answer Yes to Windows'
+warning. Firefox keeps its own certificate list: import `local-ca.crt` there, or set
+`security.enterprise_roots.enabled` to `true` in `about:config`.
+
+**A site name doesn't resolve.** The hosts file is only changed after the admin prompt. If you
+canceled it, or an antivirus blocked the change, click **Apply** again.
 
 **Apache won't start after a PHP change.** The panel shows the reason from `error.log`. Use
 **Switch back** in the Versions window to return to the previous PHP.
@@ -152,13 +202,16 @@ dotnet publish -p:PublishProfile=win-x64
 # bin\publish\win-x64\XamppControl.exe
 ```
 
-Pushing a tag like `v0.2.0` builds the exe with GitHub Actions and publishes it as a release.
+To release, add the version's section to [CHANGELOG.md](CHANGELOG.md), set `<Version>` in
+`XamppControl.csproj`, and push a tag like `v0.2.0`. GitHub Actions builds the exe and publishes it as a
+release, with that changelog section as the release notes.
 
 ## Contributing
 
-Issues and pull requests are welcome. The code style is defined in `.editorconfig` (Allman braces,
-120 columns, `_camelCase` private fields, analyzers at `latest-recommended`). Before opening a pull
-request, run:
+Issues and pull requests are welcome; the issue forms ask for the log, which usually shows the
+cause. The code style is defined in `.editorconfig` (Allman braces, 120 columns, `_camelCase` private
+fields, analyzers at `latest-recommended`) and explained, with examples, in
+[CODING_STANDARDS.md](CODING_STANDARDS.md). Before opening a pull request, run:
 
 ```powershell
 dotnet format --verify-no-changes

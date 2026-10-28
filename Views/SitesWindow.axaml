@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:XamppControl.ViewModels"
+        x:Class="XamppControl.Views.SitesWindow"
+        x:DataType="vm:SitesViewModel"
+        Title="Sites (virtual hosts)"
+        Width="820" Height="600" MinWidth="680" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.note">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto" Margin="18">
+
+        <!-- Intro -->
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="Give each project its own address, such as https://myproject.test, with a trusted certificate."
+                       TextWrapping="Wrap" />
+            <TextBlock Classes="note" Text="{Binding LocalhostNote}" />
+        </StackPanel>
+
+        <!-- Sites -->
+        <Border Grid.Row="1" Classes="card">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Height="34" Padding="12,0" Background="{DynamicResource HeaderBrush}"
+                        BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="200,10,*,10,70,10,130">
+                        <TextBlock Grid.Column="0" Classes="colhead" Text="HOST NAME" />
+                        <TextBlock Grid.Column="2" Classes="colhead" Text="FOLDER" />
+                        <TextBlock Grid.Column="4" Classes="colhead" Text="HTTPS" />
+                    </Grid>
+                </Border>
+
+                <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*" Margin="12,8">
+                    <Button Grid.Column="0" Classes="tool" Content="Add site" Command="{Binding AddCommand}" />
+                    <TextBlock Grid.Column="1" Classes="note" VerticalAlignment="Center" Margin="12,0,0,0"
+                               Text="Use names ending in .test: they are reserved for local use and never clash with real websites." />
+                </Grid>
+
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Rows}" IsEnabled="{Binding IsIdle}" Margin="0,0,10,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SiteRow">
+                                <Border Padding="12,8" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="200,10,*,10,70,10,130">
+                                        <TextBox Grid.Column="0" Text="{Binding Host}" Watermark="myproject.test" />
+                                        <Grid Grid.Column="2" ColumnDefinitions="*,6,Auto">
+                                            <TextBox Grid.Column="0" Text="{Binding Folder}"
+                                                     Watermark="C:\xampp\htdocs\myproject" />
+                                            <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="Browse_Click" />
+                                        </Grid>
+                                        <CheckBox Grid.Column="4" IsChecked="{Binding UseHttps}" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="6">
+                                            <Button Classes="tool" Content="Open" Command="{Binding OpenCommand}"
+                                                    ToolTip.Tip="{Binding Url}" />
+                                            <Button Classes="tool" Content="Remove" Click="Remove_Click" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Certificate -->
+        <Border Grid.Row="2" Classes="card" Padding="14,10" Margin="0,12,0,0">
+            <Grid ColumnDefinitions="*,Auto,8,Auto">
+                <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TrustStatus}" TextWrapping="Wrap" />
+                    <TextBlock Classes="note"
+                               Text="Firefox keeps its own list: import local-ca.crt there, or set security.enterprise_roots.enabled to true." />
+                </StackPanel>
+                <Button Grid.Column="1" Classes="tool" Content="Trust" Click="Trust_Click"
+                        IsVisible="{Binding CanTrust}" IsEnabled="{Binding IsIdle}" />
+                <Button Grid.Column="3" Classes="tool" Content="Show local-ca.crt" Click="ShowAuthority_Click" />
+            </Grid>
+        </Border>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="3" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,12,0,0" />
+
+        <!-- Apply / Close -->
+        <Grid Grid.Row="4" ColumnDefinitions="*,Auto,8,Auto" Margin="0,12,0,0">
+            <TextBlock Grid.Column="0" Classes="note" VerticalAlignment="Center"
+                       Text="Apply writes httpd-vhosts.conf and the hosts file (Windows asks for admin rights), then restarts Apache." />
+            <Button Grid.Column="1" Classes="accent" Content="Apply" Width="100" Click="Apply_Click"
+                    IsEnabled="{Binding IsIdle}" />
+            <Button Grid.Column="3" Classes="tool" Content="Close" Width="90" Click="Close_Click"
+                    IsEnabled="{Binding IsIdle}" />
+        </Grid>
+    </Grid>
+</Window>

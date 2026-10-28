@@ -54,6 +54,11 @@ public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriv
             return;
         }
 
+        if (!await PassesConfigTestAsync(host))
+        {
+            return;
+        }
+
         host.Write(Tag, "Attempting to start Apache app...");
         host.Debug(Tag, $"Executing \"{Exe}\"");
         using Process? process = Shell.StartHidden(Exe, "", Root);
@@ -71,6 +76,60 @@ public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriv
                 LogLevel.Error);
             host.TailLog(Tag, InRoot(@"apache\logs\error.log"), 6);
         }
+    }
+
+    /// <summary>Runs httpd -t and logs what it finds, so a broken config is named before Apache starts.</summary>
+    /// <param name="host">Receives the error lines when the test fails.</param>
+    /// <returns>True when the config is valid, or when the test timed out (Apache then starts as usual).</returns>
+    private async Task<bool> PassesConfigTestAsync(IModuleHost host)
+    {
+        host.Debug(Tag, "Checking the Apache configuration (httpd -t)");
+        Shell.RunResult result = await TestConfigAsync(Root);
+        if (result.TimedOut || result.ExitCode == 0)
+        {
+            return true;
+        }
+
+        host.Write(Tag, "Apache configuration error, so Apache was not started:", LogLevel.Error);
+        foreach (string line in ConfigTestProblems(result))
+        {
+            host.Write(Tag, "  › " + line, LogLevel.Error);
+        }
+        return false;
+    }
+
+    /// <summary>Checks Apache's configuration with httpd -t without starting the server.</summary>
+    /// <param name="root">The XAMPP folder whose apache\bin\httpd.exe runs the test.</param>
+    /// <returns>
+    /// httpd's result: exit code 0 and "Syntax OK" when valid; -1 with the reason when httpd.exe is missing, could
+    /// not start or ran past 20 seconds.
+    /// </returns>
+    public static async Task<Shell.RunResult> TestConfigAsync(string root)
+    {
+        string exe = Path.Combine(root, "apache", "bin", "httpd.exe");
+        if (!File.Exists(exe))
+        {
+            return new Shell.RunResult(-1, "", "httpd.exe not found in apache\\bin", false);
+        }
+
+        return await Shell.RunAsync(exe, "-t", root, TimeSpan.FromSeconds(20));
+    }
+
+    /// <summary>The lines of a failed httpd -t that describe the problem.</summary>
+    /// <param name="result">The test's result; httpd writes its findings to standard error.</param>
+    /// <returns>The non-empty lines of both streams except "Syntax OK"; the exit code when there are none.</returns>
+    public static List<string> ConfigTestProblems(Shell.RunResult result)
+    {
+        var problems = (result.Error + "\n" + result.Output)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .Where(line => line.Length > 0 && !line.Equals("Syntax OK", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (problems.Count == 0)
+        {
+            problems.Add($"httpd -t failed with exit code {result.ExitCode}.");
+        }
+        return problems;
     }
 
     public override async Task<bool> StopAsync(IModuleHost host)

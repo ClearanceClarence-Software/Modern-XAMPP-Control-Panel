@@ -62,6 +62,19 @@ public sealed class UserFile
     public string Path { get; set; } = "";
 }
 
+/// <summary>A local site served by Apache under its own host name, set up from the Sites window.</summary>
+public sealed class Site
+{
+    /// <summary>The host name, such as myproject.test; lowercase, without scheme or port.</summary>
+    public string Host { get; set; } = "";
+
+    /// <summary>Full path of the site's document root.</summary>
+    public string Folder { get; set; } = "";
+
+    /// <summary>True also serves the site over HTTPS with the panel's local certificate.</summary>
+    public bool UseHttps { get; set; } = true;
+}
+
 /// <summary>User settings, stored as JSON in %AppData%\XamppControl\settings.json.</summary>
 public sealed class AppSettings
 {
@@ -86,6 +99,17 @@ public sealed class AppSettings
     /// <summary>True opens the main window minimized.</summary>
     public bool StartMinimized { get; set; }
 
+    /// <summary>
+    /// The color theme: <see cref="AppTheme.System"/>, <see cref="AppTheme.Light"/> or <see cref="AppTheme.Dark"/>.
+    /// </summary>
+    public string Theme { get; set; } = AppTheme.System;
+
+    /// <summary>True hides the main window to the tray icon when it is minimized.</summary>
+    public bool MinimizeToTray { get; set; } = true;
+
+    /// <summary>True checks GitHub for a newer version of the panel when it starts.</summary>
+    public bool CheckForAppUpdates { get; set; } = true;
+
     /// <summary>True starts Tomcat in a visible console window; false starts it hidden.</summary>
     public bool TomcatOutputWindow { get; set; } = true;
 
@@ -100,6 +124,9 @@ public sealed class AppSettings
 
     /// <summary>Extra files in the modules' Config menus.</summary>
     public List<UserFile> UserFiles { get; set; } = [];
+
+    /// <summary>Local sites from the Sites window, in the order they are written to the Apache config.</summary>
+    public List<Site> Sites { get; set; } = [];
 
     /// <summary>Font size of the log list, 10 to 18 after <see cref="Load"/>.</summary>
     public int LogFontSize { get; set; } = 12;
@@ -142,6 +169,8 @@ public sealed class AppSettings
         settings.Services ??= new ServiceSettings();
         settings.UserFiles ??= [];
         settings.AutoStart ??= [];
+        settings.Sites ??= [];
+        settings.Theme = AppTheme.Normalize(settings.Theme);
         settings.LogFontSize = Math.Clamp(settings.LogFontSize, 10, 18);
         settings.MaxLogLines = Math.Clamp(settings.MaxLogLines, 100, 100_000);
         return settings;
@@ -211,12 +240,16 @@ public sealed class AppSettings
         Browser = other.Browser;
         MySqlRootPassword = other.MySqlRootPassword;
         AutoStart = [.. other.AutoStart];
+        Theme = other.Theme;
         StartMinimized = other.StartMinimized;
+        MinimizeToTray = other.MinimizeToTray;
+        CheckForAppUpdates = other.CheckForAppUpdates;
         TomcatOutputWindow = other.TomcatOutputWindow;
         CheckPortsOnStartup = other.CheckPortsOnStartup;
         ShowDebug = other.ShowDebug;
         Services = other.Services;
         UserFiles = [.. other.UserFiles];
+        Sites = [.. other.Sites];
         LogFontSize = other.LogFontSize;
         MaxLogLines = other.MaxLogLines;
         LogToFile = other.LogToFile;

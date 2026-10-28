@@ -80,8 +80,10 @@ public static partial class XamppPaths
                 return null;
             }
 
-            Match match = VersionPattern().Match(rawVersion);
-            return match.Success ? match.Value : rawVersion.Trim();
+            // Some programs (FileZilla Server among them) write the version as "1, 12, 6, 0".
+            string dottedVersion = rawVersion.Replace(", ", ".", StringComparison.Ordinal).Replace(',', '.');
+            Match match = VersionPattern().Match(dottedVersion);
+            return match.Success ? match.Value : dottedVersion.Trim();
         }
         catch
         {

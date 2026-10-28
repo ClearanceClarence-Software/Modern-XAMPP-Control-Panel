@@ -77,12 +77,26 @@ public sealed class ModuleViewModel : ObservableObject
     public RelayCommand ToggleServiceCommand { get; }
 
     /// <summary>True for an installed module that can run as a Windows service, on Windows.</summary>
-    public bool CanUseService => IsInstalled && Driver.ServiceName is not null && OperatingSystem.IsWindows();
+    public bool CanUseService =>
+        IsInstalled && Driver.ServiceName is not null && !Driver.IsAlwaysService && OperatingSystem.IsWindows();
 
     /// <summary>The service checkbox's tooltip, naming the service or saying there is none.</summary>
-    public string ServiceTip => Driver.ServiceName is null
-        ? "This module can't run as a Windows service"
-        : $"Install or remove the \"{Driver.ServiceName}\" Windows service (asks for admin rights)";
+    public string ServiceTip
+    {
+        get
+        {
+            if (Driver.ServiceName is null)
+            {
+                return "This module can't run as a Windows service";
+            }
+            if (Driver.IsAlwaysService)
+            {
+                return $"{Driver.VersionLabel ?? Name} always runs as the \"{Driver.ServiceName}\" Windows service; " +
+                    "uninstall it from Windows Settings › Apps to remove it";
+            }
+            return $"Install or remove the \"{Driver.ServiceName}\" Windows service (asks for admin rights)";
+        }
+    }
 
     /// <summary>True while the last refresh found at least one of the module's processes.</summary>
     public bool IsRunning
@@ -276,6 +290,37 @@ public sealed class ModuleViewModel : ObservableObject
         }
     }
 
+    /// <summary>Stops and starts a running module so it loads a changed configuration, logging why.</summary>
+    /// <returns>
+    /// True when it was restarted or wasn't running; false when it runs as a Windows service (the user restarts that)
+    /// or didn't stop.
+    /// </returns>
+    public async Task<bool> RestartForConfigChangeAsync()
+    {
+        if (!IsRunning)
+        {
+            return true;
+        }
+
+        if (IsServiceInstalled)
+        {
+            _main.Write(Driver.Tag, $"{Name} runs as a Windows service: restart the service to load the change.",
+                LogLevel.Warn);
+            return false;
+        }
+
+        _main.Write(Driver.Tag, $"Restarting {Name} to load the change…");
+        if (!await StopForMaintenanceAsync())
+        {
+            _main.Write(Driver.Tag, $"{Name} didn't stop, so it still runs with the old configuration.",
+                LogLevel.Warn);
+            return false;
+        }
+
+        await StartAfterMaintenanceAsync();
+        return true;
+    }
+
     /// <summary>
     /// The action button: force stops, starts or stops the service, stops, or starts after checking the ports,
     /// then refreshes the status.
@@ -379,6 +424,8 @@ public sealed class ModuleViewModel : ObservableObject
         if (command is not { } serviceCommand)
         {
             // Same: no command for this module, so the checkbox goes back to the real state.
+            _main.Write(Driver.Tag, $"{Name}'s Windows service can't be installed or removed from here.",
+                LogLevel.Warn);
             OnPropertyChanged(nameof(IsServiceInstalled));
             return;
         }

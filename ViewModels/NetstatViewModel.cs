@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using Avalonia.Media;
 using Avalonia.Threading;
 using XamppControl.Core;
 
@@ -50,21 +49,11 @@ public sealed class NetstatRow(Listener listener, string name, string path, bool
     /// <summary>"address|port|pid", unique per socket across refreshes.</summary>
     public string Key => $"{Address}|{Port}|{Pid}";
 
-    /// <summary>The background in XAMPP's colors: green for new sockets, dark red for ones just closed.</summary>
-    public IBrush RowBrush { get; } = state switch
-    {
-        SocketState.New => Brush.Parse("#22C55E"),
-        SocketState.Old => Brush.Parse("#7F1D1D"),
-        _ => Brushes.Transparent,
-    };
+    /// <summary>True for a socket that appeared since the previous refresh; the row shows green.</summary>
+    public bool IsNew => State == SocketState.New;
 
-    /// <summary>The row's text color, readable on <see cref="RowBrush"/>.</summary>
-    public IBrush TextBrush { get; } = state switch
-    {
-        SocketState.New => Brush.Parse("#052E16"),
-        SocketState.Old => Brushes.White,
-        _ => Brush.Parse("#1F2329"),
-    };
+    /// <summary>True for a socket that closed since the previous refresh; the row shows dark red.</summary>
+    public bool IsOld => State == SocketState.Old;
 }
 
 /// <summary>

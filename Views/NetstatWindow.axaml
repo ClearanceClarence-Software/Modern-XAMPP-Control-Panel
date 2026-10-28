@@ -8,31 +8,49 @@
         MinWidth="560" MinHeight="360"
         WindowStartupLocation="CenterOwner">
 
+    <!-- Row colors follow XAMPP's Netstat: green for new sockets, dark red for closed ones -->
+    <Window.Styles>
+        <Style Selector="Border.socket.new">
+            <Setter Property="Background" Value="{DynamicResource NetstatNewBrush}" />
+        </Style>
+        <Style Selector="Border.socket.new TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource NetstatNewTextBrush}" />
+        </Style>
+        <Style Selector="Border.socket.old">
+            <Setter Property="Background" Value="{DynamicResource NetstatOldBrush}" />
+        </Style>
+        <Style Selector="Border.socket.old TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource NetstatOldTextBrush}" />
+        </Style>
+    </Window.Styles>
+
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
 
         <!-- Legend + refresh, like XAMPP's -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,12">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                <Border Padding="12,5" CornerRadius="5" Background="White" BorderBrush="#D5D9DF" BorderThickness="1">
+                <Border Padding="12,5" CornerRadius="5" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
                     <TextBlock Text="Active socket" FontSize="12" />
                 </Border>
-                <Border Padding="12,5" CornerRadius="5" Background="#22C55E">
-                    <TextBlock Text="New socket" FontSize="12" Foreground="#052E16" FontWeight="SemiBold" />
+                <Border Padding="12,5" CornerRadius="5" Background="{DynamicResource NetstatNewBrush}">
+                    <TextBlock Text="New socket" FontSize="12" Foreground="{DynamicResource NetstatNewTextBrush}"
+                               FontWeight="SemiBold" />
                 </Border>
-                <Border Padding="12,5" CornerRadius="5" Background="#7F1D1D">
-                    <TextBlock Text="Old socket" FontSize="12" Foreground="White" FontWeight="SemiBold" />
+                <Border Padding="12,5" CornerRadius="5" Background="{DynamicResource NetstatOldBrush}">
+                    <TextBlock Text="Old socket" FontSize="12" Foreground="{DynamicResource NetstatOldTextBrush}"
+                               FontWeight="SemiBold" />
                 </Border>
                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="10,0,0,0" VerticalAlignment="Center">
-                    <Ellipse Width="7" Height="7" Fill="{StaticResource AccentBrush}" />
-                    <TextBlock Text="XAMPP process" FontSize="12" Foreground="{StaticResource MutedBrush}" />
+                    <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" />
+                    <TextBlock Text="XAMPP process" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
                 </StackPanel>
             </StackPanel>
             <Button Grid.Column="2" Classes="tool" Content="Refresh" Command="{Binding RefreshCommand}" Width="90" />
         </Grid>
 
         <!-- Column headers -->
-        <Border Grid.Row="1" Height="32" Padding="12,0" Background="#F8F9FA" CornerRadius="8,8,0,0"
-                BorderBrush="{StaticResource LineBrush}" BorderThickness="1,1,1,0">
+        <Border Grid.Row="1" Height="32" Padding="12,0" Background="{DynamicResource HeaderBrush}" CornerRadius="8,8,0,0"
+                BorderBrush="{DynamicResource LineBrush}" BorderThickness="1,1,1,0">
             <Grid ColumnDefinitions="200,70,70,*">
                 <TextBlock Grid.Column="0" Classes="colhead" Text="ADDRESS" />
                 <TextBlock Grid.Column="1" Classes="colhead" Text="PORT" HorizontalAlignment="Right" Margin="0,0,14,0" />
@@ -42,22 +60,23 @@
         </Border>
 
         <!-- Rows -->
-        <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="0,0,8,8"
-                BorderBrush="{StaticResource LineBrush}" BorderThickness="1" ClipToBounds="True">
+        <Border Grid.Row="2" Background="{DynamicResource CardBrush}" CornerRadius="0,0,8,8"
+                BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" ClipToBounds="True">
             <ScrollViewer>
                 <ItemsControl ItemsSource="{Binding Rows}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:NetstatRow">
-                            <Border Background="{Binding RowBrush}" Padding="12,4" ToolTip.Tip="{Binding Path}">
+                            <Border Classes="socket" Classes.new="{Binding IsNew}" Classes.old="{Binding IsOld}"
+                                    Padding="12,4" ToolTip.Tip="{Binding Path}">
                                 <Grid ColumnDefinitions="200,70,70,*">
-                                    <TextBlock Grid.Column="0" Classes="mono" Text="{Binding Address}" Foreground="{Binding TextBrush}" />
-                                    <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Port}" Foreground="{Binding TextBrush}"
+                                    <TextBlock Grid.Column="0" Classes="mono" Text="{Binding Address}" />
+                                    <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Port}"
                                                HorizontalAlignment="Right" Margin="0,0,14,0" />
-                                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Pid}" Foreground="{Binding TextBrush}"
+                                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Pid}"
                                                HorizontalAlignment="Right" Margin="0,0,14,0" />
                                     <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="{Binding Name}" Foreground="{Binding TextBrush}" FontSize="13" />
-                                        <Ellipse Width="7" Height="7" Fill="{StaticResource AccentBrush}" IsVisible="{Binding IsXampp}"
+                                        <TextBlock Text="{Binding Name}" FontSize="13" />
+                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" IsVisible="{Binding IsXampp}"
                                                  VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Grid>
@@ -69,6 +88,6 @@
         </Border>
 
         <!-- Status line -->
-        <TextBlock Grid.Row="3" Text="{Binding Summary}" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="2,8,0,0" />
+        <TextBlock Grid.Row="3" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource MutedBrush}" Margin="2,8,0,0" />
     </Grid>
 </Window>

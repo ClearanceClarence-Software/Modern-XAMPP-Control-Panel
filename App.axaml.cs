@@ -18,14 +18,23 @@ public partial class App : Application
         {
             var viewModel = new MainViewModel(AppSettings.Load());
             AppSettings settings = viewModel.Settings;
-            desktop.MainWindow = new MainWindow
+            AppTheme.Apply(settings.Theme);
+            var mainWindow = new MainWindow
             {
                 DataContext = viewModel,
                 WindowState = settings.StartMinimized
                     ? Avalonia.Controls.WindowState.Minimized
                     : Avalonia.Controls.WindowState.Normal,
             };
-            desktop.ShutdownRequested += (_, _) => viewModel.Dispose();
+            desktop.MainWindow = mainWindow;
+
+            var tray = new TrayController(this, mainWindow, viewModel);
+            mainWindow.Tray = tray;
+            desktop.ShutdownRequested += (_, _) =>
+            {
+                tray.Dispose();
+                viewModel.Dispose();
+            };
         }
 
         base.OnFrameworkInitializationCompleted();

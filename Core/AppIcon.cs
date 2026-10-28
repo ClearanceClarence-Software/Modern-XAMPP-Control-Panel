@@ -35,20 +35,28 @@ public static class AppIcon
     /// <param name="window">The window whose title bar and taskbar icon change.</param>
     public static void Apply(Window window)
     {
+        if (LoadWindowIcon() is { } icon)
+        {
+            window.Icon = icon;
+        }
+    }
+
+    /// <summary>Loads the XAMPP icon for a window or the tray, preferring the .ico with its several sizes.</summary>
+    /// <returns>The icon; null when the build has neither file or it cannot be decoded.</returns>
+    public static WindowIcon? LoadWindowIcon()
+    {
         try
         {
             if (AssetLoader.Exists(_icoUri))
             {
-                window.Icon = new WindowIcon(AssetLoader.Open(_icoUri));
+                return new WindowIcon(AssetLoader.Open(_icoUri));
             }
-            else if (HasLogo)
-            {
-                window.Icon = new WindowIcon(AssetLoader.Open(_pngUri));
-            }
+            return HasLogo ? new WindowIcon(AssetLoader.Open(_pngUri)) : null;
         }
         catch
         {
-            // Any failure to open or decode the asset is cosmetic: the window keeps the default icon.
+            // Any failure to open or decode the asset is cosmetic: the default icon is used instead.
+            return null;
         }
     }
 }

@@ -1,7 +1,10 @@
 using System.Collections.Specialized;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using XamppControl.Core;
 using XamppControl.Modules;
@@ -31,10 +34,21 @@ public partial class MainWindow : Window
         }
 
         DataContextChanged += (_, _) => Subscribe();
+        ActualThemeVariantChanged += (_, _) => UpdateThemeToggle();
+        UpdateThemeToggle();
 
-        // No XAMPP at the configured or default location: ask for the folder right away.
         Opened += async (_, _) =>
         {
+            // Started minimized with minimize to tray on: go straight to the tray.
+            bool startsInTray = WindowState == WindowState.Minimized
+                && Tray is not null
+                && ViewModel is { Settings.MinimizeToTray: true };
+            if (startsInTray)
+            {
+                Hide();
+            }
+
+            // No XAMPP at the configured or default location: ask for the folder right away.
             if (ViewModel is { HasXampp: false })
             {
                 await PickRootAsync(isXamppMissing: true);
@@ -42,7 +56,26 @@ public partial class MainWindow : Window
         };
     }
 
+    /// <summary>The tray icon, set by the app after the window is created; null when there is none.</summary>
+    public TrayController? Tray { get; set; }
+
     private MainViewModel? ViewModel => DataContext as MainViewModel;
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        bool isMinimizedToTray = change.Property == WindowStateProperty
+            && WindowState == WindowState.Minimized
+            && Tray is not null
+            && IsVisible
+            && ViewModel is { Settings.MinimizeToTray: true };
+        if (isMinimizedToTray)
+        {
+            // Posted, so the window finishes minimizing before it leaves the taskbar.
+            Dispatcher.UIThread.Post(Hide);
+        }
+    }
 
     private async void ChangeRoot_Click(object? sender, RoutedEventArgs e) =>
         await PickRootAsync(isXamppMissing: false);
@@ -141,6 +174,26 @@ public partial class MainWindow : Window
         new NetstatWindow { DataContext = new NetstatViewModel(viewModel.Root) }.Show(this);
     }
 
+    private async void Sites_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        await new SitesWindow { DataContext = new SitesViewModel(viewModel) }.ShowDialog(this);
+    }
+
+    private async void PhpSettings_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        await new PhpSettingsWindow { DataContext = new PhpSettingsViewModel(viewModel) }.ShowDialog(this);
+    }
+
     private async void Updates_Click(object? sender, RoutedEventArgs e)
     {
         if (ViewModel is not { } viewModel)
@@ -152,6 +205,30 @@ public partial class MainWindow : Window
     }
 
     private void Quit_Click(object? sender, RoutedEventArgs e) => Close();
+
+    /// <summary>Switches to the other theme and remembers it, the same as choosing it in Config.</summary>
+    /// <param name="sender">The sun/moon button in the header.</param>
+    /// <param name="e">Carries nothing the switch needs.</param>
+    private void ThemeToggle_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            viewModel.SetTheme(IsDark ? AppTheme.Light : AppTheme.Dark);
+        }
+    }
+
+    private bool IsDark => ActualThemeVariant == ThemeVariant.Dark;
+
+    /// <summary>Shows the moon in the light theme and the sun in the dark one, with a tooltip for the click.</summary>
+    private void UpdateThemeToggle()
+    {
+        string iconKey = IsDark ? "IconSun" : "IconMoon";
+        if (this.TryFindResource(iconKey, ActualThemeVariant, out object? icon) && icon is Geometry geometry)
+        {
+            ThemeIcon.Data = geometry;
+        }
+        ToolTip.SetTip(ThemeToggle, IsDark ? "Switch to the light theme" : "Switch to the dark theme");
+    }
 
     private async void CopySelected_Click(object? sender, RoutedEventArgs e)
     {

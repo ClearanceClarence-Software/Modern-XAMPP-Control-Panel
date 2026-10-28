@@ -164,14 +164,7 @@ public static class ModuleCatalog
     [
         new ApacheDriver(root, settings),
         new MySqlDriver(root, settings),
-        new BatchDriver(root, settings, "FileZilla", "FileZillaFTP", ["FileZillaServer", "FileZilla Server"],
-            "filezilla_start.bat", "filezilla_stop.bat", @"FileZillaFTP\FileZillaServer.exe")
-        {
-            AdminTarget = @"FileZillaFTP\FileZilla Server Interface.exe",
-            Ports = services => [services.FileZillaPort, services.FileZillaAdminPort],
-            Configs = [("FileZilla Server.xml", @"FileZillaFTP\FileZilla Server.xml")],
-            Logs = [("<Browse> FileZillaFTP\\Logs", @"FileZillaFTP\Logs")],
-        },
+        CreateFileZilla(root, settings),
         new BatchDriver(root, settings, "Mercury", "MercuryMail", ["mercury"],
             "mercury_start.bat", "mercury_stop.bat", @"MercuryMail\mercury.exe")
         {
@@ -192,4 +185,28 @@ public static class ModuleCatalog
             Logs = [("<Browse> tomcat\\logs", @"tomcat\logs")],
         },
     ];
+
+    /// <summary>
+    /// The FileZilla row: FileZilla Server 1.x when it is installed (it replaces XAMPP's copy), otherwise XAMPP's
+    /// bundled FileZilla Server 0.9.41.
+    /// </summary>
+    /// <param name="root">The XAMPP installation folder.</param>
+    /// <param name="settings">The panel's live settings.</param>
+    /// <returns>The driver for whichever FileZilla Server is present; the 0.9.41 one when neither is.</returns>
+    private static ModuleDriver CreateFileZilla(string root, AppSettings settings)
+    {
+        if (FileZillaServer.FindInstallFolder() is { } installFolder)
+        {
+            return new FileZillaServiceDriver(root, settings, installFolder);
+        }
+
+        return new BatchDriver(root, settings, "FileZilla", "FileZillaFTP", ["FileZillaServer", "FileZilla Server"],
+            "filezilla_start.bat", "filezilla_stop.bat", @"FileZillaFTP\FileZillaServer.exe")
+        {
+            AdminTarget = @"FileZillaFTP\FileZilla Server Interface.exe",
+            Ports = services => [services.FileZillaPort, services.FileZillaAdminPort],
+            Configs = [("FileZilla Server.xml", @"FileZillaFTP\FileZilla Server.xml")],
+            Logs = [("<Browse> FileZillaFTP\\Logs", @"FileZillaFTP\Logs")],
+        };
+    }
 }

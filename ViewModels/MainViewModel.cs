@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using Avalonia.Threading;
 using XamppControl.Core;
 using XamppControl.Modules;
+using XamppControl.Updates;
 
 namespace XamppControl.ViewModels;
 
@@ -14,6 +16,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     private string _root = "";
     private string _subtitle = "";
     private int _logFontSize;
+    private AppRelease? _appUpdate;
 
     /// <summary>Loads the modules and runs the startup sequence in the background, which then starts polling.</summary>
     /// <param name="settings">The loaded settings; kept and updated in place when the Config dialog saves.</param>
@@ -29,6 +32,8 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         HelpCommand = new RelayCommand(
             () => Shell.OpenUrl("https://www.apachefriends.org/faq_windows.html", Settings.Browser));
         ClearLogCommand = new RelayCommand(() => Log.Clear());
+        OpenAppUpdateCommand = new RelayCommand(
+            () => Shell.OpenUrl(AppUpdate?.Url ?? AppUpdateCheck.ReleasesUrl, Settings.Browser));
 
         LoadModules();
 
@@ -70,6 +75,29 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 
     /// <summary>The panel's own version, shown in the header.</summary>
     public string Version => BuildInfo.Version;
+
+    /// <summary>A newer release of the panel found at startup; null when none was found or checking is off.</summary>
+    public AppRelease? AppUpdate
+    {
+        get => _appUpdate;
+        private set
+        {
+            if (SetField(ref _appUpdate, value))
+            {
+                OnPropertyChanged(nameof(HasAppUpdate));
+                OnPropertyChanged(nameof(AppUpdateText));
+            }
+        }
+    }
+
+    /// <summary>True when <see cref="AppUpdate"/> is set; shows the header's update link.</summary>
+    public bool HasAppUpdate => AppUpdate is not null;
+
+    /// <summary>The header's update link, e.g. "v0.2.1 is available"; empty without an update.</summary>
+    public string AppUpdateText => AppUpdate is { } update ? $"{update.Version} is available" : "";
+
+    /// <summary>Opens the release page of <see cref="AppUpdate"/>, or the releases list when there is none.</summary>
+    public RelayCommand OpenAppUpdateCommand { get; }
 
     /// <summary>True when the current folder contains apache or mysql.</summary>
     public bool HasXampp => XamppPaths.IsXampp(Root);
@@ -134,6 +162,35 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         await AutoStartModulesAsync();
 
         Write("main", "Control Panel Ready");
+
+        if (Settings.CheckForAppUpdates)
+        {
+            await CheckForAppUpdateAsync();
+        }
+    }
+
+    /// <summary>Looks for a newer release of the panel on GitHub and logs it when there is one.</summary>
+    /// <returns>A task that completes when the check has answered, failed or timed out.</returns>
+    private async Task CheckForAppUpdateAsync()
+    {
+        try
+        {
+            AppUpdate = await AppUpdateCheck.FindNewerAsync(BuildInfo.Version);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException)
+        {
+            // Being offline is normal for a local server panel; the failure is only shown with debug output on.
+            Debug("main", "Update check failed: " + ex.Message);
+            return;
+        }
+
+        if (AppUpdate is { } update)
+        {
+            Write("update",
+                $"{BuildInfo.AppName} {update.Version} is available (you have {BuildInfo.Version}). " +
+                "Click the link in the header to download it.",
+                LogLevel.Ok);
+        }
     }
 
     /// <summary>Logs the XAMPP folder and which modules it has, or an error when the folder holds no XAMPP.</summary>
@@ -190,6 +247,12 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
                 continue;
             }
 
+            if (!module.IsInstalled)
+            {
+                Write("main", $"Autostart is on for {name}, but {name} isn't installed; skipping it.", LogLevel.Warn);
+                continue;
+            }
+
             Write("main", $"Autostart active: starting {name}");
             await module.StartIfStoppedAsync();
         }
@@ -211,6 +274,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     {
         Settings.CopyFrom(edited);
         Settings.Save();
+        AppTheme.Apply(Settings.Theme);
         LogFontSize = Settings.LogFontSize;
         TrimLog();
 
@@ -218,6 +282,15 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         await ReloadModulesAsync();
 
         Write("main", "Configuration saved", LogLevel.Ok);
+    }
+
+    /// <summary>Applies a theme right away and saves it, for the header's sun/moon button.</summary>
+    /// <param name="theme">One of the <see cref="AppTheme"/> names.</param>
+    public void SetTheme(string theme)
+    {
+        Settings.Theme = AppTheme.Normalize(theme);
+        Settings.Save();
+        AppTheme.Apply(Settings.Theme);
     }
 
     /// <summary>Switches to another XAMPP installation and saves it as the configured folder.</summary>

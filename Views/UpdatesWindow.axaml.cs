@@ -79,6 +79,27 @@ public partial class UpdatesWindow : Window
         }
     }
 
+    private void FileZillaDownload_Click(object? sender, RoutedEventArgs e) => ViewModel?.OpenFileZillaDownloadPage();
+
+    private async void FileZillaInstall_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose the FileZilla Server installer (FileZilla_Server_…_win64-setup.exe)",
+            AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType("Installers") { Patterns = ["FileZilla_Server*.exe", "*.exe"] }],
+        });
+        if (files.Count > 0 && files[0].TryGetLocalPath() is { } installer)
+        {
+            await viewModel.InstallFileZillaAsync(installer);
+        }
+    }
+
     private async void Rollback_Click(object? sender, RoutedEventArgs e)
     {
         if (ViewModel is { } viewModel)

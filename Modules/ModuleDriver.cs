@@ -37,6 +37,12 @@ public abstract class ModuleDriver(string root, AppSettings settings)
     /// <summary>Windows service name, or null if the module can't run as a service.</summary>
     public virtual string? ServiceName => null;
 
+    /// <summary>
+    /// True when the module only exists as a Windows service (FileZilla Server 1.x), so the Service checkbox shows
+    /// it as a service but can't remove it.
+    /// </summary>
+    public virtual bool IsAlwaysService => false;
+
     /// <summary>The program and arguments that install <see cref="ServiceName"/>; null when not available.</summary>
     public virtual (string Exe, string Args)? ServiceInstallCommand => null;
 

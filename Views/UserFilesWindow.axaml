@@ -7,7 +7,7 @@
         WindowStartupLocation="CenterOwner">
 
     <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="18">
-        <TextBlock Grid.Row="0" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,10"
+        <TextBlock Grid.Row="0" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,10"
                    Text="Extra files to show in a module's Config menu, e.g. a project's .htaccess or a vhost file you edit often." />
 
         <Border Grid.Row="1" Classes="card">

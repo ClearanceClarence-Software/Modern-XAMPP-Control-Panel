@@ -9,7 +9,7 @@
     <Window.Styles>
         <Style Selector="TextBlock.lbl">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
             <Setter Property="Margin" Value="0,0,0,4" />
         </Style>
         <Style Selector="TextBlock.section">
@@ -19,7 +19,7 @@
     </Window.Styles>
 
     <StackPanel Margin="18" Spacing="12">
-        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}"
+        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource MutedBrush}"
                    Text="These tell the Control Panel which service names and ports to use for its checks, links and service commands. They don't change the servers' own config files: change the port there too (httpd.conf, my.ini, …)." />
 
         <!-- Apache -->
@@ -43,7 +43,7 @@
                     <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Main port" /><TextBox x:Name="MySqlPort" /></StackPanel>
                     <StackPanel Grid.Column="4"><TextBlock Classes="lbl" Text="Root password" /><TextBox x:Name="MySqlPassword" PasswordChar="•" /></StackPanel>
                 </Grid>
-                <TextBlock FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0" TextWrapping="Wrap"
+                <TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,6,0,0" TextWrapping="Wrap"
                            Text="The root password is only used for the clean shutdown and is stored in plain text in your user profile." />
             </StackPanel>
         </Border>
@@ -80,7 +80,7 @@
             </StackPanel>
         </Border>
 
-        <TextBlock x:Name="ErrorText" Foreground="#B42318" FontSize="12" IsVisible="False" TextWrapping="Wrap" />
+        <TextBlock x:Name="ErrorText" Classes="error" FontSize="12" IsVisible="False" TextWrapping="Wrap" />
 
         <Grid ColumnDefinitions="Auto,*,Auto">
             <Button Grid.Column="0" Classes="tool" Content="Defaults" Click="Defaults_Click" />

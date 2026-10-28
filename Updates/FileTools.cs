@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Text;
 
 namespace XamppControl.Updates;
 
@@ -164,6 +165,52 @@ public static class FileTools
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
             // Leftover staging folders are harmless: the next update deletes the folder before extracting again.
+        }
+    }
+
+    /// <summary>
+    /// Reads a config file as UTF-8, or as Latin-1 when it isn't valid UTF-8 (older files saved in the Windows code
+    /// page), so writing it back with the same encoding keeps every byte the panel didn't change.
+    /// </summary>
+    /// <param name="path">Full path of the file.</param>
+    /// <param name="encoding">Receives the encoding to write the file back with, with a BOM when it had one.</param>
+    /// <returns>The file's text without the BOM.</returns>
+    /// <exception cref="IOException">The file is missing or cannot be read.</exception>
+    public static string ReadText(string path, out Encoding encoding)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+        int start = hasBom ? 3 : 0;
+        try
+        {
+            string text = new UTF8Encoding(false, true).GetString(bytes, start, bytes.Length - start);
+            encoding = new UTF8Encoding(hasBom);
+            return text;
+        }
+        catch (DecoderFallbackException)
+        {
+            // Not valid UTF-8: Latin-1 maps each byte to one character, so the bytes come back unchanged on write.
+            encoding = Encoding.Latin1;
+            return Encoding.Latin1.GetString(bytes);
+        }
+    }
+
+    /// <summary>The line break a text uses: CRLF when it has any, otherwise LF.</summary>
+    /// <param name="text">A file's text.</param>
+    /// <returns>"\r\n" or "\n".</returns>
+    public static string LineBreakOf(string text) => text.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+
+    /// <summary>Deletes a file when it exists, never throwing.</summary>
+    /// <param name="file">The file to delete; a missing file is ignored.</param>
+    public static void TryDeleteFile(string file)
+    {
+        try
+        {
+            File.Delete(file);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            // A leftover temporary file is harmless: the next run overwrites it.
         }
     }
 

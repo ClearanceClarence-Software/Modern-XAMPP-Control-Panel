@@ -22,13 +22,13 @@
 
                 <StackPanel Spacing="6">
                     <CheckBox x:Name="LogToFileBox" Content="Also write the log to a file" />
-                    <TextBlock x:Name="LogPathText" Classes="mono" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="LogPathText" Classes="mono" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" />
                     <Button Classes="tool" Content="Open log folder" HorizontalAlignment="Left" Click="OpenFolder_Click" />
                 </StackPanel>
             </StackPanel>
         </Border>
 
-        <TextBlock x:Name="ErrorText" Foreground="#B42318" FontSize="12" IsVisible="False" />
+        <TextBlock x:Name="ErrorText" Classes="error" FontSize="12" IsVisible="False" />
 
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
             <Button Classes="tool" Width="90" Height="34" Content="Abort" Click="Abort_Click" />

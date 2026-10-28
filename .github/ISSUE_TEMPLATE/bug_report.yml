@@ -1,0 +1,37 @@
+name: Bug report
+description: Something in the panel doesn't work as it should.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Panel version
+      description: From the title bar, for example v0.2.0.
+    validations:
+      required: true
+  - type: input
+    id: xampp
+    attributes:
+      label: XAMPP, PHP and MariaDB versions
+      description: The header shows PHP; the module rows show Apache and MariaDB.
+      placeholder: XAMPP 8.2.12, PHP 8.5.12, MariaDB 12.3.3
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: >
+        Turn on "Show debug information" in Config, repeat the problem, then right-click the log and choose
+        "Copy all". Remove anything private, such as passwords or paths you don't want to share.
+      render: text
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2

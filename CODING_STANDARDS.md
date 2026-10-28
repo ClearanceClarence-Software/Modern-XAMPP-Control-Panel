@@ -965,7 +965,7 @@ catch (Exception ex) when (ex is SocketException
 }
 ```
 
-Not `catch (Exception)` because "something might go wrong". A `catch (Exception)` or a bare `catch` is for the few places where anything at all may fail and the app must carry on regardless, and the comment inside says that. In this code those places are: `RelayCommand.Execute` (an exception escaping an `async void` would crash the app), the status poll in `MainViewModel` (it tries again on the next tick), the button handlers and update runner in `UpdatesViewModel` (the failure goes to the status line), a module action in `ModuleViewModel`, `VersionSwitcher`'s swap (it puts the old build back), reading another program's version resource, and writing the log file.
+Not `catch (Exception)` because "something might go wrong". A `catch (Exception)` or a bare `catch` is for the few places where anything at all may fail and the app must carry on regardless, and the comment inside says that. In this code those places are: `RelayCommand.Execute` (an exception escaping an `async void` would crash the app), the status poll in `MainViewModel` (it tries again on the next tick), the button handlers and update runner in `UpdatesViewModel` and the Apply and Save of `SitesViewModel` and `PhpSettingsViewModel` (the failure goes to the status line), a module action in `ModuleViewModel`, `VersionSwitcher`'s swap (it puts the old build back), reading another program's version resource, and writing the log file.
 
 ### Translate at the boundary
 

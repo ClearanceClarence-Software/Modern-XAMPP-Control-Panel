@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest something the panel should do.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: The task or problem, not only the solution. For example "I switch PHP versions per project".
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could the panel help?
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you do it today?

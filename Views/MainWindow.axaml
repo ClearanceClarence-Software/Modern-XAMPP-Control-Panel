@@ -4,8 +4,8 @@
         x:Class="XamppControl.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="Modern XAMPP Control Panel"
-        Width="1040" Height="680"
-        MinWidth="900" MinHeight="560"
+        Width="1040" Height="720"
+        MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen">
 
     <Window.Styles>
@@ -20,39 +20,54 @@
     <Grid RowDefinitions="Auto,Auto,*" Margin="20,16,20,20">
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="14" Margin="0,0,0,14">
-            <!-- XAMPP icon from Assets\xampp.png when present; otherwise the fallback glyph -->
-            <Image x:Name="HeaderLogo" Width="44" Height="44" IsVisible="False"
-                   RenderOptions.BitmapInterpolationMode="HighQuality" />
-            <Border x:Name="HeaderFallback" Width="42" Height="42" CornerRadius="10" Background="{StaticResource AccentBrush}">
-                <Path Data="{StaticResource IconStack}" Width="22" Height="22" Stretch="Uniform"
-                      Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round" StrokeJoin="Round"
-                      HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-            <StackPanel VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Modern XAMPP Control Panel" FontSize="20" FontWeight="Bold" />
-                    <TextBlock Text="{Binding Version}" FontSize="13" Foreground="{StaticResource MutedBrush}"
-                               VerticalAlignment="Bottom" Margin="0,0,0,3" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{StaticResource MutedBrush}"
-                               VerticalAlignment="Center" />
-                    <Button Content="Change…" Click="ChangeRoot_Click" Padding="6,1" FontSize="11" MinHeight="0"
-                            Background="Transparent" BorderThickness="0" Foreground="#C2410C"
-                            ToolTip.Tip="Choose the XAMPP installation folder" />
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14">
+                <!-- XAMPP icon from Assets\xampp.png when present; otherwise the fallback glyph -->
+                <Image x:Name="HeaderLogo" Width="44" Height="44" IsVisible="False"
+                       RenderOptions.BitmapInterpolationMode="HighQuality" />
+                <Border x:Name="HeaderFallback" Width="42" Height="42" CornerRadius="10" Background="{DynamicResource AccentBrush}">
+                    <Path Data="{StaticResource IconStack}" Width="22" Height="22" Stretch="Uniform"
+                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round" StrokeJoin="Round"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Modern XAMPP Control Panel" FontSize="20" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Version}" FontSize="13" Foreground="{DynamicResource MutedBrush}"
+                                   VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                        <Button Content="{Binding AppUpdateText}" Command="{Binding OpenAppUpdateCommand}"
+                                IsVisible="{Binding HasAppUpdate}" VerticalAlignment="Bottom"
+                                Padding="8,1" FontSize="11" MinHeight="0" CornerRadius="10"
+                                Background="{DynamicResource UpdatePillBrush}" BorderBrush="{DynamicResource UpdatePillBorderBrush}"
+                                BorderThickness="1" Foreground="{DynamicResource LinkBrush}"
+                                ToolTip.Tip="Open the release page to download the new version" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource MutedBrush}"
+                                   VerticalAlignment="Center" />
+                        <Button Content="Change…" Click="ChangeRoot_Click" Padding="6,1" FontSize="11" MinHeight="0"
+                                Background="Transparent" BorderThickness="0" Foreground="{DynamicResource LinkBrush}"
+                                ToolTip.Tip="Choose the XAMPP installation folder" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
-        </StackPanel>
+
+            <!-- Light/dark switch: the moon shows in the light theme, the sun in the dark one -->
+            <Button Grid.Column="1" x:Name="ThemeToggle" Classes="ghost" Width="36" Height="36"
+                    VerticalAlignment="Center" Click="ThemeToggle_Click">
+                <Path x:Name="ThemeIcon" Classes="icon" Width="18" Height="18" Data="{StaticResource IconMoon}" />
+            </Button>
+        </Grid>
 
         <!-- Modules + side buttons -->
         <Grid Grid.Row="1" ColumnDefinitions="*,14,132">
 
+            <!-- The rows share the card's height evenly, so the card ends level with the last side button. -->
             <Border Grid.Column="0" Classes="card">
-                <StackPanel>
+                <DockPanel>
                     <!-- Column headers -->
-                    <Border Height="34" Padding="14,0" Background="#F8F9FA"
-                            BorderBrush="{StaticResource RowLineBrush}" BorderThickness="0,0,0,1">
+                    <Border DockPanel.Dock="Top" Height="34" Padding="14,0" Background="{DynamicResource HeaderBrush}"
+                            BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="58,150,64,92,*">
                             <TextBlock Grid.Column="0" Classes="colhead" Text="SERVICE" />
                             <TextBlock Grid.Column="1" Classes="colhead" Text="MODULE" />
@@ -63,17 +78,22 @@
                     </Border>
 
                     <ItemsControl ItemsSource="{Binding Modules}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ModuleViewModel">
-                                <Border Height="52" Padding="14,0" Opacity="{Binding RowOpacity}"
-                                        BorderBrush="{StaticResource RowLineBrush}" BorderThickness="0,0,0,1">
+                                <Border MinHeight="52" Padding="14,0" Opacity="{Binding RowOpacity}"
+                                        BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
                                     <Grid ColumnDefinitions="58,150,64,92,*">
 
                                         <CheckBox Grid.Column="0" VerticalAlignment="Center"
                                                   IsChecked="{Binding IsServiceInstalled, Mode=OneWay}"
                                                   IsEnabled="{Binding CanUseService}"
                                                   Command="{Binding ToggleServiceCommand}"
-                                                  ToolTip.Tip="{Binding ServiceTip}" />
+                                                  ToolTip.Tip="{Binding ServiceTip}" ToolTip.ShowOnDisabled="True" />
 
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                             <Ellipse Classes="dot"
@@ -82,14 +102,14 @@
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                                 <TextBlock Text="{Binding Subtitle}" FontSize="11"
-                                                           Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                                           Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
                                         </StackPanel>
 
                                         <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Pids}"
-                                                   VerticalAlignment="Center" Foreground="#3B4048" />
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource CellTextBrush}" />
                                         <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Ports}"
-                                                   VerticalAlignment="Center" Foreground="#3B4048" TextWrapping="Wrap" />
+                                                   VerticalAlignment="Center" Foreground="{DynamicResource CellTextBrush}" TextWrapping="Wrap" />
 
                                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                             <Button Classes="tool"
@@ -116,63 +136,72 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </StackPanel>
+                </DockPanel>
             </Border>
 
-            <!-- Side buttons -->
-            <DockPanel Grid.Column="2" LastChildFill="False">
-                <Button DockPanel.Dock="Bottom" Classes="side" Click="Quit_Click">
+            <!-- Side buttons: one column with even spacing; Quit is last, like the original panel -->
+            <StackPanel Grid.Column="2" Spacing="6">
+                <Button Classes="side" Click="Settings_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconGear}" />
+                        <TextBlock Text="Config" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Click="Netstat_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconGlobe}" />
+                        <TextBlock Text="Netstat" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Click="Updates_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconUpdate}" />
+                        <TextBlock Text="Versions" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Click="Sites_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconSites}" />
+                        <TextBlock Text="Sites" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Click="PhpSettings_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconCode}" />
+                        <TextBlock Text="PHP" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Command="{Binding ShellCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconShell}" />
+                        <TextBlock Text="Shell" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Command="{Binding ExplorerCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                        <TextBlock Text="Explorer" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Command="{Binding ServicesCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconServices}" />
+                        <TextBlock Text="Services" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Command="{Binding HelpCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconHelp}" />
+                        <TextBlock Text="Help" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Click="Quit_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconQuit}" />
                         <TextBlock Text="Quit" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
-
-                <StackPanel DockPanel.Dock="Top" Spacing="5">
-                    <Button Classes="side" Click="Settings_Click">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Path Classes="icon" Data="{StaticResource IconGear}" />
-                            <TextBlock Text="Config" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="side" Click="Netstat_Click">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Path Classes="icon" Data="{StaticResource IconGlobe}" />
-                            <TextBlock Text="Netstat" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="side" Click="Updates_Click">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Path Classes="icon" Data="{StaticResource IconUpdate}" />
-                            <TextBlock Text="Versions" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="side" Command="{Binding ShellCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Path Classes="icon" Data="{StaticResource IconShell}" />
-                            <TextBlock Text="Shell" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="side" Command="{Binding ExplorerCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Path Classes="icon" Data="{StaticResource IconFolder}" />
-                            <TextBlock Text="Explorer" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="side" Command="{Binding ServicesCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Path Classes="icon" Data="{StaticResource IconServices}" />
-                            <TextBlock Text="Services" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="side" Command="{Binding HelpCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Path Classes="icon" Data="{StaticResource IconHelp}" />
-                            <TextBlock Text="Help" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </DockPanel>
+            </StackPanel>
         </Grid>
 
         <!-- Log -->
@@ -190,10 +219,16 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:LogEntry">
                         <Grid ColumnDefinitions="Auto,Auto,*">
-                            <TextBlock Grid.Column="0" Classes="logtext" Text="{Binding Time}" Foreground="#7A808A" Margin="0,0,14,0" />
-                            <TextBlock Grid.Column="1" Classes="logtext" Text="{Binding Source}" Foreground="{Binding SourceBrush}"
+                            <TextBlock Grid.Column="0" Classes="logtext" Text="{Binding Time}" Foreground="{DynamicResource LogTimeBrush}" Margin="0,0,14,0" />
+                            <TextBlock Grid.Column="1" Classes="logtext source" Text="{Binding Source}"
+                                       Classes.apache="{Binding IsApache}" Classes.mysql="{Binding IsMySql}"
+                                       Classes.filezilla="{Binding IsFileZilla}" Classes.mercury="{Binding IsMercury}"
+                                       Classes.tomcat="{Binding IsTomcat}" Classes.update="{Binding IsUpdate}"
+                                       Classes.sites="{Binding IsSites}" Classes.php="{Binding IsPhp}"
                                        MinWidth="90" Margin="0,0,14,0" />
-                            <TextBlock Grid.Column="2" Classes="logtext" Text="{Binding Message}" Foreground="{Binding MessageBrush}"
+                            <TextBlock Grid.Column="2" Classes="logtext" Text="{Binding Message}"
+                                       Classes.error="{Binding IsError}" Classes.warn="{Binding IsWarn}"
+                                       Classes.ok="{Binding IsOk}" Classes.debug="{Binding IsDebug}"
                                        TextWrapping="Wrap" />
                         </Grid>
                     </DataTemplate>

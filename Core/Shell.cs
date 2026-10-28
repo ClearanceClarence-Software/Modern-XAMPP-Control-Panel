@@ -205,14 +205,19 @@ public static class Shell
     /// <param name="exe">Full path of the executable, or a name on PATH.</param>
     /// <param name="arguments">The command line after the exe, already quoted.</param>
     /// <param name="workingDirectory">The folder the process runs in.</param>
+    /// <param name="showWindow">True shows the program's window, for installers; false runs it hidden.</param>
     /// <returns>The exit code; -1 when no process was started; -2 when the user declined the UAC prompt.</returns>
-    public static async Task<int> RunElevatedAsync(string exe, string arguments, string workingDirectory)
+    public static async Task<int> RunElevatedAsync(
+        string exe,
+        string arguments,
+        string workingDirectory,
+        bool showWindow = false)
     {
         var startInfo = new ProcessStartInfo(exe, arguments)
         {
             UseShellExecute = true,
             Verb = "runas",
-            WindowStyle = ProcessWindowStyle.Hidden,
+            WindowStyle = showWindow ? ProcessWindowStyle.Normal : ProcessWindowStyle.Hidden,
             WorkingDirectory = workingDirectory,
         };
         try
