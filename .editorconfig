@@ -1,0 +1,162 @@
+# EditorConfig for Modern XAMPP Control Panel: https://editorconfig.org
+# Rider, Visual Studio and VS Code read this; dotnet format applies the C# rules.
+# Same house rules as SpaceSharp.
+root = true
+
+# ------------------------------------------------------------------ everything
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Windows reads these with CRLF (PowerShell, the solution, batch files); .gitattributes keeps them that way too.
+[*.{sln,ps1,cmd,bat}]
+end_of_line = crlf
+
+# Two trailing spaces are a hard line break in Markdown.
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+[*.{csproj,pubxml,props,targets,xml,manifest,resx,json,yml,yaml,html,js,css,svg}]
+indent_size = 2
+
+[*.{xaml,axaml}]
+indent_size = 4
+
+# ------------------------------------------------------------------ C#
+[*.cs]
+max_line_length = 120
+
+# Organization
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+csharp_using_directive_placement = outside_namespace:warning
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_prefer_braces = when_multiline:suggestion
+
+# Braces on their own line (Allman), as the code is written
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_between_query_expression_clauses = true
+
+# Indentation and spacing
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = one_less_than_current
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_after_colon_in_inheritance_clause = true
+csharp_preserve_single_line_statements = true
+csharp_preserve_single_line_blocks = true
+
+# var: for built-in types and when the type is obvious, so declarations stay short
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:silent
+
+# Modern C# that the code already uses
+csharp_style_expression_bodied_methods = when_on_single_line:silent
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_pattern_matching = true:silent
+csharp_style_inlined_variable_declaration = true:suggestion
+csharp_style_throw_expression = true:suggestion
+csharp_style_conditional_delegate_call = true:suggestion
+csharp_style_prefer_null_check_over_type_check = true:suggestion
+csharp_style_prefer_primary_constructors = false:silent
+csharp_prefer_simple_using_statement = true:suggestion
+csharp_prefer_static_local_function = true:suggestion
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_prefer_conditional_expression_over_return = false:silent
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+dotnet_style_readonly_field = true:suggestion
+dotnet_code_quality_unused_parameters = non_public:suggestion
+dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary:silent
+dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:silent
+
+# Naming: PascalCase types and members, _camelCase private fields, camelCase locals and parameters
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_naming_style.camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.interface_prefix.capitalization = pascal_case
+dotnet_naming_style.interface_prefix.required_prefix = I
+
+dotnet_naming_symbols.types_and_members.applicable_kinds = namespace, class, struct, enum, delegate, event, method, property
+dotnet_naming_symbols.types_and_members.applicable_accessibilities = *
+dotnet_naming_rule.types_and_members_pascal.symbols = types_and_members
+dotnet_naming_rule.types_and_members_pascal.style = pascal_case
+dotnet_naming_rule.types_and_members_pascal.severity = suggestion
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_rule.interfaces_prefixed.symbols = interfaces
+dotnet_naming_rule.interfaces_prefixed.style = interface_prefix
+dotnet_naming_rule.interfaces_prefixed.severity = suggestion
+
+# Constants first: a const is also a field, and the first matching rule wins.
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_rule.constants_pascal.symbols = constants
+dotnet_naming_rule.constants_pascal.style = pascal_case
+dotnet_naming_rule.constants_pascal.severity = suggestion
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, private_protected
+dotnet_naming_symbols.private_fields.required_modifiers =
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel_case
+dotnet_naming_rule.private_fields_underscore.severity = suggestion
+
+dotnet_naming_symbols.locals_and_parameters.applicable_kinds = parameter, local
+dotnet_naming_rule.locals_camel.symbols = locals_and_parameters
+dotnet_naming_rule.locals_camel.style = camel_case
+dotnet_naming_rule.locals_camel.severity = suggestion
+
+# Diagnostics worth seeing in the editor
+dotnet_diagnostic.IDE0005.severity = suggestion   # unnecessary using
+dotnet_diagnostic.IDE0051.severity = warning      # unused private member
+dotnet_diagnostic.IDE0052.severity = warning      # private member written, never read
+dotnet_diagnostic.IDE0060.severity = suggestion   # unused parameter
+dotnet_diagnostic.CA1416.severity = none          # platform compatibility: this is a Windows-only app
+dotnet_diagnostic.CA2007.severity = none          # ConfigureAwait: UI code wants the UI context back
+
+# Analyzer rules turned off on purpose (AnalysisLevel is latest-recommended, which enables these by default)
+dotnet_diagnostic.CA1305.severity = none          # IFormatProvider on every ToString: the log and UI format for the user's culture on purpose; build dates pass InvariantCulture by hand
+dotnet_diagnostic.CA1304.severity = none          # same, for ToUpper/ToLower on display text
+dotnet_diagnostic.CA1310.severity = none          # StartsWith without StringComparison: path and version checks already say Ordinal/OrdinalIgnoreCase where it matters
+dotnet_diagnostic.CA1861.severity = none          # "cache constant arrays": process-name and port lists are a handful of items, built per status check
+dotnet_diagnostic.CA1822.severity = suggestion    # "could be static": helpful, not worth a warning
+dotnet_diagnostic.CA1805.severity = none          # "initialized to its default": settings list every default explicitly so the file reads as documentation
+dotnet_diagnostic.CA1054.severity = none          # URI parameters as strings: download URLs come from JSON feeds as text
+dotnet_diagnostic.CA1056.severity = none          # URI properties as strings: same
+dotnet_diagnostic.CA1819.severity = none          # properties returning arrays: drivers expose small fixed process-name lists
+dotnet_diagnostic.CA2000.severity = none          # dispose before losing scope: Avalonia owns the asset streams handed to WindowIcon and Bitmap
+
+# Generated code: leave it alone
+[*.{g.cs,g.i.cs,Designer.cs}]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

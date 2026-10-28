@@ -1,0 +1,204 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:XamppControl.ViewModels"
+        x:Class="XamppControl.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Modern XAMPP Control Panel"
+        Width="1040" Height="680"
+        MinWidth="900" MinHeight="560"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <!-- Config/Logs menus: each generated MenuItem binds to a FileLink.
+             Scoped to MenuFlyoutPresenter so the log's context menu is unaffected. -->
+        <Style Selector="MenuFlyoutPresenter > MenuItem" x:DataType="vm:FileLink">
+            <Setter Property="Header" Value="{Binding Label}" />
+            <Setter Property="Command" Value="{Binding OpenCommand}" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*" Margin="20,16,20,20">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="14" Margin="0,0,0,14">
+            <!-- XAMPP icon from Assets\xampp.png when present; otherwise the fallback glyph -->
+            <Image x:Name="HeaderLogo" Width="44" Height="44" IsVisible="False"
+                   RenderOptions.BitmapInterpolationMode="HighQuality" />
+            <Border x:Name="HeaderFallback" Width="42" Height="42" CornerRadius="10" Background="{StaticResource AccentBrush}">
+                <Path Data="{StaticResource IconStack}" Width="22" Height="22" Stretch="Uniform"
+                      Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round" StrokeJoin="Round"
+                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Modern XAMPP Control Panel" FontSize="20" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Version}" FontSize="13" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Center" />
+                    <Button Content="Change…" Click="ChangeRoot_Click" Padding="6,1" FontSize="11" MinHeight="0"
+                            Background="Transparent" BorderThickness="0" Foreground="#C2410C"
+                            ToolTip.Tip="Choose the XAMPP installation folder" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Modules + side buttons -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,14,132">
+
+            <Border Grid.Column="0" Classes="card">
+                <StackPanel>
+                    <!-- Column headers -->
+                    <Border Height="34" Padding="14,0" Background="#F8F9FA"
+                            BorderBrush="{StaticResource RowLineBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="58,150,64,92,*">
+                            <TextBlock Grid.Column="0" Classes="colhead" Text="SERVICE" />
+                            <TextBlock Grid.Column="1" Classes="colhead" Text="MODULE" />
+                            <TextBlock Grid.Column="2" Classes="colhead" Text="PID(S)" />
+                            <TextBlock Grid.Column="3" Classes="colhead" Text="PORT(S)" />
+                            <TextBlock Grid.Column="4" Classes="colhead" Text="ACTIONS" />
+                        </Grid>
+                    </Border>
+
+                    <ItemsControl ItemsSource="{Binding Modules}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ModuleViewModel">
+                                <Border Height="52" Padding="14,0" Opacity="{Binding RowOpacity}"
+                                        BorderBrush="{StaticResource RowLineBrush}" BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="58,150,64,92,*">
+
+                                        <CheckBox Grid.Column="0" VerticalAlignment="Center"
+                                                  IsChecked="{Binding IsServiceInstalled, Mode=OneWay}"
+                                                  IsEnabled="{Binding CanUseService}"
+                                                  Command="{Binding ToggleServiceCommand}"
+                                                  ToolTip.Tip="{Binding ServiceTip}" />
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <Ellipse Classes="dot"
+                                                     Classes.running="{Binding IsRunning}"
+                                                     Classes.busy="{Binding IsBusy}" />
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Subtitle}" FontSize="11"
+                                                           Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Pids}"
+                                                   VerticalAlignment="Center" Foreground="#3B4048" />
+                                        <TextBlock Grid.Column="3" Classes="mono" Text="{Binding Ports}"
+                                                   VerticalAlignment="Center" Foreground="#3B4048" TextWrapping="Wrap" />
+
+                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Button Classes="tool"
+                                                    Classes.start="{Binding ShowStart}"
+                                                    Classes.stop="{Binding ShowStop}"
+                                                    Content="{Binding ActionLabel}"
+                                                    Command="{Binding ActionCommand}" />
+                                            <Button Classes="tool" Content="Admin" Command="{Binding AdminCommand}" />
+
+                                            <Button Classes="tool" Content="Config" IsEnabled="{Binding HasConfig}">
+                                                <Button.Flyout>
+                                                    <MenuFlyout Placement="BottomEdgeAlignedLeft" ItemsSource="{Binding ConfigFiles}" />
+                                                </Button.Flyout>
+                                            </Button>
+
+                                            <Button Classes="tool" Content="Logs" IsEnabled="{Binding HasLogs}">
+                                                <Button.Flyout>
+                                                    <MenuFlyout Placement="BottomEdgeAlignedLeft" ItemsSource="{Binding LogFiles}" />
+                                                </Button.Flyout>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Side buttons -->
+            <DockPanel Grid.Column="2" LastChildFill="False">
+                <Button DockPanel.Dock="Bottom" Classes="side" Click="Quit_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconQuit}" />
+                        <TextBlock Text="Quit" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <StackPanel DockPanel.Dock="Top" Spacing="5">
+                    <Button Classes="side" Click="Settings_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Path Classes="icon" Data="{StaticResource IconGear}" />
+                            <TextBlock Text="Config" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="side" Click="Netstat_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Path Classes="icon" Data="{StaticResource IconGlobe}" />
+                            <TextBlock Text="Netstat" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="side" Click="Updates_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Path Classes="icon" Data="{StaticResource IconUpdate}" />
+                            <TextBlock Text="Versions" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="side" Command="{Binding ShellCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Path Classes="icon" Data="{StaticResource IconShell}" />
+                            <TextBlock Text="Shell" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="side" Command="{Binding ExplorerCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                            <TextBlock Text="Explorer" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="side" Command="{Binding ServicesCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Path Classes="icon" Data="{StaticResource IconServices}" />
+                            <TextBlock Text="Services" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Classes="side" Command="{Binding HelpCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Path Classes="icon" Data="{StaticResource IconHelp}" />
+                            <TextBlock Text="Help" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+
+        <!-- Log -->
+        <Border Grid.Row="2" Classes="card" Margin="0,14,0,0">
+            <ListBox x:Name="LogList" Classes="log" ItemsSource="{Binding Log}" FontSize="{Binding LogFontSize}"
+                     Background="Transparent" Padding="0,6" SelectionMode="Multiple">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Copy selected" Click="CopySelected_Click" />
+                        <MenuItem Header="Copy all" Click="CopyAll_Click" />
+                        <Separator />
+                        <MenuItem Header="Clear" Command="{Binding ClearLogCommand}" />
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LogEntry">
+                        <Grid ColumnDefinitions="Auto,Auto,*">
+                            <TextBlock Grid.Column="0" Classes="logtext" Text="{Binding Time}" Foreground="#7A808A" Margin="0,0,14,0" />
+                            <TextBlock Grid.Column="1" Classes="logtext" Text="{Binding Source}" Foreground="{Binding SourceBrush}"
+                                       MinWidth="90" Margin="0,0,14,0" />
+                            <TextBlock Grid.Column="2" Classes="logtext" Text="{Binding Message}" Foreground="{Binding MessageBrush}"
+                                       TextWrapping="Wrap" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</Window>

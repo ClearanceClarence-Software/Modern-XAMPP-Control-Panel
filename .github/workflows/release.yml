@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes
+
+      - name: Publish
+        run: dotnet publish -p:PublishProfile=win-x64
+
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive bin/publish/win-x64/XamppControl.exe "ModernXamppControlPanel-${{ github.ref_name }}-win-x64.zip"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ModernXamppControlPanel-*-win-x64.zip
+          generate_release_notes: true

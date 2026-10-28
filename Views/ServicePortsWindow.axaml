@@ -1,0 +1,93 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="XamppControl.Views.ServicePortsWindow"
+        Title="Service and Port Settings"
+        Width="560" SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.lbl">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="18" Spacing="12">
+        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                   Text="These tell the Control Panel which service names and ports to use for its checks, links and service commands. They don't change the servers' own config files: change the port there too (httpd.conf, my.ini, …)." />
+
+        <!-- Apache -->
+        <Border Classes="card" Padding="16,12">
+            <StackPanel>
+                <TextBlock Classes="section" Text="Apache" />
+                <Grid ColumnDefinitions="2*,12,*,12,*">
+                    <StackPanel Grid.Column="0"><TextBlock Classes="lbl" Text="Service name" /><TextBox x:Name="ApacheService" /></StackPanel>
+                    <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Main port" /><TextBox x:Name="ApachePort" /></StackPanel>
+                    <StackPanel Grid.Column="4"><TextBlock Classes="lbl" Text="SSL port" /><TextBox x:Name="ApacheSslPort" /></StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- MySQL -->
+        <Border Classes="card" Padding="16,12">
+            <StackPanel>
+                <TextBlock Classes="section" Text="MySQL" />
+                <Grid ColumnDefinitions="2*,12,*,12,*">
+                    <StackPanel Grid.Column="0"><TextBlock Classes="lbl" Text="Service name" /><TextBox x:Name="MySqlService" /></StackPanel>
+                    <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Main port" /><TextBox x:Name="MySqlPort" /></StackPanel>
+                    <StackPanel Grid.Column="4"><TextBlock Classes="lbl" Text="Root password" /><TextBox x:Name="MySqlPassword" PasswordChar="•" /></StackPanel>
+                </Grid>
+                <TextBlock FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0" TextWrapping="Wrap"
+                           Text="The root password is only used for the clean shutdown and is stored in plain text in your user profile." />
+            </StackPanel>
+        </Border>
+
+        <!-- FileZilla + Tomcat -->
+        <Grid ColumnDefinitions="*,12,*">
+            <Border Grid.Column="0" Classes="card" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Classes="section" Text="FileZilla" />
+                    <Grid ColumnDefinitions="*,12,*">
+                        <StackPanel Grid.Column="0"><TextBlock Classes="lbl" Text="Main port" /><TextBox x:Name="FileZillaPort" /></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Admin port" /><TextBox x:Name="FileZillaAdminPort" /></StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Classes="card" Padding="16,12">
+                <StackPanel>
+                    <TextBlock Classes="section" Text="Tomcat" />
+                    <Grid ColumnDefinitions="*,8,*,8,*">
+                        <StackPanel Grid.Column="0"><TextBlock Classes="lbl" Text="Main" /><TextBox x:Name="TomcatPort" /></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Shutdown" /><TextBox x:Name="TomcatShutdownPort" /></StackPanel>
+                        <StackPanel Grid.Column="4"><TextBlock Classes="lbl" Text="AJP" /><TextBox x:Name="TomcatAjpPort" /></StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Mercury -->
+        <Border Classes="card" Padding="16,12">
+            <StackPanel>
+                <TextBlock Classes="section" Text="Mercury" />
+                <TextBlock Classes="lbl" Text="Ports (comma separated)" />
+                <TextBox x:Name="MercuryPorts" />
+            </StackPanel>
+        </Border>
+
+        <TextBlock x:Name="ErrorText" Foreground="#B42318" FontSize="12" IsVisible="False" TextWrapping="Wrap" />
+
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <Button Grid.Column="0" Classes="tool" Content="Defaults" Click="Defaults_Click" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <Button Classes="tool" Width="90" Height="34" Content="Abort" Click="Abort_Click" />
+                <Button Classes="tool" Width="90" Height="34" Content="Save" FontWeight="SemiBold" Click="Save_Click" />
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</Window>

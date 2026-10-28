@@ -1,0 +1,93 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="XamppControl.Views.SettingsWindow"
+        Title="Configuration of Control Panel"
+        Width="560" SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="18" Spacing="14">
+
+        <!-- Paths -->
+        <Border Classes="card" Padding="16">
+            <StackPanel Spacing="12">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="XAMPP installation folder" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,8,Auto">
+                        <TextBox x:Name="RootBox" Grid.Column="0" Watermark="C:\xampp" />
+                        <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseRoot_Click" />
+                    </Grid>
+                    <TextBlock x:Name="RootHint" FontSize="12" Foreground="{StaticResource MutedBrush}" />
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Editor" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,8,Auto">
+                        <TextBox x:Name="EditorBox" Grid.Column="0" Watermark="notepad.exe" />
+                        <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseEditor_Click" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Browser (empty = system default)" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,8,Auto">
+                        <TextBox x:Name="BrowserBox" Grid.Column="0" />
+                        <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseBrowser_Click" />
+                    </Grid>
+                </StackPanel>
+
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Autostart -->
+        <Border Classes="card" Padding="16,12">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Autostart of modules" FontWeight="SemiBold" />
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
+                    <CheckBox x:Name="AutoApache" Grid.Row="0" Grid.Column="0" Content="Apache" />
+                    <CheckBox x:Name="AutoFileZilla" Grid.Row="0" Grid.Column="1" Content="FileZilla" />
+                    <CheckBox x:Name="AutoTomcat" Grid.Row="0" Grid.Column="2" Content="Tomcat" />
+                    <CheckBox x:Name="AutoMySql" Grid.Row="1" Grid.Column="0" Content="MySQL" />
+                    <CheckBox x:Name="AutoMercury" Grid.Row="1" Grid.Column="1" Content="Mercury" />
+                </Grid>
+                <TextBlock Text="Selected modules will be started on next launch of the Control Panel."
+                           FontSize="12" Foreground="#1D4ED8" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <!-- Options -->
+        <StackPanel Spacing="2" Margin="4,0">
+            <CheckBox x:Name="StartMinimizedBox" Content="Start Control Panel minimized" />
+            <CheckBox x:Name="TomcatWindowBox" Content="Enable Tomcat output window" />
+            <CheckBox x:Name="CheckPortsBox" Content="Check default ports on startup" />
+            <CheckBox x:Name="DebugBox" Content="Show debug information" />
+        </StackPanel>
+
+        <!-- Sub-dialogs -->
+        <Grid ColumnDefinitions="*,10,*" RowDefinitions="Auto,8,Auto">
+            <Button Grid.Row="0" Grid.Column="0" Classes="side" HorizontalContentAlignment="Center"
+                    Content="User Defined Files" Click="UserFiles_Click" />
+            <Button Grid.Row="0" Grid.Column="2" Classes="side" HorizontalContentAlignment="Center"
+                    Content="Service and Port Settings" Click="ServicePorts_Click" />
+            <Button Grid.Row="2" Grid.Column="0" Classes="side" HorizontalContentAlignment="Center"
+                    Content="Log Options" Click="LogOptions_Click" />
+        </Grid>
+
+        <!-- Abort / Save -->
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,4,0,0">
+            <Button Classes="tool" Width="110" Height="34" Click="Abort_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Data="M6,6 L18,18 M18,6 L6,18" Width="11" Height="11" Stretch="Uniform"
+                          Stroke="#DC2626" StrokeThickness="2.6" StrokeLineCap="Round" />
+                    <TextBlock Text="Abort" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Classes="tool" Width="110" Height="34" Click="Save_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Path Data="M4,12 L10,18 L20,6" Width="13" Height="11" Stretch="Uniform"
+                          Stroke="#16A34A" StrokeThickness="2.6" StrokeLineCap="Round" StrokeJoin="Round" />
+                    <TextBlock Text="Save" VerticalAlignment="Center" FontWeight="SemiBold" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </StackPanel>
+</Window>
