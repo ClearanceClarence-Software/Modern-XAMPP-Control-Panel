@@ -4,3 +4,6 @@ obj/
 .vs/
 *.user
 *.DotSettings.user
+
+# Release packages from tools/release.ps1
+artifacts/

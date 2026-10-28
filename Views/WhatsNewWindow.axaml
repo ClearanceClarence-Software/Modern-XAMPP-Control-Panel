@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:XamppControl.ViewModels"
+        x:Class="XamppControl.Views.WhatsNewWindow"
+        x:DataType="vm:MainViewModel"
+        Title="What's new"
+        Width="620" Height="560" MinWidth="460" MinHeight="320"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="{Binding AppUpdateText}" FontSize="18" FontWeight="Bold" />
+            <TextBlock Classes="muted" FontSize="12" Text="{Binding AppUpdateSubtitle}" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Classes="card" Padding="16,12">
+            <ScrollViewer>
+                <SelectableTextBlock Text="{Binding AppUpdateNotes}" TextWrapping="Wrap" LineHeight="21"
+                                     Margin="0,0,10,0" />
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,8,Auto" Margin="0,14,0,0">
+            <TextBlock Grid.Column="0" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
+                       Text="Download the zip from the release page and replace XamppControl.exe; your settings stay." />
+            <Button Grid.Column="1" Classes="accent" Content="Open release page" Click="Download_Click" />
+            <Button Grid.Column="3" Classes="tool" Content="Later" Width="90" Click="Close_Click" />
+        </Grid>
+    </Grid>
+</Window>

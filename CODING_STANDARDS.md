@@ -1029,7 +1029,7 @@ A change that is "only renames" can still break the app at runtime or break exis
 | Folders on disk | `versions\php`, `versions\mariadb`, `_update_php`, `_update_mysql`, `mysql_dumps` | installed versions and dumps stop being found on existing installs |
 | Release feeds | the JSON names read from releases.json and the MariaDB REST API (`zip`, `path`, `sha256`, `file_name`, `release_status`) | updates find no builds |
 | XAMPP's own files | module names, `*_start.bat`/`*_stop.bat`, `php8apache2_4.dll`, my.ini keys | modules stop starting or detecting |
-| Release workflow | the `XamppControl.exe` name and the zip name in `.github/workflows/release.yml` and the README | the release has no file, or the download instructions are wrong |
+| Release script | the `XamppControl.exe` name and the zip name in `tools/release.ps1` and the README | the release has no file, or the download instructions are wrong |
 | P/Invoke | signatures, struct offsets and constants in `PortTable` and `ProcessScan` | Windows does not care what the names say; the offsets must match |
 
 Renaming a parameter is safe only after searching for `name:` uses of it; a named argument in a caller is a compile error you will not see until the caller builds.
@@ -1058,4 +1058,4 @@ Before a pull request, run `dotnet format --verify-no-changes` and `dotnet build
 - Does every `catch` that swallows say why? Does every method of substance have a one-sentence summary?
 - Does every documented method have a `<param>` per parameter in order, a `<returns>` when it returns, a `<typeparam>` when generic? Does each tag say something the name does not?
 - Does any comment describe the code as it used to be?
-- Did a rename touch XAML, settings keys, folder names, feed names, the release workflow or P/Invoke?
+- Did a rename touch XAML, settings keys, folder names, feed names, the release script or P/Invoke?

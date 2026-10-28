@@ -1,0 +1,27 @@
+name: Build
+
+# Checks that every push and pull request builds cleanly. Releases are built, signed and uploaded on the
+# maintainer's PC with tools/release.ps1, so this workflow never publishes anything.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes
+
+      - name: Build
+        run: dotnet build --configuration Release

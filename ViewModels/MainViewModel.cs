@@ -17,6 +17,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     private string _subtitle = "";
     private int _logFontSize;
     private AppRelease? _appUpdate;
+    private string _appUpdateNotes = "";
 
     /// <summary>Loads the modules and runs the startup sequence in the background, which then starts polling.</summary>
     /// <param name="settings">The loaded settings; kept and updated in place when the Config dialog saves.</param>
@@ -96,6 +97,19 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     /// <summary>The header's update link, e.g. "v0.2.1 is available"; empty without an update.</summary>
     public string AppUpdateText => AppUpdate is { } update ? $"{update.Version} is available" : "";
 
+    /// <summary>The line under the What's new title, naming the running version.</summary>
+    public string AppUpdateSubtitle => $"You have {BuildInfo.Version}. Here's what changed since then.";
+
+    /// <summary>
+    /// What changed since the running version: the notes of every newer release, newest first, each under its
+    /// version; empty without an update.
+    /// </summary>
+    public string AppUpdateNotes
+    {
+        get => _appUpdateNotes;
+        private set => SetField(ref _appUpdateNotes, value);
+    }
+
     /// <summary>Opens the release page of <see cref="AppUpdate"/>, or the releases list when there is none.</summary>
     public RelayCommand OpenAppUpdateCommand { get; }
 
@@ -173,9 +187,10 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     /// <returns>A task that completes when the check has answered, failed or timed out.</returns>
     private async Task CheckForAppUpdateAsync()
     {
+        List<AppRelease> newerReleases;
         try
         {
-            AppUpdate = await AppUpdateCheck.FindNewerAsync(BuildInfo.Version);
+            newerReleases = await AppUpdateCheck.FindNewerAsync(BuildInfo.Version);
         }
         catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException)
         {
@@ -184,13 +199,18 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             return;
         }
 
-        if (AppUpdate is { } update)
+        if (newerReleases.Count == 0)
         {
-            Write("update",
-                $"{BuildInfo.AppName} {update.Version} is available (you have {BuildInfo.Version}). " +
-                "Click the link in the header to download it.",
-                LogLevel.Ok);
+            return;
         }
+
+        AppUpdateNotes = string.Join("\n\n", newerReleases.Select(release =>
+            release.Notes.Length > 0 ? $"{release.Version}\n{release.Notes}" : release.Version));
+        AppUpdate = newerReleases[0];
+        Write("update",
+            $"{BuildInfo.AppName} {AppUpdate.Version} is available (you have {BuildInfo.Version}). " +
+            "Click the link in the header to see what's new.",
+            LogLevel.Ok);
     }
 
     /// <summary>Logs the XAMPP folder and which modules it has, or an error when the folder holds no XAMPP.</summary>

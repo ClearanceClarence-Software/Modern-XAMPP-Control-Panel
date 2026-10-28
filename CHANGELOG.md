@@ -1,7 +1,21 @@
 # Changelog
 
-All notable changes to Modern XAMPP Control Panel. The release workflow copies the section for each version into
+All notable changes to Modern XAMPP Control Panel. The release script copies the section for each version into
 its GitHub release.
+
+## [0.2.1] - 2026-10-28
+
+### Added
+
+- **What's new window.** The update link in the header opens the release notes of every version since the one
+  you have, newest first, with a button to the download page.
+- `SECURITY.md`: how to report a vulnerability privately, and what counts.
+
+### Changed
+
+- Releases are code-signed with a Certum certificate. They are built, signed and uploaded as drafts on the
+  maintainer's PC (`tools/release.ps1`); GitHub Actions now only checks that each push builds.
+- The README covers signing, security reports and the update notice, and has a new social preview image.
 
 ## [0.2.0] - 2026-10-28
 
@@ -45,5 +59,6 @@ First release: the XAMPP-style panel with clean MySQL/MariaDB shutdown, explaine
 conflict finder, Netstat, XAMPP-style configuration, and installing, switching and rolling back PHP and
 MariaDB versions.
 
+[0.2.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.2.1
 [0.2.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.1.0

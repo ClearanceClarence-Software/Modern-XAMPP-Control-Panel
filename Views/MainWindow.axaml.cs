@@ -204,6 +204,14 @@ public partial class MainWindow : Window
         await new UpdatesWindow { DataContext = new UpdatesViewModel(viewModel) }.ShowDialog(this);
     }
 
+    private async void AppUpdate_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await new WhatsNewWindow { DataContext = viewModel }.ShowDialog(this);
+        }
+    }
+
     private void Quit_Click(object? sender, RoutedEventArgs e) => Close();
 
     /// <summary>Switches to the other theme and remembers it, the same as choosing it in Config.</summary>

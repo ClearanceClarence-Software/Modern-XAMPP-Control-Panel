@@ -35,12 +35,12 @@
                         <TextBlock Text="Modern XAMPP Control Panel" FontSize="20" FontWeight="Bold" />
                         <TextBlock Text="{Binding Version}" FontSize="13" Foreground="{DynamicResource MutedBrush}"
                                    VerticalAlignment="Bottom" Margin="0,0,0,3" />
-                        <Button Content="{Binding AppUpdateText}" Command="{Binding OpenAppUpdateCommand}"
+                        <Button Content="{Binding AppUpdateText}" Click="AppUpdate_Click"
                                 IsVisible="{Binding HasAppUpdate}" VerticalAlignment="Bottom"
                                 Padding="8,1" FontSize="11" MinHeight="0" CornerRadius="10"
                                 Background="{DynamicResource UpdatePillBrush}" BorderBrush="{DynamicResource UpdatePillBorderBrush}"
                                 BorderThickness="1" Foreground="{DynamicResource LinkBrush}"
-                                ToolTip.Tip="Open the release page to download the new version" />
+                                ToolTip.Tip="See what's new and download it" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource MutedBrush}"

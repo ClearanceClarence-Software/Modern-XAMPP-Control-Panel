@@ -8,7 +8,7 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>XamppControl</AssemblyName>
     <RootNamespace>XamppControl</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Product>Modern XAMPP Control Panel</Product>
     <Authors>ClearanceClarence</Authors>
     <Company>ClearanceClarence</Company>

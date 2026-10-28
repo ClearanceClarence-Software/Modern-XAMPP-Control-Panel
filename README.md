@@ -93,8 +93,9 @@ upload size, post size, execution time, input vars, display errors, time zone) a
 extension in `php\ext` with a check box. Saving keeps the previous file as `php.ini.bak` and
 restarts Apache.
 
-**Update notice.** The panel checks GitHub for a newer release when it starts and shows a link in
-the header when there is one. You can turn this off in Config.
+**Update notice.** The panel checks GitHub for newer releases when it starts. When there is one, a
+link in the header opens the release notes of every version since yours, with a button to download
+the newest. You can turn this off in Config.
 
 **Netstat.** Listening TCP sockets with address, port, PID and process, refreshed every 3 seconds.
 New sockets show in green, closed ones in dark red, and XAMPP's own processes are marked.
@@ -116,7 +117,8 @@ It's a single self-contained exe: no installer and no .NET runtime to install. S
 
 > [!TIP]
 > Windows SmartScreen may warn about an unrecognized app the first time. Choose
-> **More info › Run anyway**.
+> **More info › Run anyway**. Releases are code-signed; each release's notes name the signer, and
+> [docs/code-signing.md](docs/code-signing.md) shows how to check the signature.
 
 ### Requirements
 
@@ -202,9 +204,9 @@ dotnet publish -p:PublishProfile=win-x64
 # bin\publish\win-x64\XamppControl.exe
 ```
 
-To release, add the version's section to [CHANGELOG.md](CHANGELOG.md), set `<Version>` in
-`XamppControl.csproj`, and push a tag like `v0.2.0`. GitHub Actions builds the exe and publishes it as a
-release, with that changelog section as the release notes.
+Releases are built, signed with a Certum code-signing certificate and uploaded as a draft on the
+maintainer's PC with `tools/release.ps1`; GitHub Actions only checks that each push builds. See
+[docs/code-signing.md](docs/code-signing.md).
 
 ## Contributing
 
@@ -219,6 +221,11 @@ dotnet build
 ```
 
 and make sure neither reports anything.
+
+## Security
+
+Please report security problems privately through the repository's **Security** tab, not in a public issue.
+[SECURITY.md](SECURITY.md) says what counts and what to include.
 
 ## License
 

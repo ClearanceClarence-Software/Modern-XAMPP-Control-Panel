@@ -6,7 +6,7 @@ body:
     id: version
     attributes:
       label: Panel version
-      description: From the title bar, for example v0.2.0.
+      description: From the title bar, for example v0.2.1.
     validations:
       required: true
   - type: input
