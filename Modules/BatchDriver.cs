@@ -154,7 +154,7 @@ public sealed class TomcatDriver(string root, AppSettings settings) : BatchDrive
 public static class ModuleCatalog
 {
     /// <summary>Display names in panel order; the auto-start settings and user files are keyed by them.</summary>
-    public static readonly string[] Names = ["Apache", "MySQL", "FileZilla", "Mercury", "Tomcat"];
+    public static readonly string[] Names = ["Apache", "MySQL", "FileZilla", "Mercury", "Tomcat", "Mailpit"];
 
     /// <summary>Builds one driver per module, in the order of <see cref="Names"/>.</summary>
     /// <param name="root">The XAMPP installation folder.</param>
@@ -184,6 +184,7 @@ public static class ModuleCatalog
             ],
             Logs = [("<Browse> tomcat\\logs", @"tomcat\logs")],
         },
+        new MailpitDriver(root, settings),
     ];
 
     /// <summary>

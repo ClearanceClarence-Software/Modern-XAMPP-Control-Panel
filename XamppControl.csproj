@@ -8,7 +8,7 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>XamppControl</AssemblyName>
     <RootNamespace>XamppControl</RootNamespace>
-    <Version>0.2.1</Version>
+    <Version>0.3.0</Version>
     <Product>Modern XAMPP Control Panel</Product>
     <Authors>ClearanceClarence</Authors>
     <Company>ClearanceClarence</Company>
@@ -25,6 +25,17 @@
   <PropertyGroup Condition="Exists('Assets\xampp.ico')">
     <ApplicationIcon>Assets\xampp.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="XamppControl.Tests" />
+  </ItemGroup>
+
+  <!-- The test project lives in a subfolder of this one, so its files must not be compiled into the app. -->
+  <ItemGroup>
+    <Compile Remove="tests\**" />
+    <None Remove="tests\**" />
+    <AvaloniaXaml Remove="tests\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />

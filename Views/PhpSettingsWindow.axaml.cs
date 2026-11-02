@@ -26,7 +26,34 @@ public partial class PhpSettingsWindow : Window
 
     private PhpSettingsViewModel? ViewModel => DataContext as PhpSettingsViewModel;
 
+    /// <summary>Starts the Xdebug update check once the window shows, so opening isn't delayed by the network.</summary>
+    /// <param name="e">The event data.</param>
+    protected override async void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.CheckXdebugUpdateAsync();
+        }
+    }
+
     private void OpenIni_Click(object? sender, RoutedEventArgs e) => ViewModel?.OpenIni();
+
+    private async void Xdebug_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.XdebugActionAsync();
+        }
+    }
+
+    private async void XdebugUpdate_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.UpdateXdebugAsync();
+        }
+    }
 
     private async void Save_Click(object? sender, RoutedEventArgs e)
     {

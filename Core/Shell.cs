@@ -75,6 +75,50 @@ public static class Shell
         }
     }
 
+    /// <summary>
+    /// Opens a folder in the configured editor (VS Code, PhpStorm and most editors open a folder as a project);
+    /// without an editor, or when it fails to start, Explorer shows the folder.
+    /// </summary>
+    /// <param name="folder">Full path of the folder.</param>
+    /// <param name="editor">The editor exe; null or blank opens Explorer.</param>
+    public static void OpenFolderInEditor(string folder, string? editor)
+    {
+        if (!string.IsNullOrWhiteSpace(editor))
+        {
+            try
+            {
+                var startInfo = new ProcessStartInfo(editor) { UseShellExecute = false, WorkingDirectory = folder };
+                startInfo.ArgumentList.Add(folder);
+                Process.Start(startInfo)?.Dispose();
+                return;
+            }
+            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+            {
+                // The configured editor is missing or cannot start; Explorer shows the folder instead.
+            }
+        }
+        Open(folder);
+    }
+
+    /// <summary>
+    /// Opens a command prompt in a folder with XAMPP's php and mysql folders on PATH, so "php artisan" and
+    /// "composer" work there.
+    /// </summary>
+    /// <param name="folder">The folder the prompt starts in.</param>
+    /// <param name="root">The XAMPP folder whose php and mysql\bin folders go first on PATH.</param>
+    public static void OpenTerminal(string folder, string root)
+    {
+        string path = $"{Path.Combine(root, "php")};{Path.Combine(root, "mysql", "bin")};%PATH%";
+        string arguments = $"/k \"cd /d \"{folder}\" && set \"PATH={path}\"\"";
+        var startInfo = new ProcessStartInfo("cmd.exe", arguments)
+        {
+            UseShellExecute = true,
+            WorkingDirectory = Directory.Exists(folder) ? folder : Environment.CurrentDirectory,
+        };
+        // The console runs on its own; the panel has no use for the process handle.
+        Process.Start(startInfo)?.Dispose();
+    }
+
     /// <summary>Runs a batch file in its own visible console window (e.g. Tomcat's output window).</summary>
     /// <param name="bat">Full path of the batch file; it is quoted for cmd.exe.</param>
     /// <param name="workingDirectory">The folder the batch file runs in.</param>
@@ -188,7 +232,7 @@ public static class Shell
 
     /// <summary>Kills a process and its children, ignoring every failure.</summary>
     /// <param name="process">The process to kill; it may already have exited.</param>
-    private static void KillTreeQuietly(Process process)
+    public static void KillTreeQuietly(Process process)
     {
         try
         {

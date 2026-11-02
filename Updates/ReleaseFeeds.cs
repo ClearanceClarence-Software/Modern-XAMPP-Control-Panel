@@ -105,7 +105,7 @@ public static partial class ReleaseFeeds
     /// <returns>One entry per branch that has a TS x64 zip, in feed order; empty when none has.</returns>
     /// <exception cref="JsonException">The text is not JSON.</exception>
     /// <exception cref="InvalidOperationException">The JSON root is not an object.</exception>
-    private static List<PhpBranch> ParsePhpReleasesJson(string json)
+    internal static List<PhpBranch> ParsePhpReleasesJson(string json)
     {
         var branches = new List<PhpBranch>();
         using var document = JsonDocument.Parse(json);
@@ -167,7 +167,7 @@ public static partial class ReleaseFeeds
     /// <summary>Picks the newest TS x64 zip per branch from the HTML listing of the release folder.</summary>
     /// <param name="html">The folder listing page; only zip names matching <see cref="PhpZipName"/> count.</param>
     /// <returns>One entry per branch, without checksums; empty when the page names no matching zip.</returns>
-    private static List<PhpBranch> ParsePhpListing(string html)
+    internal static List<PhpBranch> ParsePhpListing(string html)
     {
         var builds = PhpZipName().Matches(html)
             .Select(match => (File: match.Groups["file"].Value, Version: match.Groups["v"].Value))
@@ -234,9 +234,16 @@ public static partial class ReleaseFeeds
 
     /// <summary>Stable release series, newest first.</summary>
     /// <returns>Every series whose release_status is Stable; empty when the feed has no major_releases array.</returns>
-    public static async Task<List<MariaDbMajor>> GetMariaDbMajorsAsync()
+    public static async Task<List<MariaDbMajor>> GetMariaDbMajorsAsync() =>
+        ParseMariaDbMajors(await GetStringAsync(MariaDbApi));
+
+    /// <summary>Reads the stable release series from the MariaDB REST API's root document.</summary>
+    /// <param name="json">The document: an object with a "major_releases" array.</param>
+    /// <returns>The series with release_status "Stable", newest first; empty when the document has none.</returns>
+    /// <exception cref="JsonException">The text is not JSON.</exception>
+    internal static List<MariaDbMajor> ParseMariaDbMajors(string json)
     {
-        using var document = JsonDocument.Parse(await GetStringAsync(MariaDbApi));
+        using var document = JsonDocument.Parse(json);
         if (!document.RootElement.TryGetProperty("major_releases", out JsonElement majors)
             || majors.ValueKind != JsonValueKind.Array)
         {
@@ -275,7 +282,7 @@ public static partial class ReleaseFeeds
     /// <summary>Searches a JSON tree depth first, in document order, for the first winx64 zip file entry.</summary>
     /// <param name="element">Any element of the feed; objects and arrays are searched, other values skipped.</param>
     /// <returns>The first matching release; null when the tree holds none.</returns>
-    private static MariaDbRelease? FindWindowsZip(JsonElement element)
+    internal static MariaDbRelease? FindWindowsZip(JsonElement element)
     {
         if (element.ValueKind == JsonValueKind.Array)
         {

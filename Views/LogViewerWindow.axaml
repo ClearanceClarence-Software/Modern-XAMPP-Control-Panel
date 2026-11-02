@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:XamppControl.ViewModels"
+        x:Class="XamppControl.Views.LogViewerWindow"
+        x:DataType="vm:LogViewerViewModel"
+        Title="Server logs"
+        Width="960" Height="620" MinWidth="600" MinHeight="360"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <Grid Grid.Row="0" ColumnDefinitions="300,10,*,10,Auto" Margin="0,0,0,12">
+            <ComboBox Grid.Column="0" ItemsSource="{Binding Sources}" SelectedItem="{Binding Selected}"
+                      HorizontalAlignment="Stretch" PlaceholderText="No log files found" />
+            <TextBox Grid.Column="2" Text="{Binding Filter}" Watermark="Filter lines, e.g. error or a file name" />
+            <Button Grid.Column="4" Classes="tool" Content="Clear view" Command="{Binding ClearCommand}" />
+        </Grid>
+
+        <Border Grid.Row="1" Classes="card">
+            <ListBox x:Name="LinesList" Classes="log" ItemsSource="{Binding Lines}" Background="Transparent"
+                     Padding="0,6" SelectionMode="Multiple">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Copy selected" Click="CopySelected_Click" />
+                        <MenuItem Header="Copy all shown" Click="CopyAll_Click" />
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LogLine">
+                        <TextBlock Classes="mono" Text="{Binding Text}" TextWrapping="Wrap"
+                                   Classes.error="{Binding IsError}" Classes.warn="{Binding IsWarn}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <TextBlock Grid.Row="2" Classes="muted" FontSize="12" Text="{Binding Status}" Margin="2,8,0,0"
+                   TextTrimming="CharacterEllipsis" />
+    </Grid>
+</Window>

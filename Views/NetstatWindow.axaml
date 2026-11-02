@@ -4,12 +4,12 @@
         x:Class="XamppControl.Views.NetstatWindow"
         x:DataType="vm:NetstatViewModel"
         Title="Netstat - TCP Listening sockets"
-        Width="820" Height="620"
-        MinWidth="560" MinHeight="360"
+        Width="980" Height="680"
+        MinWidth="760" MinHeight="420"
         WindowStartupLocation="CenterOwner">
 
-    <!-- Row colors follow XAMPP's Netstat: green for new sockets, dark red for closed ones -->
     <Window.Styles>
+        <!-- Row colors follow XAMPP's Netstat: green for new sockets, dark red for closed ones -->
         <Style Selector="Border.socket.new">
             <Setter Property="Background" Value="{DynamicResource NetstatNewBrush}" />
         </Style>
@@ -22,72 +22,234 @@
         <Style Selector="Border.socket.old TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource NetstatOldTextBrush}" />
         </Style>
+        <Style Selector="Border.socket:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+        </Style>
+
+        <!-- Clickable column headers -->
+        <Style Selector="Button.colbtn">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.colbtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        </Style>
+
+        <!-- Small text buttons at the end of each row -->
+        <Style Selector="Button.rowact">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.rowact:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+        </Style>
+        <Style Selector="Button.rowact.danger">
+            <Setter Property="Foreground" Value="{DynamicResource StopFgBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StopBorderBrush}" />
+        </Style>
+        <Style Selector="Button.rowact.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource StopBgBrush}" />
+        </Style>
+
+        <!-- Pills: service label, reach, blocking warning, new/closed -->
+        <Style Selector="Border.pill">
+            <Setter Property="Padding" Value="7,1" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource HeaderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.pill TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+        </Style>
+        <Style Selector="Border.pill.xampp">
+            <Setter Property="Background" Value="{DynamicResource UpdatePillBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource UpdatePillBorderBrush}" />
+        </Style>
+        <Style Selector="Border.pill.xampp TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource LinkBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Border.pill.block">
+            <Setter Property="Background" Value="{DynamicResource StopBgBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StopBorderBrush}" />
+        </Style>
+        <Style Selector="Border.pill.block TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource StopFgBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- Stat tiles -->
+        <Style Selector="Border.tile">
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="MinWidth" Value="120" />
+        </Style>
+        <Style Selector="Border.tile TextBlock.value">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.tile TextBlock.label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+        </Style>
+        <Style Selector="Border.tile.alert">
+            <Setter Property="Background" Value="{DynamicResource StopBgBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StopBorderBrush}" />
+        </Style>
+        <Style Selector="Border.tile.alert TextBlock.value">
+            <Setter Property="Foreground" Value="{DynamicResource StopFgBrush}" />
+        </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16">
 
-        <!-- Legend + refresh, like XAMPP's -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,12">
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
-                <Border Padding="12,5" CornerRadius="5" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
-                    <TextBlock Text="Active socket" FontSize="12" />
-                </Border>
-                <Border Padding="12,5" CornerRadius="5" Background="{DynamicResource NetstatNewBrush}">
-                    <TextBlock Text="New socket" FontSize="12" Foreground="{DynamicResource NetstatNewTextBrush}"
-                               FontWeight="SemiBold" />
-                </Border>
-                <Border Padding="12,5" CornerRadius="5" Background="{DynamicResource NetstatOldBrush}">
-                    <TextBlock Text="Old socket" FontSize="12" Foreground="{DynamicResource NetstatOldTextBrush}"
-                               FontWeight="SemiBold" />
-                </Border>
-                <StackPanel Orientation="Horizontal" Spacing="6" Margin="10,0,0,0" VerticalAlignment="Center">
-                    <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" />
-                    <TextBlock Text="XAMPP process" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
-                </StackPanel>
-            </StackPanel>
-            <Button Grid.Column="2" Classes="tool" Content="Refresh" Command="{Binding RefreshCommand}" Width="90" />
+        <!-- Filter and controls -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,12,Auto,12,Auto,12,Auto,8,Auto" Margin="0,0,0,12">
+            <TextBox Grid.Column="0" Text="{Binding Filter}" Watermark="Filter by port, address, PID, program or service…"
+                     VerticalAlignment="Center" />
+            <CheckBox Grid.Column="2" Content="XAMPP only" IsChecked="{Binding XamppOnly}" VerticalAlignment="Center" />
+            <CheckBox Grid.Column="4" Content="IPv6" IsChecked="{Binding ShowIPv6}" VerticalAlignment="Center"
+                      ToolTip.Tip="IPv6 sockets usually duplicate the IPv4 ones; hide them for a shorter list" />
+            <Button Grid.Column="6" Classes="tool" Content="{Binding PauseLabel}" Command="{Binding PauseCommand}" Width="84"
+                    ToolTip.Tip="Stop the automatic refresh so new and closed rows stay put" />
+            <Button Grid.Column="8" Classes="tool" Content="Refresh" Command="{Binding RefreshCommand}" Width="84" />
         </Grid>
 
-        <!-- Column headers -->
-        <Border Grid.Row="1" Height="32" Padding="12,0" Background="{DynamicResource HeaderBrush}" CornerRadius="8,8,0,0"
+        <!-- Counts and legend -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,8,Auto,8,Auto,*,Auto" Margin="0,0,0,12">
+            <Border Grid.Column="0" Classes="tile">
+                <StackPanel>
+                    <TextBlock Classes="value" Text="{Binding TotalCount}" />
+                    <TextBlock Classes="label" Text="Listening sockets" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Classes="tile">
+                <StackPanel>
+                    <TextBlock Classes="value" Text="{Binding XamppCount}" Foreground="{DynamicResource AccentBrush}" />
+                    <TextBlock Classes="label" Text="Owned by XAMPP" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="4" Classes="tile" Classes.alert="{Binding HasBlocked}"
+                    ToolTip.Tip="Configured ports of stopped modules that another program holds">
+                <StackPanel>
+                    <TextBlock Classes="value" Text="{Binding BlockedCount}" />
+                    <TextBlock Classes="label" Text="Blocked XAMPP ports" />
+                </StackPanel>
+            </Border>
+            <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Padding="10,4" CornerRadius="5" Background="{DynamicResource NetstatNewBrush}">
+                    <TextBlock Text="New since last refresh" FontSize="11" Foreground="{DynamicResource NetstatNewTextBrush}"
+                               FontWeight="SemiBold" />
+                </Border>
+                <Border Padding="10,4" CornerRadius="5" Background="{DynamicResource NetstatOldBrush}">
+                    <TextBlock Text="Closed" FontSize="11" Foreground="{DynamicResource NetstatOldTextBrush}"
+                               FontWeight="SemiBold" />
+                </Border>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" />
+                    <TextBlock Text="XAMPP process" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <!-- Column headers (click to sort) -->
+        <Border Grid.Row="2" Height="32" Padding="12,0" Background="{DynamicResource HeaderBrush}" CornerRadius="8,8,0,0"
                 BorderBrush="{DynamicResource LineBrush}" BorderThickness="1,1,1,0">
-            <Grid ColumnDefinitions="200,70,70,*">
-                <TextBlock Grid.Column="0" Classes="colhead" Text="ADDRESS" />
-                <TextBlock Grid.Column="1" Classes="colhead" Text="PORT" HorizontalAlignment="Right" Margin="0,0,14,0" />
-                <TextBlock Grid.Column="2" Classes="colhead" Text="PID" HorizontalAlignment="Right" Margin="0,0,14,0" />
-                <TextBlock Grid.Column="3" Classes="colhead" Text="NAME" />
+            <Grid ColumnDefinitions="110,200,70,*,230">
+                <Button Grid.Column="0" Classes="colbtn" Content="{Binding PortHeader}" Click="SortPort_Click" />
+                <Button Grid.Column="1" Classes="colbtn" Content="{Binding AddressHeader}" Click="SortAddress_Click" />
+                <Button Grid.Column="2" Classes="colbtn" Content="{Binding PidHeader}" Click="SortPid_Click" />
+                <Button Grid.Column="3" Classes="colbtn" Content="{Binding NameHeader}" Click="SortName_Click" />
+                <TextBlock Grid.Column="4" Classes="colhead" Text="ACTIONS" HorizontalAlignment="Right" Margin="0,0,4,0" />
             </Grid>
         </Border>
 
         <!-- Rows -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBrush}" CornerRadius="0,0,8,8"
+        <Border Grid.Row="3" Background="{DynamicResource CardBrush}" CornerRadius="0,0,8,8"
                 BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" ClipToBounds="True">
-            <ScrollViewer>
-                <ItemsControl ItemsSource="{Binding Rows}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:NetstatRow">
-                            <Border Classes="socket" Classes.new="{Binding IsNew}" Classes.old="{Binding IsOld}"
-                                    Padding="12,4" ToolTip.Tip="{Binding Path}">
-                                <Grid ColumnDefinitions="200,70,70,*">
-                                    <TextBlock Grid.Column="0" Classes="mono" Text="{Binding Address}" />
-                                    <TextBlock Grid.Column="1" Classes="mono" Text="{Binding Port}"
-                                               HorizontalAlignment="Right" Margin="0,0,14,0" />
-                                    <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Pid}"
-                                               HorizontalAlignment="Right" Margin="0,0,14,0" />
-                                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="{Binding Name}" FontSize="13" />
-                                        <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" IsVisible="{Binding IsXampp}"
-                                                 VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+            <Panel>
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:NetstatRow">
+                                <Border Classes="socket" Classes.new="{Binding IsNew}" Classes.old="{Binding IsOld}"
+                                        Padding="12,5" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1"
+                                        ToolTip.Tip="{Binding Path}">
+                                    <Grid ColumnDefinitions="110,200,70,*,230">
+
+                                        <!-- Port and what it is for -->
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock Classes="mono" Text="{Binding Port}" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Service}" FontSize="11"
+                                                       Foreground="{DynamicResource MutedBrush}" IsVisible="{Binding HasService}" />
+                                        </StackPanel>
+
+                                        <!-- Address and who can reach it -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock Classes="mono" Text="{Binding Address}" />
+                                            <TextBlock Text="{Binding Reach}" FontSize="11"
+                                                       Foreground="{DynamicResource FaintBrush}" IsVisible="{Binding HasReach}" />
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Pid}" VerticalAlignment="Center" />
+
+                                        <!-- Process name with its markers -->
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontSize="13" VerticalAlignment="Center" />
+                                            <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}" IsVisible="{Binding IsXampp}"
+                                                     VerticalAlignment="Center" ToolTip.Tip="Runs from the XAMPP folder" />
+                                            <Border Classes="pill block" IsVisible="{Binding IsBlocking}"
+                                                    ToolTip.Tip="This module can't start while this program holds its port">
+                                                <TextBlock Text="{Binding BlockingText}" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Actions -->
+                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                            <Button Classes="rowact" Content="Open" Click="OpenUrl_Click" IsVisible="{Binding IsWeb}"
+                                                    ToolTip.Tip="{Binding Url}" />
+                                            <Button Classes="rowact" Content="Folder" Click="Folder_Click" IsVisible="{Binding HasPath}"
+                                                    ToolTip.Tip="Show the program's folder in Explorer" />
+                                            <Button Classes="rowact" Content="Copy" Click="Copy_Click"
+                                                    ToolTip.Tip="Copy this line" />
+                                            <Button Classes="rowact danger" Content="End" Click="End_Click" IsVisible="{Binding CanEnd}"
+                                                    ToolTip.Tip="End this program and free its ports (asks twice)" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <TextBlock Text="No sockets match the filter." IsVisible="{Binding IsEmpty}"
+                           Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Panel>
         </Border>
 
-        <!-- Status line -->
-        <TextBlock Grid.Row="3" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource MutedBrush}" Margin="2,8,0,0" />
+        <!-- Status lines -->
+        <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="2,8,0,0">
+            <TextBlock Grid.Column="0" Text="{Binding Status}" FontSize="12" TextWrapping="Wrap" />
+            <TextBlock Grid.Column="1" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
+        </Grid>
     </Grid>
 </Window>

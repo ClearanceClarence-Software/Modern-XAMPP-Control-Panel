@@ -98,6 +98,7 @@ public static class ProcessScan
         {
             using var process = Process.GetProcessById(pid);
             process.Kill(entireProcessTree: true);
+            process.WaitForExit(2000);
         }
         catch
         {

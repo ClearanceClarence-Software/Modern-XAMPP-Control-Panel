@@ -34,6 +34,11 @@ public sealed class UpdatesViewModel : ObservableObject
     private string _fileZillaInstalled = "";
     private string _fileZillaAvailable = "Checking…";
     private string? _fileZillaLatest;
+    private string _mailpitInstalled = "";
+    private string _mailpitAvailable = "Checking…";
+    private string _mailpitAction = "Install";
+    private MailpitRelease? _mailpitLatest;
+    private bool _isMailpitInstalled;
 
     /// <summary>
     /// Creates the dialog's state and reads the installed versions; the feeds load in <see cref="CheckAsync"/>.
@@ -84,6 +89,30 @@ public sealed class UpdatesViewModel : ObservableObject
         get => _fileZillaAvailable;
         private set => SetField(ref _fileZillaAvailable, value);
     }
+
+    /// <summary>The installed Mailpit, such as "Mailpit 1.29.5" or "Not installed".</summary>
+    public string MailpitInstalled
+    {
+        get => _mailpitInstalled;
+        private set => SetField(ref _mailpitInstalled, value);
+    }
+
+    /// <summary>One line comparing the newest Mailpit with the installed one, or why it can't.</summary>
+    public string MailpitAvailable
+    {
+        get => _mailpitAvailable;
+        private set => SetField(ref _mailpitAvailable, value);
+    }
+
+    /// <summary>The Mailpit button's text: "Install", "Update" or "Reinstall".</summary>
+    public string MailpitAction
+    {
+        get => _mailpitAction;
+        private set => SetField(ref _mailpitAction, value);
+    }
+
+    /// <summary>True once GitHub has answered, so the Mailpit button can install.</summary>
+    public bool CanInstallMailpit => IsIdle && _mailpitLatest is not null;
 
     /// <summary>
     /// One line comparing the selected branch's newest build with the active PHP, or the feed's error.
@@ -147,6 +176,7 @@ public sealed class UpdatesViewModel : ObservableObject
             if (SetField(ref _isBusy, value))
             {
                 OnPropertyChanged(nameof(IsIdle));
+                OnPropertyChanged(nameof(CanInstallMailpit));
             }
         }
     }
@@ -224,10 +254,45 @@ public sealed class UpdatesViewModel : ObservableObject
         MariaInstalled = mariaVersion is null ? "Not found" : $"MariaDB {mariaVersion}";
 
         FileZillaInstalled = DescribeInstalledFileZilla(root);
+        string? mailpitVersion = MailpitUpdater.InstalledVersion(root);
+        _isMailpitInstalled = mailpitVersion is not null;
+        MailpitInstalled = mailpitVersion switch
+        {
+            null => "Not installed",
+            "?" => "Mailpit (version unknown)",
+            _ => $"Mailpit {mailpitVersion}",
+        };
 
         UpdatePhpAvailable();
         UpdateMariaAvailable();
         UpdateFileZillaAvailable();
+        UpdateMailpitAvailable();
+    }
+
+    /// <summary>Sets <see cref="MailpitAvailable"/> and the button text from the release GitHub reported.</summary>
+    private void UpdateMailpitAvailable()
+    {
+        if (_mailpitLatest is not { } latest)
+        {
+            return;
+        }
+
+        // An exe without a version resource parses as 0.0 and counts as not current, so the button offers the update.
+        Version installed = VersionUtil.Parse(MailpitInstalled);
+        bool isInstalled = _isMailpitInstalled;
+        bool isCurrent = isInstalled && installed >= VersionUtil.Parse(latest.Version);
+        MailpitAvailable = isCurrent
+            ? $"Mailpit {latest.Version} is the newest release; you have it."
+            : $"Mailpit {latest.Version} is available.";
+        if (!isInstalled)
+        {
+            MailpitAction = "Install";
+        }
+        else
+        {
+            MailpitAction = isCurrent ? "Reinstall" : $"Update to {latest.Version}";
+        }
+        OnPropertyChanged(nameof(CanInstallMailpit));
     }
 
     /// <summary>Names the FileZilla Server the FileZilla row controls.</summary>
@@ -418,7 +483,29 @@ public sealed class UpdatesViewModel : ObservableObject
         PhpAvailable = "Checking…";
         MariaAvailable = "Checking…";
         FileZillaAvailable = "Checking…";
-        await Task.WhenAll(LoadPhpAsync(), LoadMariaMajorsAsync(), LoadFileZillaLatestAsync());
+        MailpitAvailable = "Checking…";
+        await Task.WhenAll(LoadPhpAsync(), LoadMariaMajorsAsync(), LoadFileZillaLatestAsync(), LoadMailpitLatestAsync());
+    }
+
+    /// <summary>Reads the newest Mailpit release from GitHub.</summary>
+    private async Task LoadMailpitLatestAsync()
+    {
+        try
+        {
+            // An install without a version note (made by hand or by an earlier panel) is asked once and remembered.
+            if (await MailpitUpdater.RecordVersionAsync(_main.Root) is { } recorded)
+            {
+                MailpitInstalled = $"Mailpit {recorded}";
+            }
+            _mailpitLatest = await MailpitUpdater.GetLatestAsync();
+            UpdateMailpitAvailable();
+        }
+        catch (Exception ex)
+        {
+            // An update check: whatever goes wrong with the network or the API is shown in the line and the
+            // dialog stays usable.
+            MailpitAvailable = "Couldn't reach GitHub: " + ex.Message;
+        }
     }
 
     /// <summary>Reads the newest FileZilla Server version from filezilla-project.org.</summary>
@@ -604,6 +691,14 @@ public sealed class UpdatesViewModel : ObservableObject
     /// </returns>
     public Task InstallFileZillaAsync(string installer) =>
         RunAsync(ctx => FileZillaUpdater.InstallAsync(ctx, installer));
+
+    /// <summary>Downloads the newest Mailpit into root\mailpit and points PHP's mail() at it.</summary>
+    /// <returns>A task that completes when the install has finished or failed; the outcome is in <see cref="Status"/>.</returns>
+    public Task InstallMailpitAsync() =>
+        _mailpitLatest is { } release ? RunAsync(ctx => MailpitUpdater.InstallAsync(ctx, release)) : Task.CompletedTask;
+
+    /// <summary>Opens Mailpit's project page in the configured browser.</summary>
+    public void OpenMailpitPage() => Shell.OpenUrl(MailpitUpdater.ProjectUrl, _main.Settings.Browser);
 
     /// <summary>Opens FileZilla Server's official download page in the configured browser.</summary>
     public void OpenFileZillaDownloadPage() => Shell.OpenUrl(FileZillaServer.DownloadPage, _main.Settings.Browser);

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="XamppControl.csproj" />
+  <Project Path="tests/XamppControl.Tests/XamppControl.Tests.csproj" />
+</Solution>

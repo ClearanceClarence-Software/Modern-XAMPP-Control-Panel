@@ -21,7 +21,10 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Check formatting
-        run: dotnet format --verify-no-changes
+        run: dotnet format XamppControl.slnx --verify-no-changes
 
       - name: Build
-        run: dotnet build --configuration Release
+        run: dotnet build XamppControl.slnx --configuration Release
+
+      - name: Test
+        run: dotnet test XamppControl.slnx --configuration Release --no-build

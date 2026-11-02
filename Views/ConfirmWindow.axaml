@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="XamppControl.Views.ConfirmWindow"
+        Title="Modern XAMPP Control Panel"
+        Width="460" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="16">
+        <TextBlock x:Name="TitleText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock x:Name="MessageText" Classes="muted" TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Classes="tool" MinWidth="90" Click="Cancel_Click" />
+            <Button x:Name="SecondaryButton" Classes="tool" MinWidth="90" Click="Secondary_Click" />
+            <Button x:Name="PrimaryButton" Classes="accent" MinWidth="90" Click="Primary_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

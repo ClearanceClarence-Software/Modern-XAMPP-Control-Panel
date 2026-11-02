@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using XamppControl.Core;
 using XamppControl.Modules;
 using XamppControl.Php;
+using XamppControl.Updates;
 
 namespace XamppControl.ViewModels;
 
@@ -80,6 +81,11 @@ public sealed class PhpSettingsViewModel : ObservableObject
     private readonly MainViewModel _main;
     private bool _isBusy;
     private string _status = "";
+    private string _xdebugStatus = "";
+    private string _xdebugAction = "";
+    private string? _xdebugUpdate;
+    private bool _isXdebugInstalled;
+    private bool _isXdebugEnabled;
 
     /// <summary>Reads php.ini from the active PHP and fills the settings and extensions.</summary>
     /// <param name="main">The panel; supplies the XAMPP folder, the editor and the log, and restarts Apache.</param>
@@ -134,11 +140,42 @@ public sealed class PhpSettingsViewModel : ObservableObject
         private set => SetField(ref _status, value);
     }
 
+    /// <summary>The Xdebug line: the installed version and whether php.ini loads it.</summary>
+    public string XdebugStatus
+    {
+        get => _xdebugStatus;
+        private set => SetField(ref _xdebugStatus, value);
+    }
+
+    /// <summary>The Xdebug button's text: "Install Xdebug", "Turn on" or "Turn off".</summary>
+    public string XdebugAction
+    {
+        get => _xdebugAction;
+        private set => SetField(ref _xdebugAction, value);
+    }
+
+    /// <summary>"Update to 3.5.3" when PECL has a newer build than the installed one; null otherwise.</summary>
+    public string? XdebugUpdate
+    {
+        get => _xdebugUpdate;
+        private set
+        {
+            if (SetField(ref _xdebugUpdate, value))
+            {
+                OnPropertyChanged(nameof(HasXdebugUpdate));
+            }
+        }
+    }
+
+    /// <summary>True when the update button should show.</summary>
+    public bool HasXdebugUpdate => XdebugUpdate is not null;
+
     /// <summary>Reads php.ini into <see cref="Settings"/> and <see cref="Extensions"/>.</summary>
     private void Load()
     {
         Settings.Clear();
         Extensions.Clear();
+        LoadXdebugState(null);
         if (!HasIni)
         {
             Status = $"No php.ini in \"{Path.GetDirectoryName(IniPath)}\".";
@@ -154,6 +191,7 @@ public sealed class PhpSettingsViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // An unreadable php.ini or ext folder: the window opens empty with the reason in the status line.
             Status = "php.ini or the ext folder can't be read: " + ex.Message;
             return;
         }
@@ -167,7 +205,155 @@ public sealed class PhpSettingsViewModel : ObservableObject
         {
             Extensions.Add(new PhpExtensionRow(extension));
         }
+        LoadXdebugState(ini);
     }
+
+    /// <summary>Fills the Xdebug line and button from the ext folder and php.ini.</summary>
+    /// <param name="ini">The loaded php.ini; null when it couldn't be read, which shows Xdebug as unavailable.</param>
+    private void LoadXdebugState(PhpIni? ini)
+    {
+        string? installed = XdebugInstaller.InstalledVersion(PhpDir);
+        _isXdebugInstalled = installed is not null;
+        _isXdebugEnabled = ini is not null && _isXdebugInstalled && XdebugInstaller.IsEnabled(ini);
+        if (!_isXdebugInstalled)
+        {
+            XdebugStatus = "Not installed. Install downloads the build that matches this PHP from PECL.";
+            XdebugAction = "Install Xdebug";
+        }
+        else
+        {
+            string state = _isXdebugEnabled ? "on: step debugging on port 9003" : "off";
+            string name = installed == "?" ? "Xdebug" : $"Xdebug {installed}";
+            XdebugStatus = $"{name} installed, {state}.";
+            XdebugAction = _isXdebugEnabled ? "Turn off" : "Turn on";
+        }
+        if (XdebugUpdate is { } update && VersionUtil.Parse(update) <= VersionUtil.Parse(installed))
+        {
+            XdebugUpdate = null;
+        }
+    }
+
+    /// <summary>Asks PECL for the newest Xdebug and shows the update button when it's newer than the installed one.</summary>
+    /// <returns>A task that completes when the check is done; a failed check shows nothing.</returns>
+    public async Task CheckXdebugUpdateAsync()
+    {
+        if (!_isXdebugInstalled)
+        {
+            return;
+        }
+        try
+        {
+            string latest = await XdebugInstaller.LatestVersionAsync();
+            string? installed = XdebugInstaller.InstalledVersion(PhpDir);
+            XdebugUpdate = VersionUtil.Parse(latest) > VersionUtil.Parse(installed) ? latest : null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
+        {
+            // Offline or PECL changed its page: the button simply doesn't show.
+            _main.Write(LogTag, "Xdebug update check failed: " + ex.Message, LogLevel.Debug);
+        }
+    }
+
+    /// <summary>The Xdebug button: installs it when missing, otherwise turns it on or off; Apache restarts.</summary>
+    /// <returns>A task that completes after the restart or when the error is shown.</returns>
+    public Task XdebugActionAsync() =>
+        _isXdebugInstalled ? SetXdebugEnabledAsync(!_isXdebugEnabled) : InstallXdebugAsync(null);
+
+    /// <summary>Installs the version the update button names and turns it on.</summary>
+    /// <returns>A task that completes after the restart or when the error is shown.</returns>
+    public Task UpdateXdebugAsync() => XdebugUpdate is { } version ? InstallXdebugAsync(version) : Task.CompletedTask;
+
+    private async Task InstallXdebugAsync(string? version)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            Status = "Reading the PHP build…";
+            PhpBuildInfo php = await XdebugInstaller.ReadPhpBuildAsync(PhpDir)
+                ?? throw new InvalidOperationException("php.exe didn't report a version and compiler PECL builds for.");
+
+            Status = "Asking PECL for the newest Xdebug…";
+            version ??= await XdebugInstaller.LatestVersionAsync();
+
+            string file = await XdebugInstaller.InstallAsync(PhpDir, php, version, fraction =>
+                Status = fraction is { } done
+                    ? $"Downloading Xdebug {version} for PHP {php.Branch}… {done:P0}"
+                    : $"Downloading Xdebug {version} for PHP {php.Branch}…");
+            _main.Write(LogTag, $"Installed Xdebug {version} to \"{file}\".", LogLevel.Ok);
+
+            await WriteXdebugAsync(true);
+            Status = $"Xdebug {version} installed and on. Set your editor to listen on port 9003.";
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // PECL builds each Xdebug release per PHP branch; a brand-new PHP may not have one yet.
+            Status = "PECL has no Xdebug build for this PHP version yet.";
+        }
+        catch (Exception ex)
+        {
+            // Downloads, zips and php.ini can all fail; the window reports it and stays usable.
+            _main.Write(LogTag, "Installing Xdebug failed: " + ex.Message, LogLevel.Error);
+            Status = "Xdebug couldn't be installed: " + ex.Message;
+        }
+        finally
+        {
+            Load();
+            IsBusy = false;
+        }
+    }
+
+    private async Task SetXdebugEnabledAsync(bool isEnabled)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            await WriteXdebugAsync(isEnabled);
+            Status = isEnabled
+                ? "Xdebug is on. Set your editor to listen on port 9003; it starts on request when a debug cookie or " +
+                  "XDEBUG_TRIGGER is present."
+                : "Xdebug is off. The DLL stays in php\\ext for next time.";
+        }
+        catch (Exception ex)
+        {
+            // Writes php.ini and restarts Apache; report rather than crash.
+            _main.Write(LogTag, "Changing Xdebug failed: " + ex.Message, LogLevel.Error);
+            Status = "Xdebug couldn't be changed: " + ex.Message;
+        }
+        finally
+        {
+            Load();
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Writes the Xdebug lines to a fresh read of php.ini and restarts Apache when it runs.</summary>
+    /// <param name="isEnabled">True loads the DLL; false comments it out.</param>
+    private async Task WriteXdebugAsync(bool isEnabled)
+    {
+        PhpIni ini = PhpIni.Load(IniPath);
+        XdebugInstaller.SetEnabled(ini, isEnabled);
+        ini.Save();
+        _main.Write(LogTag, isEnabled ? "Xdebug enabled in php.ini." : "Xdebug disabled in php.ini.");
+        Load();
+
+        if (_main.FindModule("Apache") is { IsRunning: true } apache)
+        {
+            Status = "Restarting Apache…";
+            await apache.RestartForConfigChangeAsync();
+        }
+    }
+
+    private string PhpDir => Path.Combine(_main.Root, "php");
 
     /// <summary>Writes the changed values and extensions to php.ini and restarts Apache when it runs.</summary>
     /// <returns>A task that completes after the restart, or at once when nothing changed.</returns>

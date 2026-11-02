@@ -46,7 +46,7 @@ Screenshots: save these in docs/assets/ (about 1100 px wide, PNG), then remove t
 
 ## Features
 
-**Familiar control panel.** Module rows for Apache, MySQL, FileZilla, Mercury and Tomcat with
+**Familiar control panel.** Module rows for Apache, MySQL, FileZilla, Mercury, Tomcat and Mailpit with
 Service, PID(s), Port(s), Start/Stop, Admin, Config and Logs, plus Config, Netstat, Shell, Explorer,
 Services and Help buttons, just like the original. A tray icon shows what runs, starts and stops
 modules from its menu, and keeps the panel out of the taskbar when minimized.
@@ -60,9 +60,11 @@ recovery on the next start.
 exits right after starting anyway, the panel shows the last lines of `error.log` or
 `mysql_error.log`, so you see *why* without opening files.
 
-**Port conflict finder.** Before a module starts (and optionally when the panel opens), the panel
-checks its ports and reports exactly which program holds them:
-`Port 80 in use by "C:\Program Files\Skype\Skype.exe" with PID 4120!`
+**Port conflict finder and fixer.** Before a module starts (and optionally when the panel opens),
+the panel checks its ports and reports exactly which program holds them:
+`Port 80 in use by "C:\Program Files\Skype\Skype.exe" with PID 4120!` When you click Start, a
+dialog offers to end that program (or stop IIS when Windows itself holds the port), or to move
+Apache to 8080/4433 or MySQL to 3307, updating the config files and the panel's settings for you.
 
 **PHP and MariaDB versions.** The **Versions** window lists every installed build and lets you:
 
@@ -93,12 +95,38 @@ upload size, post size, execution time, input vars, display errors, time zone) a
 extension in `php\ext` with a check box. Saving keeps the previous file as `php.ini.bak` and
 restarts Apache.
 
+**Xdebug with one button.** The PHP window installs the Xdebug build that matches your PHP
+(version, thread safety and compiler) from PECL, turns it on in debug mode on port 9003, and
+turns it off again when you want speed back. An update button shows when PECL has a newer build.
+
+**Databases.** The **Databases** window lists the databases on the running server with their size,
+exports any of them to a timestamped `.sql` file in `xampp\mysql_dumps` (routines, events and
+triggers included), imports a `.sql` file into a new or existing database, and drops databases.
+
+**Mail catcher.** The Versions window installs [Mailpit](https://github.com/axllent/mailpit) into
+`xampp\mailpit` and points PHP's `mail()` at it. Every message your code sends shows up at
+`http://localhost:8025` instead of leaving your computer. The Mailpit row starts and stops it, and
+Admin opens the inbox.
+
+**Open in editor or terminal.** Each site in the Sites window has Editor and Terminal buttons: the
+folder opens in the editor set under Config (VS Code, PhpStorm, ...) or in a command prompt with
+`php` and `mysql` already on PATH.
+
 **Update notice.** The panel checks GitHub for newer releases when it starts. When there is one, a
 link in the header opens the release notes of every version since yours, with a button to download
 the newest. You can turn this off in Config.
 
-**Netstat.** Listening TCP sockets with address, port, PID and process, refreshed every 3 seconds.
-New sockets show in green, closed ones in dark red, and XAMPP's own processes are marked.
+**Logs.** The **Logs** window follows Apache, PHP and MariaDB log files live with a filter, so you
+don't need Notepad to watch `error.log` while you work.
+
+**One admin prompt.** Starting and stopping Windows services and updating the hosts file need admin
+rights. The panel asks once per session and reuses that for later actions.
+
+**Netstat.** Listening TCP sockets with port, address, PID and process, refreshed every 3 seconds
+(or paused). Filter by anything, sort by any column, hide IPv6 or show only XAMPP. Each row says what
+the port is for (Apache, MySQL, HTTP, Remote Desktop...), who can reach it, and warns when another
+program blocks a stopped module; Open, Folder, Copy and End act on the row. New sockets show in
+green, closed ones in dark red.
 
 **XAMPP-style configuration.** Editor, browser, XAMPP folder, autostart per module, start
 minimized, light or dark theme (or follow Windows; the sun/moon button in the header switches it), minimize to tray, update check, port check on startup, debug output, plus Service and Port Settings, User Defined Files
@@ -154,6 +182,7 @@ exact state from before the update. Downgrades are refused.
 |---|---|
 | Settings | `%AppData%\XamppControl\settings.json` |
 | Optional log file | `%AppData%\XamppControl\xampp-control.log` |
+| Crash reports | `%AppData%\XamppControl\crash.log` |
 | Local certificate authority | `%AppData%\XamppControl\local-ca.pfx` (private) and `local-ca.crt` (public) |
 | Site certificate | `C:\xampp\apache\conf\ssl.crt\modern-xampp-local.crt` and `ssl.key\modern-xampp-local.key` |
 | Downloads | `%TEMP%\XamppControl` |
@@ -194,13 +223,13 @@ Requirements: the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.
 ```powershell
 git clone https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel.git
 cd Modern-XAMPP-Control-Panel
-dotnet run
+dotnet run --project XamppControl.csproj
 ```
 
 Self-contained single-file build, as published in releases:
 
 ```powershell
-dotnet publish -p:PublishProfile=win-x64
+dotnet publish XamppControl.csproj -p:PublishProfile=win-x64
 # bin\publish\win-x64\XamppControl.exe
 ```
 
@@ -216,11 +245,13 @@ fields, analyzers at `latest-recommended`) and explained, with examples, in
 [CODING_STANDARDS.md](CODING_STANDARDS.md). Before opening a pull request, run:
 
 ```powershell
-dotnet format --verify-no-changes
-dotnet build
+dotnet format XamppControl.slnx --verify-no-changes
+dotnet build XamppControl.slnx
+dotnet test XamppControl.slnx
 ```
 
-and make sure neither reports anything.
+and make sure none of them reports anything. The tests in `tests/` cover the parsers (release feeds, `php.ini`,
+virtual hosts, the hosts file); add one when you change those.
 
 ## Security
 

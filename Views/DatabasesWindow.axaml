@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:XamppControl.ViewModels"
+        xmlns:db="using:XamppControl.Databases"
+        x:Class="XamppControl.Views.DatabasesWindow"
+        x:DataType="vm:DatabasesViewModel"
+        Title="Databases"
+        Width="760" Height="560" MinWidth="560" MinHeight="360"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="16">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,8,Auto,8,Auto" Margin="0,0,0,12">
+            <TextBlock Grid.Column="0" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
+                       Text="Back up a database to an .sql file, or restore one. Exports go to mysql_dumps." />
+            <Button Grid.Column="1" Classes="tool" Content="Import .sql…" Click="Import_Click" IsEnabled="{Binding IsIdle}" />
+            <Button Grid.Column="3" Classes="tool" Content="Open dump folder" Command="{Binding OpenDumpFolderCommand}" />
+            <Button Grid.Column="5" Classes="tool" Content="Refresh" Command="{Binding RefreshCommand}" />
+        </Grid>
+
+        <Border Grid.Row="1" Classes="card">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Height="34" Padding="12,0" Background="{DynamicResource HeaderBrush}"
+                        BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*,110,100,Auto">
+                        <TextBlock Grid.Column="0" Classes="colhead" Text="DATABASE" />
+                        <TextBlock Grid.Column="1" Classes="colhead" Text="TABLES" />
+                        <TextBlock Grid.Column="2" Classes="colhead" Text="SIZE" />
+                        <TextBlock Grid.Column="3" Classes="colhead" Text="ACTIONS" MinWidth="200" />
+                    </Grid>
+                </Border>
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Databases}" IsEnabled="{Binding IsIdle}" Margin="0,0,10,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="db:DatabaseInfo">
+                                <Border Padding="12,8" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="*,110,100,Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1" Classes="mono" Text="{Binding TableText}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Size}" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" MinWidth="200">
+                                            <Button Classes="tool" Content="Export" Click="Export_Click" />
+                                            <Button Classes="tool" Content="Import into…" Click="ImportInto_Click" />
+                                            <Button Classes="tool" Content="Drop" Click="Drop_Click" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <TextBlock Grid.Row="2" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,12,0,0" />
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+            <TextBlock Grid.Column="0" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
+                       Text="Imports run as root. A dump made with Export recreates its own database; another .sql file is run inside the database you pick." />
+            <Button Grid.Column="1" Classes="tool" Content="Close" Width="90" Click="Close_Click" IsEnabled="{Binding IsIdle}" />
+        </Grid>
+    </Grid>
+</Window>

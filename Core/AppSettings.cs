@@ -41,6 +41,12 @@ public sealed class ServiceSettings
     /// <summary>Tomcat's AJP connector port, used for the port conflict check.</summary>
     public int TomcatAjpPort { get; set; } = 8009;
 
+    /// <summary>Mailpit's SMTP port, where PHP's mail() delivers; used for php.ini and the port conflict check.</summary>
+    public int MailpitSmtpPort { get; set; } = 1025;
+
+    /// <summary>Mailpit's web interface port, used for the Admin link and the port conflict check.</summary>
+    public int MailpitHttpPort { get; set; } = 8025;
+
     /// <summary>
     /// <see cref="MercuryPorts"/> as numbers, in the order typed; entries that are not a port from 1 to 65535 are
     /// left out.

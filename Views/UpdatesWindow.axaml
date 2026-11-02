@@ -128,6 +128,23 @@
                                    Text="FileZilla's download links expire, so download the Windows installer yourself and run it from here. The first upgrade stops XAMPP's FileZilla 0.9.41 and installs FileZilla Server 1.x as a Windows service, which the FileZilla row then controls. 1.x can't read the old settings: set up your FTP users again with Admin. The old FileZillaFTP folder is left as it was." />
                     </StackPanel>
                 </Border>
+
+                <!-- Mailpit -->
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Mailpit (mail catcher)" FontSize="16" FontWeight="Bold" />
+                        <TextBlock Classes="section" Text="INSTALLED" />
+                        <TextBlock Text="{Binding MailpitInstalled}" FontSize="13" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding MailpitAvailable}" FontSize="13" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Classes="accent" Content="{Binding MailpitAction}" Click="MailpitInstall_Click"
+                                    IsEnabled="{Binding CanInstallMailpit}" />
+                            <Button Classes="tool" Content="Project page" Click="MailpitPage_Click" IsEnabled="{Binding IsIdle}" />
+                        </StackPanel>
+                        <TextBlock Classes="note"
+                                   Text="Catches every email your PHP code sends with mail() and shows it at http://localhost:8025 instead of delivering it. Install downloads the Windows build from GitHub into xampp\mailpit and sets sendmail_path in php.ini; the Mailpit row in the panel then starts and stops it, and Admin opens the inbox. Ports are under Config › Service and Port Settings." />
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

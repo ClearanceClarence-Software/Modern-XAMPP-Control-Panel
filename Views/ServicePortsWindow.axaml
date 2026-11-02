@@ -71,6 +71,17 @@
             </Border>
         </Grid>
 
+        <!-- Mailpit -->
+        <Border Classes="card" Padding="16,12">
+            <StackPanel>
+                <TextBlock Classes="section" Text="Mailpit" />
+                <Grid ColumnDefinitions="*,12,*">
+                    <StackPanel Grid.Column="0"><TextBlock Classes="lbl" Text="SMTP port (PHP mail() sends here)" /><TextBox x:Name="MailpitSmtpPort" /></StackPanel>
+                    <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Web interface port" /><TextBox x:Name="MailpitHttpPort" /></StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
         <!-- Mercury -->
         <Border Classes="card" Padding="16,12">
             <StackPanel>

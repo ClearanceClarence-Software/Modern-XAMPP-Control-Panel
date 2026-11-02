@@ -57,6 +57,21 @@
                     <TextBlock DockPanel.Dock="Top" Text="Extensions" FontSize="16" FontWeight="Bold" Margin="0,0,0,4" />
                     <TextBlock DockPanel.Dock="Top" Classes="note" Margin="0,0,0,8"
                                Text="Every extension DLL in php\ext. Checked ones load with Apache." />
+
+                    <!-- Xdebug: installed from PECL and switched with one button -->
+                    <Border DockPanel.Dock="Top" Padding="12,10" Margin="0,0,14,10" CornerRadius="6"
+                            Background="{DynamicResource HeaderBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                        <Grid ColumnDefinitions="*,10,Auto,6,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="Xdebug" FontWeight="SemiBold" />
+                                <TextBlock Classes="note" Text="{Binding XdebugStatus}" />
+                            </StackPanel>
+                            <Button Grid.Column="2" Classes="tool" Content="{Binding XdebugUpdate, StringFormat='Update to {0}'}"
+                                    IsVisible="{Binding HasXdebugUpdate}" Click="XdebugUpdate_Click" VerticalAlignment="Center" />
+                            <Button Grid.Column="4" Classes="tool" Content="{Binding XdebugAction}" MinWidth="110"
+                                    Click="Xdebug_Click" VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
                     <ScrollViewer>
                         <ItemsControl ItemsSource="{Binding Extensions}" Margin="0,0,14,0">
                             <ItemsControl.ItemsPanel>

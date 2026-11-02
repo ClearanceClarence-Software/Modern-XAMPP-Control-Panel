@@ -81,6 +81,16 @@ public partial class UpdatesWindow : Window
 
     private void FileZillaDownload_Click(object? sender, RoutedEventArgs e) => ViewModel?.OpenFileZillaDownloadPage();
 
+    private void MailpitPage_Click(object? sender, RoutedEventArgs e) => ViewModel?.OpenMailpitPage();
+
+    private async void MailpitInstall_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.InstallMailpitAsync();
+        }
+    }
+
     private async void FileZillaInstall_Click(object? sender, RoutedEventArgs e)
     {
         if (ViewModel is not { } viewModel)

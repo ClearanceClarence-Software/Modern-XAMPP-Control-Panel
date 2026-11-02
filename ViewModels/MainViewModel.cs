@@ -25,7 +25,6 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     {
         Settings = settings;
         _logFontSize = settings.LogFontSize;
-        RelayCommand.UnhandledError += exception => Write("main", exception.Message, LogLevel.Error);
 
         ShellCommand = new RelayCommand(OpenShell);
         ExplorerCommand = new RelayCommand(() => Shell.Open(Root));
@@ -358,23 +357,76 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         }
     }
 
-    /// <summary>Before starting a module: false (with a log explanation) if another program holds its ports.</summary>
+    /// <summary>
+    /// Set by the main window: shows the port conflict dialog and returns the choice. Null, or a hidden window,
+    /// means the start is simply refused as before.
+    /// </summary>
+    public Func<PortConflictPrompt, Task<PortConflictChoice>>? ResolvePortConflict { get; set; }
+
+    /// <summary>
+    /// Before starting a module: false (with a log explanation) if another program holds its ports. When the main
+    /// window is showing, a dialog offers to end the blocking program, stop IIS, or move the module to free ports;
+    /// after that the ports are checked again.
+    /// </summary>
     /// <param name="module">The module about to start; ports held by programs inside the XAMPP folder are fine.</param>
     /// <returns>True when no program outside the XAMPP folder holds any of the module's configured ports.</returns>
     public async Task<bool> PortsAreFreeAsync(ModuleViewModel module)
     {
         List<Listener> listeners = await Task.Run(PortTable.ListAll);
-        return !ReportBlockedPorts(module, listeners);
+        List<PortConflict> conflicts = FindBlockedPorts(module, listeners);
+        if (conflicts.Count == 0)
+        {
+            return true;
+        }
+
+        ReportBlockedPorts(module, conflicts);
+        if (ResolvePortConflict is null)
+        {
+            return false;
+        }
+
+        bool hasIis = conflicts.Any(conflict => conflict.IsSystem)
+            && await WindowsServices.IsRunningAsync(PortConflicts.IisService);
+        string? freeLabel = FreePortsLabel(conflicts, hasIis);
+        (int? Http, int? Https) moveTo = AlternativePorts(module, listeners);
+        string? moveLabel = null;
+        if (moveTo.Http is { } http)
+        {
+            moveLabel = moveTo.Https is { } https ? $"Use ports {http} and {https}" : $"Use port {http}";
+        }
+
+        var prompt = new PortConflictPrompt(module.Name, conflicts, freeLabel, moveLabel);
+        PortConflictChoice choice = await ResolvePortConflict(prompt);
+        switch (choice)
+        {
+            case PortConflictChoice.FreePorts:
+                await FreePortsAsync(module, conflicts, hasIis);
+                break;
+            case PortConflictChoice.MovePorts when moveTo.Http is { } newHttp:
+                MovePorts(module, newHttp, moveTo.Https);
+                break;
+            default:
+                return false;
+        }
+
+        listeners = await Task.Run(PortTable.ListAll);
+        conflicts = FindBlockedPorts(module, listeners);
+        if (conflicts.Count > 0)
+        {
+            ReportBlockedPorts(module, conflicts);
+            return false;
+        }
+        Write(module.Driver.Tag, "The ports are free now.", LogLevel.Ok);
+        return true;
     }
 
-    /// <summary>Logs, in XAMPP's wording, each configured port that a program outside XAMPP holds.</summary>
+    /// <summary>The module's configured ports that a program outside the XAMPP folder holds.</summary>
     /// <param name="module">The module whose configured ports are checked.</param>
     /// <param name="listeners">The listening sockets to check against, read once by the caller.</param>
-    /// <returns>True when at least one port is blocked, after the problem has been logged.</returns>
-    private bool ReportBlockedPorts(ModuleViewModel module, IReadOnlyList<Listener> listeners)
+    /// <returns>One entry per blocked port, in the order of the configured ports.</returns>
+    private List<PortConflict> FindBlockedPorts(ModuleViewModel module, IReadOnlyList<Listener> listeners)
     {
-        string tag = module.Driver.Tag;
-        bool isAnyPortBlocked = false;
+        var conflicts = new List<PortConflict>();
         foreach (int port in module.Driver.ConfiguredPorts.Distinct())
         {
             if (PortTable.OwnerOf(port, listeners) is not { } pid)
@@ -390,25 +442,176 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
                 continue;
             }
 
-            if (!isAnyPortBlocked)
-            {
-                Write(tag, "Problem detected!", LogLevel.Error);
-            }
-            isAnyPortBlocked = true;
-
             // PID 4 is the Windows kernel, which has no executable path or process name to show.
             string ownerName = ownerPath ?? ProcessScan.NameOf(pid) ?? (pid == 4 ? "System" : "unknown process");
-            Write(tag, $"Port {port} in use by \"{ownerName}\" with PID {pid}!", LogLevel.Error);
+            conflicts.Add(new PortConflict(port, pid, ownerName));
+        }
+        return conflicts;
+    }
+
+    /// <summary>Logs, in XAMPP's wording, each configured port that a program outside XAMPP holds.</summary>
+    /// <param name="module">The module whose configured ports are checked.</param>
+    /// <param name="listeners">The listening sockets to check against, read once by the caller.</param>
+    /// <returns>True when at least one port is blocked, after the problem has been logged.</returns>
+    private bool ReportBlockedPorts(ModuleViewModel module, IReadOnlyList<Listener> listeners)
+    {
+        List<PortConflict> conflicts = FindBlockedPorts(module, listeners);
+        if (conflicts.Count == 0)
+        {
+            return false;
+        }
+        ReportBlockedPorts(module, conflicts);
+        return true;
+    }
+
+    private void ReportBlockedPorts(ModuleViewModel module, List<PortConflict> conflicts)
+    {
+        string tag = module.Driver.Tag;
+        Write(tag, "Problem detected!", LogLevel.Error);
+        foreach (PortConflict conflict in conflicts)
+        {
+            Write(tag, $"Port {conflict.Port} in use by \"{conflict.OwnerName}\" with PID {conflict.Pid}!", LogLevel.Error);
+        }
+        Write(tag, $"{module.Name} WILL NOT start without the configured ports free!", LogLevel.Error);
+        Write(tag, "You need to uninstall/disable/reconfigure the blocking application", LogLevel.Error);
+        Write(tag, $"or reconfigure {module.Name} and the Control Panel to listen on a different port",
+            LogLevel.Error);
+    }
+
+    /// <summary>The text of the button that frees the ports.</summary>
+    /// <param name="conflicts">The blocked ports.</param>
+    /// <param name="hasIis">True when the kernel holds a port and IIS is running, so stopping IIS should free it.</param>
+    /// <returns>
+    /// "Stop IIS", "End chrome.exe", "End the 2 programs"; null when only the kernel holds ports and IIS isn't there.
+    /// </returns>
+    private static string? FreePortsLabel(List<PortConflict> conflicts, bool hasIis)
+    {
+        List<PortConflict> processes = conflicts.Where(conflict => !conflict.IsSystem).ToList();
+        bool hasSystem = conflicts.Any(conflict => conflict.IsSystem);
+        if (hasSystem && !hasIis && processes.Count == 0)
+        {
+            return null;
         }
 
-        if (isAnyPortBlocked)
+        var parts = new List<string>();
+        if (hasSystem && hasIis)
         {
-            Write(tag, $"{module.Name} WILL NOT start without the configured ports free!", LogLevel.Error);
-            Write(tag, "You need to uninstall/disable/reconfigure the blocking application", LogLevel.Error);
-            Write(tag, $"or reconfigure {module.Name} and the Control Panel to listen on a different port",
-                LogLevel.Error);
+            parts.Add("Stop IIS");
         }
-        return isAnyPortBlocked;
+        string[] names = processes.Select(process => process.ShortName).Distinct().ToArray();
+        if (names.Length == 1)
+        {
+            parts.Add($"End {names[0]}");
+        }
+        else if (names.Length > 1)
+        {
+            parts.Add($"End the {names.Length} programs");
+        }
+        return string.Join(" and ", parts);
+    }
+
+    /// <summary>Free ports a module could move to.</summary>
+    /// <param name="module">The module; only Apache and MySQL can be moved.</param>
+    /// <param name="listeners">The listening sockets, read once by the caller.</param>
+    /// <returns>
+    /// Apache's HTTP and HTTPS ports, or MySQL's port in Http; (null, null) when the module can't move or nothing is
+    /// free.
+    /// </returns>
+    private (int? Http, int? Https) AlternativePorts(ModuleViewModel module, IReadOnlyList<Listener> listeners)
+    {
+        switch (module.Name)
+        {
+            case "Apache":
+            {
+                int? http = PortConflicts.FirstFree([8080, 8081, 8000, 8888], listeners);
+                int? https = PortConflicts.FirstFree([4433, 8443, 4443], listeners);
+                return http is null || https is null ? (null, null) : (http, https);
+            }
+            case "MySQL":
+                return (PortConflicts.FirstFree([3307, 3308, 3309], listeners), null);
+            default:
+                return (null, null);
+        }
+    }
+
+    /// <summary>Stops IIS and ends the processes that hold the module's ports, then waits a moment for the ports.</summary>
+    /// <param name="module">The module that is about to start; its tag names the log lines.</param>
+    /// <param name="conflicts">The blocked ports and who holds them.</param>
+    /// <param name="hasIis">True when IIS is running and the kernel holds a port, so IIS is stopped first.</param>
+    /// <returns>A task that completes after the stop and kill attempts and a short wait for the ports.</returns>
+    private async Task FreePortsAsync(ModuleViewModel module, List<PortConflict> conflicts, bool hasIis)
+    {
+        string tag = module.Driver.Tag;
+        if (hasIis && conflicts.Any(conflict => conflict.IsSystem))
+        {
+            Write(tag, "Stopping IIS (World Wide Web Publishing Service)…");
+            int exitCode = await WindowsServices.StopAsync(PortConflicts.IisService);
+            Write(tag,
+                exitCode switch
+                {
+                    0 => "IIS stopped. It starts again with Windows unless you disable it in Services.",
+                    -2 => "Canceled at the admin prompt; IIS keeps running.",
+                    _ => $"net stop {PortConflicts.IisService} exited with {exitCode}.",
+                },
+                exitCode == 0 ? LogLevel.Ok : LogLevel.Warn);
+        }
+
+        IEnumerable<PortConflict> processes = conflicts.Where(conflict => !conflict.IsSystem).DistinctBy(conflict => conflict.Pid);
+        foreach (PortConflict conflict in processes)
+        {
+            Write(tag, $"Ending {conflict.OwnerName} (PID {conflict.Pid})…");
+            ProcessScan.KillTree(conflict.Pid);
+            if (ProcessScan.NameOf(conflict.Pid) is not null)
+            {
+                // Services and programs of other users need admin rights to end.
+                int exitCode = await ElevatedHelper.RunAsync(
+                    "taskkill.exe", $"/PID {conflict.Pid} /T /F", Environment.SystemDirectory);
+                if (exitCode != 0)
+                {
+                    Write(tag, $"{conflict.ShortName} couldn't be ended (taskkill exited with {exitCode}).", LogLevel.Warn);
+                }
+            }
+        }
+        await Task.Delay(700);
+    }
+
+    /// <summary>Rewrites the module's config files and the panel's settings for the new ports.</summary>
+    /// <param name="module">Apache or MySQL.</param>
+    /// <param name="newHttp">Apache's new HTTP port, or MySQL's new port.</param>
+    /// <param name="newHttps">Apache's new HTTPS port; null for MySQL.</param>
+    private void MovePorts(ModuleViewModel module, int newHttp, int? newHttps)
+    {
+        string tag = module.Driver.Tag;
+        ServiceSettings services = Settings.Services;
+        try
+        {
+            List<string> changed;
+            if (module.Name == "Apache" && newHttps is { } https)
+            {
+                changed = PortConflicts.MoveApache(Root, services.ApachePort, newHttp, services.ApacheSslPort, https);
+                Write(tag, $"Apache now listens on {newHttp} (HTTP) and {https} (HTTPS); open http://localhost:{newHttp}/",
+                    LogLevel.Ok);
+                services.ApachePort = newHttp;
+                services.ApacheSslPort = https;
+            }
+            else
+            {
+                changed = PortConflicts.MoveMySql(Root, services.MySqlPort, newHttp);
+                Write(tag, $"MySQL now listens on {newHttp}; set that port in your apps and phpMyAdmin's config.inc.php.",
+                    LogLevel.Ok);
+                services.MySqlPort = newHttp;
+            }
+            foreach (string file in changed)
+            {
+                Write(tag, $"Updated \"{file}\"");
+            }
+            Settings.Save();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // A locked or read-only config file: the module stays on its old ports and the log says why.
+            Write(tag, "The config files couldn't be changed: " + ex.Message, LogLevel.Error);
+        }
     }
 
     // ── status polling ───────────────────────────────────────
@@ -588,6 +791,21 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 
         // The console runs on its own; the panel has no use for the process handle.
         System.Diagnostics.Process.Start(startInfo)?.Dispose();
+    }
+
+    /// <summary>The modules the panel itself started or that run as plain processes, not as Windows services.</summary>
+    /// <returns>Running modules that <see cref="StopAllAsync"/> would stop, in panel order.</returns>
+    public List<ModuleViewModel> RunningModules() =>
+        Modules.Where(module => module.IsRunning && !module.IsServiceInstalled).ToList();
+
+    /// <summary>Stops every running module that isn't a Windows service, in panel order (Apache first).</summary>
+    /// <returns>A task that completes when every stop attempt has finished.</returns>
+    public async Task StopAllAsync()
+    {
+        foreach (ModuleViewModel module in RunningModules())
+        {
+            await module.StopForMaintenanceAsync();
+        }
     }
 
     /// <summary>Stops the status polling.</summary>

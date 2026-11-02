@@ -18,6 +18,8 @@ namespace XamppControl.Views;
 public partial class MainWindow : Window
 {
     private MainViewModel? _subscribedViewModel;
+    private bool _isClosingConfirmed;
+    private bool _isClosingInProgress;
 
     /// <summary>Sets up the title, icon and logo, and asks for the XAMPP folder on open when none is found.</summary>
     public MainWindow()
@@ -60,6 +62,68 @@ public partial class MainWindow : Window
     public TrayController? Tray { get; set; }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
+
+    /// <summary>
+    /// Asks what to do with running modules before the window closes: stop them, leave them running, or stay.
+    /// Services are left alone either way, since Windows keeps them running.
+    /// </summary>
+    /// <param name="e">Canceled while the question is open and when the user chooses to stay.</param>
+    protected override async void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+        bool isShuttingDown = e.CloseReason == WindowCloseReason.OSShutdown;
+        if (_isClosingConfirmed || isShuttingDown || ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        List<ModuleViewModel> running = viewModel.RunningModules();
+        if (running.Count == 0)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        if (_isClosingInProgress)
+        {
+            return;
+        }
+
+        _isClosingInProgress = true;
+        try
+        {
+            // Quit from the tray arrives with the window hidden; a dialog needs a visible owner.
+            if (!IsVisible)
+            {
+                Tray?.ShowWindow();
+            }
+
+            bool isOne = running.Count == 1;
+            string names = string.Join(" and ", running.Select(module => module.Name));
+            ConfirmChoice choice = await ConfirmWindow.AskAsync(this,
+                $"{names} {(isOne ? "is" : "are")} still running",
+                $"Stop {(isOne ? "it" : "them")} with a clean shutdown before quitting, or leave " +
+                $"{(isOne ? "it" : "them")} running in the background? Modules installed as Windows services keep " +
+                "running either way.",
+                "Stop and quit",
+                "Leave running");
+            if (choice == ConfirmChoice.Cancel)
+            {
+                return;
+            }
+
+            if (choice == ConfirmChoice.Primary)
+            {
+                await viewModel.StopAllAsync();
+            }
+            _isClosingConfirmed = true;
+            Close();
+        }
+        finally
+        {
+            _isClosingInProgress = false;
+        }
+    }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
@@ -124,7 +188,42 @@ public partial class MainWindow : Window
         if (_subscribedViewModel is not null)
         {
             _subscribedViewModel.Log.CollectionChanged += OnLogChanged;
+            _subscribedViewModel.ResolvePortConflict = AskPortConflictAsync;
         }
+    }
+
+    /// <summary>The port conflict dialog: who holds the ports, and the buttons to free them or move the module.</summary>
+    /// <param name="prompt">The blocked ports and the available ways out.</param>
+    /// <returns>The choice; Cancel when the window is hidden (autostart from the tray) or neither way out exists.</returns>
+    private async Task<PortConflictChoice> AskPortConflictAsync(PortConflictPrompt prompt)
+    {
+        if (!IsVisible || (prompt.FreeLabel is null && prompt.MoveLabel is null))
+        {
+            return PortConflictChoice.Cancel;
+        }
+
+        string lines = string.Join(Environment.NewLine, prompt.Conflicts.Select(conflict =>
+            $"Port {conflict.Port}: {conflict.OwnerName} (PID {conflict.Pid})"));
+        string hint = prompt.Conflicts.Any(conflict => conflict.IsSystem)
+            ? Environment.NewLine + Environment.NewLine + "\"System\" means Windows itself holds the port, usually for IIS."
+            : "";
+        string message = $"{lines}{hint}{Environment.NewLine}{Environment.NewLine}" +
+            (prompt.MoveLabel is null
+                ? "End the program to free the port, or cancel and change the port under Config."
+                : $"Free the port, or move {prompt.ModuleName} to other ports (its config files and the panel's " +
+                  "settings are updated).");
+
+        // Primary is the free action when it exists; otherwise moving takes its place.
+        string primary = prompt.FreeLabel ?? prompt.MoveLabel!;
+        string? secondary = prompt.FreeLabel is null ? null : prompt.MoveLabel;
+        ConfirmChoice choice = await ConfirmWindow.AskAsync(this, $"{prompt.ModuleName} can't start: port in use",
+            message, primary, secondary);
+        return choice switch
+        {
+            ConfirmChoice.Primary => prompt.FreeLabel is null ? PortConflictChoice.MovePorts : PortConflictChoice.FreePorts,
+            ConfirmChoice.Secondary => PortConflictChoice.MovePorts,
+            _ => PortConflictChoice.Cancel,
+        };
     }
 
     /// <summary>Keeps the newest log line in view when lines are added.</summary>
@@ -171,7 +270,23 @@ public partial class MainWindow : Window
             return;
         }
 
-        new NetstatWindow { DataContext = new NetstatViewModel(viewModel.Root) }.Show(this);
+        new NetstatWindow { DataContext = new NetstatViewModel(viewModel) }.Show(this);
+    }
+
+    private async void Databases_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await new DatabasesWindow { DataContext = new DatabasesViewModel(viewModel) }.ShowDialog(this);
+        }
+    }
+
+    private void Logs_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            new LogViewerWindow { DataContext = new LogViewerViewModel(viewModel) }.Show(this);
+        }
     }
 
     private async void Sites_Click(object? sender, RoutedEventArgs e)

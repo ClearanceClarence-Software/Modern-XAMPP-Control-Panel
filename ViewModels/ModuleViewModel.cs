@@ -6,7 +6,7 @@ namespace XamppControl.ViewModels;
 /// <summary>One module row: status, PIDs, ports, the Start/Stop button, the service checkbox and the menus.</summary>
 public sealed class ModuleViewModel : ObservableObject
 {
-    // Shell.RunElevatedAsync returns this when the user cancels the UAC prompt.
+    // Elevated commands return this when the user cancels the UAC prompt.
     private const int ElevationCanceledExitCode = -2;
 
     private readonly MainViewModel _main;
@@ -432,7 +432,7 @@ public sealed class ModuleViewModel : ObservableObject
 
         string progressVerb = IsServiceInstalled ? "Removing" : "Installing";
         _main.Write(Driver.Tag, $"{progressVerb} the {Driver.ServiceName} service…");
-        int exitCode = await Shell.RunElevatedAsync(serviceCommand.Exe, serviceCommand.Args, _main.Root);
+        int exitCode = await ElevatedHelper.RunAsync(serviceCommand.Exe, serviceCommand.Args, _main.Root);
         if (exitCode == ElevationCanceledExitCode)
         {
             _main.Write(Driver.Tag, "Canceled at the admin prompt.", LogLevel.Warn);

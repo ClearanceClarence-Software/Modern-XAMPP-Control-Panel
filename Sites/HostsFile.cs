@@ -100,7 +100,7 @@ public static class HostsFile
 
         // cmd's exit code is that of its last command, so a failed copy skips the flush and reports the copy's code.
         string arguments = $"/c copy /y \"{prepared}\" \"{HostsPath}\" >nul && ipconfig /flushdns >nul";
-        int exitCode = await Shell.RunElevatedAsync("cmd.exe", arguments, AppSettings.Folder);
+        int exitCode = await ElevatedHelper.RunAsync("cmd.exe", arguments, AppSettings.Folder);
         FileTools.TryDeleteFile(prepared);
         return exitCode;
     }

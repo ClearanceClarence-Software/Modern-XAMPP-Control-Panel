@@ -4,8 +4,8 @@
         x:Class="XamppControl.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="Modern XAMPP Control Panel"
-        Width="1040" Height="720"
-        MinWidth="900" MinHeight="600"
+        Width="1040" Height="800"
+        MinWidth="900" MinHeight="680"
         WindowStartupLocation="CenterScreen">
 
     <Window.Styles>
@@ -157,6 +157,18 @@
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconUpdate}" />
                         <TextBlock Text="Versions" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Click="Databases_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconDatabase}" />
+                        <TextBlock Text="Databases" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="side" Click="Logs_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Path Classes="icon" Data="{StaticResource IconLogs}" />
+                        <TextBlock Text="Logs" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Sites_Click">

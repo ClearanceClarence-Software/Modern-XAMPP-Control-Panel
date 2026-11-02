@@ -6,7 +6,7 @@
 .DESCRIPTION
     Run from anywhere; the script works in the repository root. Steps:
       1. reads the version from XamppControl.csproj and its section from CHANGELOG.md,
-      2. checks formatting and publishes the self-contained single-file exe,
+      2. checks formatting, runs the tests and publishes the self-contained single-file exe,
       3. with -Sign, signs it with the code-signing certificate in your certificate store (Certum through
          SimplySign Desktop, which must be running and logged in) and verifies the signature,
       4. zips the exe and writes a SHA-256 file next to it in artifacts\,
@@ -107,13 +107,17 @@ $changelog = Get-ChangelogSection $version
 Write-Host "Releasing Modern XAMPP Control Panel $tag" -ForegroundColor Green
 
 Write-Step 'Checking formatting'
-dotnet format --verify-no-changes
+dotnet format XamppControl.slnx --verify-no-changes
 if ($LASTEXITCODE -ne 0) { throw 'dotnet format found changes. Run dotnet format and commit them first.' }
+
+Write-Step 'Running tests'
+dotnet test XamppControl.slnx --configuration Release
+if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
 
 Write-Step 'Publishing'
 $publishDir = Join-Path $repoRoot 'bin\publish\win-x64'
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
-dotnet publish -p:PublishProfile=win-x64 -p:Version=$version
+dotnet publish XamppControl.csproj -p:PublishProfile=win-x64 -p:Version=$version
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
 $exe = Join-Path $publishDir 'XamppControl.exe'
 

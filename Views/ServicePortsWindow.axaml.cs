@@ -44,6 +44,8 @@ public partial class ServicePortsWindow : Window
         TomcatPort.Text = services.TomcatPort.ToString();
         TomcatShutdownPort.Text = services.TomcatShutdownPort.ToString();
         TomcatAjpPort.Text = services.TomcatAjpPort.ToString();
+        MailpitSmtpPort.Text = services.MailpitSmtpPort.ToString();
+        MailpitHttpPort.Text = services.MailpitHttpPort.ToString();
         MercuryPorts.Text = services.MercuryPorts;
     }
 
@@ -82,6 +84,8 @@ public partial class ServicePortsWindow : Window
             TomcatPort = ParsePort(TomcatPort, "Tomcat main port"),
             TomcatShutdownPort = ParsePort(TomcatShutdownPort, "Tomcat shutdown port"),
             TomcatAjpPort = ParsePort(TomcatAjpPort, "Tomcat AJP port"),
+            MailpitSmtpPort = ParsePort(MailpitSmtpPort, "Mailpit SMTP port"),
+            MailpitHttpPort = ParsePort(MailpitHttpPort, "Mailpit web port"),
             MercuryPorts = MercuryPorts.Text?.Trim() ?? "",
         };
 

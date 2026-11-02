@@ -3,6 +3,41 @@
 All notable changes to Modern XAMPP Control Panel. The release script copies the section for each version into
 its GitHub release.
 
+## [0.3.0] - 2026-11-02
+
+### Added
+
+- **Logs window.** Follows Apache, PHP and MariaDB log files live, like `tail -f`, with a filter box and errors and
+  warnings colored. Rotated or cleared files are picked up again.
+- **One admin prompt per session.** The first action that needs admin rights (starting or stopping a Windows
+  service, the hosts file) starts a small elevated helper that serves the rest of the session, so you answer the
+  UAC prompt once instead of every time. If you decline, that action is canceled and later ones ask one by one,
+  as before.
+- **Crash reports.** An error the panel can't recover from now shows a window with the details, buttons to copy
+  them and open an issue, and the choice to keep running or quit. The report is also saved to `crash.log` in the
+  settings folder.
+- **Quit asks about running modules.** Closing the panel with Apache or MySQL running offers to stop them cleanly
+  first or leave them running.
+- **Databases window.** Lists the databases on the running server with table counts and sizes, exports any of
+  them to a timestamped `.sql` dump in `xampp\mysql_dumps` (routines, events and triggers included), imports a
+  `.sql` file into a new or existing database, and drops databases after a second click.
+- **Xdebug button.** The PHP window installs the Xdebug build that matches the active PHP from PECL, turns it on
+  (debug mode, start on request, port 9003) or off, and offers newer builds when PECL has one.
+- **Mailpit mail catcher.** The Versions window installs Mailpit into `xampp\mailpit` and sets `sendmail_path`
+  in `php.ini`, so `mail()` delivers to it. A Mailpit module row starts and stops it; Admin opens the inbox at
+  `http://localhost:8025`. Its ports are in Service and Port Settings.
+- **Port conflict fixes.** When a module can't start because another program holds its port, a dialog offers to
+  end that program, stop IIS when Windows holds the port, or move Apache to 8080/4433 (or MySQL to 3307) with the
+  config files and the panel's settings updated.
+- **Editor and Terminal per site.** The Sites window opens a site's folder in the configured editor or in a
+  command prompt with `php` and `mysql` on PATH.
+- **Netstat redesigned.** A filter box (port, address, PID, program or service), "XAMPP only" and IPv6 toggles,
+  Pause, sortable columns, and tiles for the socket count, XAMPP's sockets and blocked XAMPP ports. Each row names
+  what the port is for (Apache, MySQL, HTTP, Remote Desktop...), who can reach it, and warns when a foreign program
+  blocks a stopped module; Open, Folder, Copy and End buttons act on the row.
+- **Tests.** An xUnit project (`tests/XamppControl.Tests`) covers the release-feed parsing, `php.ini` editing,
+  the virtual host and hosts-file blocks, port rewriting and the version parsing; CI and the release script run it.
+
 ## [0.2.1] - 2026-10-28
 
 ### Added
@@ -59,6 +94,7 @@ First release: the XAMPP-style panel with clean MySQL/MariaDB shutdown, explaine
 conflict finder, Netstat, XAMPP-style configuration, and installing, switching and rolling back PHP and
 MariaDB versions.
 
+[0.3.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.0
 [0.2.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.2.1
 [0.2.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.2.0
 [0.1.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.1.0

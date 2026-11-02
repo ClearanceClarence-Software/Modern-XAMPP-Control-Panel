@@ -19,13 +19,17 @@ public sealed class SiteRow : ObservableObject
     /// <param name="site">The stored site; its values are copied, so editing the row doesn't change it.</param>
     /// <param name="services">Supplies Apache's ports for the row's link, read when the link is built.</param>
     /// <param name="browser">Read on each click for the configured browser; null uses the system default.</param>
-    public SiteRow(Site site, ServiceSettings services, Func<string?> browser)
+    /// <param name="editor">Read on each click for the configured editor; null opens the folder in Explorer.</param>
+    /// <param name="root">The XAMPP folder, for the terminal's PATH.</param>
+    public SiteRow(Site site, ServiceSettings services, Func<string?> browser, Func<string?> editor, string root)
     {
         _services = services;
         _host = site.Host;
         _folder = site.Folder;
         _useHttps = site.UseHttps;
         OpenCommand = new RelayCommand(() => Shell.OpenUrl(Url, browser()), () => Host.Length > 0);
+        EditorCommand = new RelayCommand(() => Shell.OpenFolderInEditor(Folder.Trim(), editor()), HasFolder);
+        TerminalCommand = new RelayCommand(() => Shell.OpenTerminal(Folder.Trim(), root), HasFolder);
     }
 
     /// <summary>The host name as typed, such as myproject.test.</summary>
@@ -46,7 +50,14 @@ public sealed class SiteRow : ObservableObject
     public string Folder
     {
         get => _folder;
-        set => SetField(ref _folder, value);
+        set
+        {
+            if (SetField(ref _folder, value))
+            {
+                EditorCommand.RaiseCanExecuteChanged();
+                TerminalCommand.RaiseCanExecuteChanged();
+            }
+        }
     }
 
     /// <summary>True also serves the site over HTTPS.</summary>
@@ -81,6 +92,14 @@ public sealed class SiteRow : ObservableObject
 
     /// <summary>Opens <see cref="Url"/> in the configured browser.</summary>
     public RelayCommand OpenCommand { get; }
+
+    /// <summary>Opens the site's folder in the configured editor, or in Explorer when none is set.</summary>
+    public RelayCommand EditorCommand { get; }
+
+    /// <summary>Opens a command prompt in the site's folder with php and mysql on PATH.</summary>
+    public RelayCommand TerminalCommand { get; }
+
+    private bool HasFolder() => Folder.Trim().Length > 0 && Directory.Exists(Folder.Trim());
 
     /// <summary>The row as a site to save, with the host name trimmed and lowercase and the folder trimmed.</summary>
     /// <returns>A new <see cref="Site"/>.</returns>
@@ -265,5 +284,6 @@ public sealed class SitesViewModel : ObservableObject
     /// <summary>Creates a row bound to the panel's ports and browser.</summary>
     /// <param name="site">The site to copy into the row.</param>
     /// <returns>The new row.</returns>
-    private SiteRow NewRow(Site site) => new(site, _main.Settings.Services, () => _main.Settings.Browser);
+    private SiteRow NewRow(Site site) =>
+        new(site, _main.Settings.Services, () => _main.Settings.Browser, () => _main.Settings.Editor, _main.Root);
 }

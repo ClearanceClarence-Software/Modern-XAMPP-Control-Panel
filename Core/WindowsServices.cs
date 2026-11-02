@@ -22,15 +22,35 @@ public static class WindowsServices
         return result.ExitCode == 0;
     }
 
-    /// <summary>Starts a Windows service through net.exe, behind a UAC prompt.</summary>
+    /// <summary>True when a Windows service exists and is running.</summary>
+    /// <param name="name">The service name (not the display name).</param>
+    /// <returns>True when sc.exe reports the RUNNING state; false otherwise or off Windows.</returns>
+    public static async Task<bool> IsRunningAsync(string name)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        Shell.RunResult result = await Shell.RunAsync(
+            "sc.exe",
+            $"query \"{name}\"",
+            Environment.SystemDirectory,
+            TimeSpan.FromSeconds(5));
+        // The state line reads "STATE : 4  RUNNING" in every language's sc.exe.
+        return result.ExitCode == 0 && result.Output.Contains(": 4", StringComparison.Ordinal)
+            && result.Output.Contains("RUNNING", StringComparison.Ordinal);
+    }
+
+    /// <summary>Starts a Windows service through net.exe, elevated (one UAC prompt per session).</summary>
     /// <param name="name">The service name (not the display name).</param>
     /// <returns>net.exe's exit code (0 on success); -1 when it did not start; -2 when the user declined UAC.</returns>
     public static Task<int> StartAsync(string name) =>
-        Shell.RunElevatedAsync("net.exe", $"start \"{name}\"", Environment.SystemDirectory);
+        ElevatedHelper.RunAsync("net.exe", $"start \"{name}\"", Environment.SystemDirectory);
 
-    /// <summary>Stops a Windows service through net.exe, behind a UAC prompt.</summary>
+    /// <summary>Stops a Windows service through net.exe, elevated (one UAC prompt per session).</summary>
     /// <param name="name">The service name (not the display name).</param>
     /// <returns>net.exe's exit code (0 on success); -1 when it did not start; -2 when the user declined UAC.</returns>
     public static Task<int> StopAsync(string name) =>
-        Shell.RunElevatedAsync("net.exe", $"stop \"{name}\"", Environment.SystemDirectory);
+        ElevatedHelper.RunAsync("net.exe", $"stop \"{name}\"", Environment.SystemDirectory);
 }

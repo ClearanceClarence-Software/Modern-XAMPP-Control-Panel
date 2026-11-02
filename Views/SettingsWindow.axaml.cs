@@ -48,6 +48,7 @@ public partial class SettingsWindow : Window
         (AutoFileZilla, "FileZilla"),
         (AutoMercury, "Mercury"),
         (AutoTomcat, "Tomcat"),
+        (AutoMailpit, "Mailpit"),
     ];
 
     /// <summary>Shows the editor, browser and XAMPP folder.</summary>

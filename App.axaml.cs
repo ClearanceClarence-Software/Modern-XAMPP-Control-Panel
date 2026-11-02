@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using XamppControl.Core;
+using XamppControl.Modules;
 using XamppControl.ViewModels;
 using XamppControl.Views;
 
@@ -27,6 +29,11 @@ public partial class App : Application
                     : Avalonia.Controls.WindowState.Normal,
             };
             desktop.MainWindow = mainWindow;
+
+            // Faulted tasks nobody awaited are shown on the UI thread. A crash that unwinds the UI thread or a
+            // plain thread ends the process before any window can show, so those reports only reach crash.log.
+            CrashReport.Shown = details => Dispatcher.UIThread.Post(() => new CrashWindow(details).Show());
+            RelayCommand.UnhandledError += exception => viewModel.Write("main", exception.Message, LogLevel.Error);
 
             var tray = new TrayController(this, mainWindow, viewModel);
             mainWindow.Tray = tray;
