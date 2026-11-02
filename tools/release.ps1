@@ -108,7 +108,7 @@ Write-Host "Releasing Modern XAMPP Control Panel $tag" -ForegroundColor Green
 
 Write-Step 'Checking formatting'
 dotnet format XamppControl.slnx --verify-no-changes
-if ($LASTEXITCODE -ne 0) { throw 'dotnet format found changes. Run dotnet format and commit them first.' }
+if ($LASTEXITCODE -ne 0) { throw 'dotnet format found changes. Run "dotnet format XamppControl.slnx" and commit them first.' }
 
 Write-Step 'Running tests'
 dotnet test XamppControl.slnx --configuration Release

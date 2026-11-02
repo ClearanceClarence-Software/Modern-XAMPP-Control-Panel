@@ -522,11 +522,11 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         switch (module.Name)
         {
             case "Apache":
-            {
-                int? http = PortConflicts.FirstFree([8080, 8081, 8000, 8888], listeners);
-                int? https = PortConflicts.FirstFree([4433, 8443, 4443], listeners);
-                return http is null || https is null ? (null, null) : (http, https);
-            }
+                {
+                    int? http = PortConflicts.FirstFree([8080, 8081, 8000, 8888], listeners);
+                    int? https = PortConflicts.FirstFree([4433, 8443, 4443], listeners);
+                    return http is null || https is null ? (null, null) : (http, https);
+                }
             case "MySQL":
                 return (PortConflicts.FirstFree([3307, 3308, 3309], listeners), null);
             default:

@@ -1,138 +1,68 @@
 <p align="center">
-  <img src="docs/assets/header.png" alt="Modern XAMPP Control Panel: a faster, safer control panel for XAMPP on Windows" width="100%">
+  <img src="docs/assets/header.png" alt="Modern XAMPP Control Panel: the control panel XAMPP should have shipped with" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ClearanceClarence-Software/Modern-XAMPP-Control-Panel?color=F47A26"></a>
-  <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/total?color=F47A26"></a>
-  <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4">
-  <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4">
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/ClearanceClarence-Software/Modern-XAMPP-Control-Panel"></a>
+  <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ClearanceClarence-Software/Modern-XAMPP-Control-Panel?style=flat-square&color=F47A26&label=release"></a>
+  <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/total?style=flat-square&color=F47A26"></a>
+  <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/actions/workflows/ci.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/ci.yml?style=flat-square&label=build"></a>
+  <img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=flat-square">
+  <img alt=".NET 10 + Avalonia" src="https://img.shields.io/badge/.NET%2010-Avalonia-512BD4?style=flat-square">
+  <img alt="Code signed" src="https://img.shields.io/badge/releases-code%20signed-2EA043?style=flat-square">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/ClearanceClarence-Software/Modern-XAMPP-Control-Panel?style=flat-square"></a>
 </p>
 
-A drop-in replacement for the XAMPP Control Panel on Windows. It keeps the layout you already know
-(module rows, Start/Stop, Admin, Config, Logs) and fixes the things that hurt: databases corrupted
-by hard kills, cryptic "shutdown unexpectedly" errors, and no way to change PHP or MariaDB versions.
+<p align="center">
+  <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/latest"><b>Download for Windows</b></a>
+  &nbsp;·&nbsp;
+  <a href="#features">Features</a>
+  &nbsp;·&nbsp;
+  <a href="#quick-start">Quick start</a>
+  &nbsp;·&nbsp;
+  <a href="#how-versions-work">How versions work</a>
+  &nbsp;·&nbsp;
+  <a href="#troubleshooting">Troubleshooting</a>
+  &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+<br>
+
+**Modern XAMPP Control Panel** is a drop-in replacement for the control panel that ships with XAMPP
+on Windows. It keeps the layout you already know (module rows, Start/Stop, Admin, Config, Logs) and
+fixes the things that hurt: databases corrupted by hard kills, cryptic "shutdown unexpectedly"
+errors, ports taken by something you can't see, and no way to change PHP or MariaDB versions.
+
+One signed, self-contained `.exe`. No installer, no runtime to install, nothing moved in your XAMPP
+folder that you didn't ask for.
 
 > [!NOTE]
-> This is an unofficial, community project. It is not affiliated with or endorsed by Apache Friends.
-> XAMPP and the XAMPP logo are trademarks of Apache Friends.
+> This is an unofficial, community project by [CC Software](https://github.com/ClearanceClarence-Software).
+> It is not affiliated with or endorsed by Apache Friends. XAMPP and the XAMPP logo are trademarks of
+> Apache Friends.
 
-<!--
-Screenshots: save these in docs/assets/ (about 1100 px wide, PNG), then remove this comment.
-<p align="center">
-  <img src="docs/assets/screenshot-light.png" alt="Main window, light theme" width="49%">
-  <img src="docs/assets/screenshot-dark.png" alt="Main window, dark theme" width="49%">
-</p>
-<p align="center">
-  <img src="docs/assets/screenshot-sites.png" alt="Sites window" width="49%">
-  <img src="docs/assets/screenshot-versions.png" alt="Versions window" width="49%">
-</p>
--->
+<br>
 
-## Why use it
+<p align="center">
+  <img src="docs/assets/features.png" alt="Six things the panel does: clean MySQL shutdown, readable errors, HTTPS local sites, PHP and MariaDB versions, Xdebug Mailpit and databases, port conflicts solved" width="100%">
+</p>
+
+## Why switch
 
 | | XAMPP Control Panel | Modern XAMPP Control Panel |
 |---|---|---|
 | Stopping MySQL/MariaDB | Ends the process | Clean shutdown with `mariadb-admin`, so InnoDB flushes its logs |
-| When a server won't start | "Shutdown unexpectedly" | Shows the last lines of the error log in the panel |
-| Ports in use | Generic warning | Names the program and PID holding the port, before starting |
-| PHP / MariaDB versions | Whatever came with XAMPP | Install, update and switch between several versions |
-| Versions at a glance | No | Apache, PHP and MariaDB versions read from the binaries |
-| Local sites | Edit `httpd-vhosts.conf` and the hosts file by hand | `https://myproject.test` in one click, with a trusted certificate |
-| php.ini | Open it in Notepad | Common settings and every extension on one page |
-| Broken Apache config | "Shutdown unexpectedly" | `httpd -t` runs first and names the line |
-| Look and feel | 2010s VCL | Modern UI with light and dark themes, same familiar layout |
+| When a server won't start | "Shutdown unexpectedly" | `httpd -t` runs first; otherwise the last lines of the error log show in the panel |
+| Ports in use | Generic warning | Names the program and PID, then offers to end it, stop IIS, or move the module |
+| PHP / MariaDB versions | Whatever came with XAMPP | Install, update, switch and roll back, from the official feeds |
+| Local sites | Edit `httpd-vhosts.conf` and the hosts file by hand | `https://myproject.test` in one click, with a certificate Windows trusts |
+| php.ini | Open it in Notepad | Common settings, every extension, and Xdebug with one button |
+| Mail from PHP | Goes nowhere, or everywhere | Mailpit catches it at `localhost:8025` |
+| Databases | phpMyAdmin | Export, import and drop from the panel |
+| Admin prompts | Every service action | Once per session |
+| Look and feel | 2010s VCL, one theme | Light and dark, tray icon, same familiar layout |
 
-## Features
-
-**Familiar control panel.** Module rows for Apache, MySQL, FileZilla, Mercury, Tomcat and Mailpit with
-Service, PID(s), Port(s), Start/Stop, Admin, Config and Logs, plus Config, Netstat, Shell, Explorer,
-Services and Help buttons, just like the original. A tray icon shows what runs, starts and stops
-modules from its menu, and keeps the panel out of the taskbar when minimized.
-
-**Safe MySQL/MariaDB handling.** Stop always tries a clean shutdown first. A hard kill is only
-offered as **Force stop** when the clean shutdown fails, and it tells you that InnoDB will run crash
-recovery on the next start.
-
-**Startup failures explained.** Before Apache starts, the panel checks its configuration with
-`httpd -t` and shows the exact error instead of starting a server that dies. If Apache or MySQL
-exits right after starting anyway, the panel shows the last lines of `error.log` or
-`mysql_error.log`, so you see *why* without opening files.
-
-**Port conflict finder and fixer.** Before a module starts (and optionally when the panel opens),
-the panel checks its ports and reports exactly which program holds them:
-`Port 80 in use by "C:\Program Files\Skype\Skype.exe" with PID 4120!` When you click Start, a
-dialog offers to end that program (or stop IIS when Windows itself holds the port), or to move
-Apache to 8080/4433 or MySQL to 3307, updating the config files and the panel's settings for you.
-
-**PHP and MariaDB versions.** The **Versions** window lists every installed build and lets you:
-
-- **Install** a new version straight from windows.php.net or downloads.mariadb.org (SHA-256
-  verified), or from a zip you downloaded yourself.
-- **Switch** between installed versions in seconds; the server is stopped and restarted for you.
-- **Switch back** after any install or switch, and **remove** versions you no longer need.
-
-**FileZilla Server upgrade.** XAMPP still ships FileZilla Server 0.9.41 from 2012. The Versions
-window opens the official download page and runs the installer you downloaded: it stops the old
-server, installs FileZilla Server 1.x as a Windows service, and the FileZilla row then starts, stops
-and administers the new one. Later 1.x updates go the same way and keep your users. FileZilla's
-download links expire, so the panel can't download it for you, and 1.x can't read 0.9's settings,
-so FTP users are set up again in its Admin program.
-
-**Sites with HTTPS.** The **Sites** window gives each project its own address, such as
-`https://myproject.test`. Pick a name and a folder, and Apply:
-
-- writes the virtual hosts to `httpd-vhosts.conf` (in a marked block; your own entries are left
-  alone) and tests the config before keeping it,
-- adds the names to the Windows hosts file (one admin prompt),
-- issues a certificate for localhost and every site from a certificate authority that exists only
-  on your computer, and asks Windows to trust it, so Chrome and Edge show the padlock,
-- restarts Apache. `localhost` keeps serving `htdocs`.
-
-**PHP settings.** The **PHP** window edits the `php.ini` values everyone changes (memory limit,
-upload size, post size, execution time, input vars, display errors, time zone) and lists every
-extension in `php\ext` with a check box. Saving keeps the previous file as `php.ini.bak` and
-restarts Apache.
-
-**Xdebug with one button.** The PHP window installs the Xdebug build that matches your PHP
-(version, thread safety and compiler) from PECL, turns it on in debug mode on port 9003, and
-turns it off again when you want speed back. An update button shows when PECL has a newer build.
-
-**Databases.** The **Databases** window lists the databases on the running server with their size,
-exports any of them to a timestamped `.sql` file in `xampp\mysql_dumps` (routines, events and
-triggers included), imports a `.sql` file into a new or existing database, and drops databases.
-
-**Mail catcher.** The Versions window installs [Mailpit](https://github.com/axllent/mailpit) into
-`xampp\mailpit` and points PHP's `mail()` at it. Every message your code sends shows up at
-`http://localhost:8025` instead of leaving your computer. The Mailpit row starts and stops it, and
-Admin opens the inbox.
-
-**Open in editor or terminal.** Each site in the Sites window has Editor and Terminal buttons: the
-folder opens in the editor set under Config (VS Code, PhpStorm, ...) or in a command prompt with
-`php` and `mysql` already on PATH.
-
-**Update notice.** The panel checks GitHub for newer releases when it starts. When there is one, a
-link in the header opens the release notes of every version since yours, with a button to download
-the newest. You can turn this off in Config.
-
-**Logs.** The **Logs** window follows Apache, PHP and MariaDB log files live with a filter, so you
-don't need Notepad to watch `error.log` while you work.
-
-**One admin prompt.** Starting and stopping Windows services and updating the hosts file need admin
-rights. The panel asks once per session and reuses that for later actions.
-
-**Netstat.** Listening TCP sockets with port, address, PID and process, refreshed every 3 seconds
-(or paused). Filter by anything, sort by any column, hide IPv6 or show only XAMPP. Each row says what
-the port is for (Apache, MySQL, HTTP, Remote Desktop...), who can reach it, and warns when another
-program blocks a stopped module; Open, Folder, Copy and End act on the row. New sockets show in
-green, closed ones in dark red.
-
-**XAMPP-style configuration.** Editor, browser, XAMPP folder, autostart per module, start
-minimized, light or dark theme (or follow Windows; the sun/moon button in the header switches it), minimize to tray, update check, port check on startup, debug output, plus Service and Port Settings, User Defined Files
-and Log Options.
-
-## Download
+## Quick start
 
 1. Download `ModernXamppControlPanel-<version>-win-x64.zip` from the
    [latest release](https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/latest).
@@ -140,18 +70,85 @@ and Log Options.
 3. Run it. It finds XAMPP in its own folder, the folder above it, or `C:\xampp`, and asks for the
    folder if none of those has an install.
 
-It's a single self-contained exe: no installer and no .NET runtime to install. See the
-[changelog](CHANGELOG.md) for what's new in each version.
+**Requirements:** Windows 10 or 11 (x64) and XAMPP for Windows, any recent version. The original
+control panel keeps working; the two can be used side by side.
 
 > [!TIP]
 > Windows SmartScreen may warn about an unrecognized app the first time. Choose
-> **More info › Run anyway**. Releases are code-signed; each release's notes name the signer, and
-> [docs/code-signing.md](docs/code-signing.md) shows how to check the signature.
+> **More info › Run anyway**. Releases are signed with a Certum code-signing certificate; each
+> release's notes name the signer, and [docs/code-signing.md](docs/code-signing.md) shows how to
+> check the signature.
 
-### Requirements
+## Features
 
-- Windows 10 or 11, x64
-- XAMPP for Windows (any recent version)
+<details open>
+<summary><b>The panel</b></summary>
+<br>
+
+- **Familiar layout.** Module rows for Apache, MySQL, FileZilla, Mercury, Tomcat and Mailpit with
+  Service, PID(s), Port(s), Start/Stop, Admin, Config and Logs, plus Config, Netstat, Versions,
+  Databases, Logs, Sites, PHP, Shell, Explorer, Services and Help buttons.
+- **Light and dark themes.** Follows Windows by default; the sun/moon button in the header switches.
+- **Tray icon.** Shows what runs, starts and stops modules from its menu, keeps the panel out of
+  the taskbar when minimized.
+- **One admin prompt per session.** Service actions and the hosts file reuse a single elevation.
+- **Quit asks.** Closing with Apache or MySQL running offers a clean stop or leaving them running.
+- **Update notice** in the header with the release notes of every version since yours.
+- **Crash reports.** An unrecoverable error shows a window with the details and a button to open
+  an issue; the report is also saved to `crash.log`.
+</details>
+
+<details open>
+<summary><b>Safe servers</b></summary>
+<br>
+
+- **Clean MySQL/MariaDB shutdown.** Stop always tries `mariadb-admin shutdown` first. A hard kill is
+  only offered as **Force stop** when that fails, and it tells you InnoDB will run crash recovery.
+- **Startup failures explained.** `httpd -t` runs before Apache starts and names the broken line.
+  If Apache or MySQL exits right after starting, the last lines of `error.log` or `mysql_error.log`
+  appear in the panel.
+- **Port conflicts found and fixed.** Before a module starts, the panel names the program and PID
+  holding each port. A dialog offers to end that program, stop IIS when Windows itself holds the
+  port, or move Apache to 8080/4433 (MySQL to 3307) with the config files and settings updated.
+- **Netstat.** Every listening socket with what the port is for (Apache, MySQL, HTTP, Remote
+  Desktop…), who can reach it, and a warning when a foreign program blocks a stopped module. Filter,
+  sort, pause, and Open / Folder / Copy / End per row.
+- **Logs window.** Follows Apache, PHP and MariaDB logs live, like `tail -f`, with a filter.
+</details>
+
+<details open>
+<summary><b>Development tools</b></summary>
+<br>
+
+- **Sites with HTTPS.** Give each project its own address, such as `https://myproject.test`. Apply
+  writes the virtual hosts to a marked block in `httpd-vhosts.conf`, tests the config, adds the
+  names to the hosts file, issues a certificate from a local authority Windows trusts, and restarts
+  Apache. `localhost` keeps serving `htdocs`. Each site has Editor and Terminal buttons.
+- **PHP settings.** The values everyone changes (memory limit, upload size, time limits, display
+  errors, time zone) and every extension in `php\ext` with a check box. The previous file is kept
+  as `php.ini.bak`.
+- **Xdebug with one button.** Installs the build that matches your PHP (version, thread safety,
+  compiler) from PECL, turns it on in debug mode on port 9003, and off again when you want speed.
+- **Mail catcher.** Installs [Mailpit](https://github.com/axllent/mailpit) and points `mail()` at
+  it. Every message shows at `http://localhost:8025` instead of leaving your computer.
+- **Databases.** List with sizes, export to a timestamped `.sql` (routines, events and triggers
+  included), import into a new or existing database, drop.
+</details>
+
+<details open>
+<summary><b>Versions</b></summary>
+<br>
+
+- **PHP and MariaDB.** Install a new version straight from windows.php.net or
+  downloads.mariadb.org (SHA-256 verified) or from a zip, switch between installed versions in
+  seconds, switch back after any install or switch, remove what you no longer need.
+- **FileZilla Server.** XAMPP still ships FileZilla Server 0.9.41 from 2012. The Versions window
+  runs the official 1.x installer you downloaded and the FileZilla row then controls the new
+  server. (1.x can't read 0.9's settings, so FTP users are set up again in its Admin program.)
+- **XAMPP-style configuration.** Editor, browser, XAMPP folder, autostart per module, start
+  minimized, minimize to tray, update check, port check on startup, debug output, Service and Port
+  Settings, User Defined Files and Log Options.
+</details>
 
 ## How versions work
 
@@ -188,6 +185,7 @@ exact state from before the update. Downgrades are refused.
 | Downloads | `%TEMP%\XamppControl` |
 | Installed versions | `C:\xampp\versions\` |
 | SQL dumps | `C:\xampp\mysql_dumps\` |
+| Mailpit | `C:\xampp\mailpit\` (exe, `mailpit.db`, `mailpit.log`) |
 
 The local certificate authority's private key (`local-ca.pfx`) can sign certificates your browser
 trusts, the same way mkcert works. It never leaves your computer, but keep it private, and remove
@@ -195,26 +193,45 @@ trusts, the same way mkcert works. It never leaves your computer, but keep it pr
 Certification Authorities) if you stop using the panel.
 
 The MySQL root password (Config › Service and Port Settings) is only used for clean shutdowns,
-dumps and upgrades. It is stored in plain text in `settings.json`, which is fine for a local
-development machine but worth knowing.
+dumps, the Databases window and upgrades. It is stored in plain text in `settings.json`, which is
+fine for a local development machine but worth knowing.
 
 ## Troubleshooting
 
-**MySQL won't stop cleanly.** Set the root password under Config › Service and Port Settings. If
-the server really is stuck, use **Force stop**.
+<details>
+<summary><b>MySQL won't stop cleanly</b></summary>
+Set the root password under Config › Service and Port Settings. If the server really is stuck, use <b>Force stop</b>.
+</details>
 
-**A module runs as a Windows service.** Updates and version switches need the module to run
-normally. Untick its Service checkbox first (this asks for admin rights).
+<details>
+<summary><b>A module runs as a Windows service</b></summary>
+Updates and version switches need the module to run normally. Untick its Service checkbox first (this asks for admin rights).
+</details>
 
-**A site shows "Not secure".** Click **Trust** in the Sites window and answer Yes to Windows'
-warning. Firefox keeps its own certificate list: import `local-ca.crt` there, or set
-`security.enterprise_roots.enabled` to `true` in `about:config`.
+<details>
+<summary><b>A site shows "Not secure"</b></summary>
+Click <b>Trust</b> in the Sites window and answer Yes to Windows' warning. Firefox keeps its own certificate list: import <code>local-ca.crt</code> there, or set <code>security.enterprise_roots.enabled</code> to <code>true</code> in <code>about:config</code>.
+</details>
 
-**A site name doesn't resolve.** The hosts file is only changed after the admin prompt. If you
-canceled it, or an antivirus blocked the change, click **Apply** again.
+<details>
+<summary><b>A site name doesn't resolve</b></summary>
+The hosts file is only changed after the admin prompt. If you canceled it, or an antivirus blocked the change, click <b>Apply</b> again.
+</details>
 
-**Apache won't start after a PHP change.** The panel shows the reason from `error.log`. Use
-**Switch back** in the Versions window to return to the previous PHP.
+<details>
+<summary><b>Apache won't start after a PHP change</b></summary>
+The panel shows the reason from <code>error.log</code>. Use <b>Switch back</b> in the Versions window to return to the previous PHP.
+</details>
+
+<details>
+<summary><b>Xdebug install says PECL has no build</b></summary>
+PECL builds each Xdebug release per PHP branch and compiler; a brand-new PHP may have to wait a release. Try again after the next Xdebug version, or install an older PHP branch from the Versions window.
+</details>
+
+<details>
+<summary><b>Mail from PHP still doesn't show in Mailpit</b></summary>
+Check that the Mailpit row is running and that <code>php.ini</code> has <code>sendmail_path</code> pointing at <code>mailpit.exe sendmail</code> (the install sets it; Apache must restart afterwards). Code that uses its own SMTP settings (PHPMailer, Laravel) should point at <code>127.0.0.1:1025</code>.
+</details>
 
 ## Building from source
 
@@ -234,8 +251,8 @@ dotnet publish XamppControl.csproj -p:PublishProfile=win-x64
 ```
 
 Releases are built, signed with a Certum code-signing certificate and uploaded as a draft on the
-maintainer's PC with `tools/release.ps1`; GitHub Actions only checks that each push builds. See
-[docs/code-signing.md](docs/code-signing.md).
+maintainer's PC with `tools/release.ps1`; GitHub Actions checks that each push formats, builds and
+passes the tests. See [docs/code-signing.md](docs/code-signing.md) and [docs/testing.md](docs/testing.md).
 
 ## Contributing
 
@@ -250,17 +267,21 @@ dotnet build XamppControl.slnx
 dotnet test XamppControl.slnx
 ```
 
-and make sure none of them reports anything. The tests in `tests/` cover the parsers (release feeds, `php.ini`,
-virtual hosts, the hosts file); add one when you change those.
+and make sure none of them reports anything. The tests in `tests/` cover the parsers (release feeds,
+`php.ini`, virtual hosts, the hosts file, port rewriting); add one when you change those.
 
 ## Security
 
-Please report security problems privately through the repository's **Security** tab, not in a public issue.
-[SECURITY.md](SECURITY.md) says what counts and what to include.
+Please report security problems privately through the repository's **Security** tab, not in a public
+issue. [SECURITY.md](SECURITY.md) says what counts and what to include.
 
 ## License
 
-[MIT](LICENSE) © ClearanceClarence.
+[MIT](LICENSE) © ClearanceClarence / CC Software.
 
 XAMPP and the XAMPP logo are trademarks of [Apache Friends](https://www.apachefriends.org/).
-Apache, MariaDB, MySQL and PHP are trademarks of their respective owners.
+Apache, MariaDB, MySQL, PHP, Xdebug and Mailpit are trademarks or projects of their respective owners.
+
+<p align="center">
+  <sub>Built with <a href="https://avaloniaui.net/">Avalonia</a> and .NET 10 · Made in Skien, Norway</sub>
+</p>
