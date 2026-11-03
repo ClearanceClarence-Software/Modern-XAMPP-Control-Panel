@@ -38,8 +38,7 @@ folder that you didn't ask for.
 
 > [!NOTE]
 > This is an unofficial, community project by [CC Software](https://github.com/ClearanceClarence-Software).
-> It is not affiliated with or endorsed by Apache Friends. XAMPP and the XAMPP logo are trademarks of
-> Apache Friends.
+> It is not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.
 
 <br>
 
@@ -67,8 +66,8 @@ folder that you didn't ask for.
 1. Download `ModernXamppControlPanel-<version>-win-x64.zip` from the
    [latest release](https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/latest).
 2. Unzip `XamppControl.exe` anywhere, for example next to `xampp-control.exe` in `C:\xampp`.
-3. Run it. It finds XAMPP in its own folder, the folder above it, or `C:\xampp`, and asks for the
-   folder if none of those has an install.
+3. Run it. It finds XAMPP in its own folder, the folder above it, or `C:\xampp`. If none of those has
+   an install it says which folders it checked and lets you pick the right one or download XAMPP.
 
 **Requirements:** Windows 10 or 11 (x64) and XAMPP for Windows, any recent version. The original
 control panel keeps working; the two can be used side by side.
@@ -87,13 +86,14 @@ control panel keeps working; the two can be used side by side.
 
 - **Familiar layout.** Module rows for Apache, MySQL, FileZilla, Mercury, Tomcat and Mailpit with
   Service, PID(s), Port(s), Start/Stop, Admin, Config and Logs, plus Config, Netstat, Versions,
-  Databases, Logs, Sites, PHP, Shell, Explorer, Services and Help buttons.
+  Databases, Logs, Sites, PHP, Shell, Explorer, Services, Help and About buttons.
 - **Light and dark themes.** Follows Windows by default; the sun/moon button in the header switches.
 - **Tray icon.** Shows what runs, starts and stops modules from its menu, keeps the panel out of
   the taskbar when minimized.
 - **One admin prompt per session.** Service actions and the hosts file reuse a single elevation.
 - **Quit asks.** Closing with Apache or MySQL running offers a clean stop or leaving them running.
-- **Update notice** in the header with the release notes of every version since yours.
+- **Updates itself.** The header shows when a newer version exists; What's new lists every release since
+  yours and installs the newest with one click (signed zip, checksum verified, the exe swapped on restart).
 - **Crash reports.** An unrecoverable error shows a window with the details and a button to open
   an issue; the report is also saved to `crash.log`.
 </details>
@@ -279,7 +279,7 @@ issue. [SECURITY.md](SECURITY.md) says what counts and what to include.
 
 [MIT](LICENSE) © ClearanceClarence / CC Software.
 
-XAMPP and the XAMPP logo are trademarks of [Apache Friends](https://www.apachefriends.org/).
+XAMPP is a trademark of [Apache Friends](https://www.apachefriends.org/).
 Apache, MariaDB, MySQL, PHP, Xdebug and Mailpit are trademarks or projects of their respective owners.
 
 <p align="center">

@@ -3,6 +3,27 @@
 All notable changes to Modern XAMPP Control Panel. The release script copies the section for each version into
 its GitHub release.
 
+## [0.3.1] - 2026-11-03
+
+### Added
+
+- **Update from the panel.** The What's new window has an "Install and restart" button: it downloads the
+  release's signed zip, checks its SHA-256 against the published checksum, swaps `XamppControl.exe` after the
+  panel closes and starts the new version. Settings and XAMPP are untouched. Running modules keep running.
+- **About window.** Version, build date, runtime, exe location, a "Check for updates" button, links to GitHub,
+  releases, the issue form and the license, and "Copy build details" for bug reports. Opens from the new About
+  side button.
+- **Clear message without XAMPP.** When no XAMPP is found, a window lists the folders that were checked and offers
+  to download XAMPP, choose its folder, or continue; the panel also shows a banner with the same choices until a
+  folder is set.
+
+### Changed
+
+- **New icon.** The panel has its own server-rack icon (exe, window, tray and header) instead of borrowing
+  XAMPP's; `tools\Get-XamppIcon.ps1` is gone.
+- Built on Avalonia 12 (was 11.3). No visible change; text boxes use the new `PlaceholderText` property and the
+  clipboard calls the new extension methods.
+
 ## [0.3.0] - 2026-11-02
 
 ### Added
@@ -94,6 +115,7 @@ First release: the XAMPP-style panel with clean MySQL/MariaDB shutdown, explaine
 conflict finder, Netstat, XAMPP-style configuration, and installing, switching and rolling back PHP and
 MariaDB versions.
 
+[0.3.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.1
 [0.3.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.0
 [0.2.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.2.1
 [0.2.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.2.0

@@ -35,7 +35,7 @@
                         <StackPanel Spacing="6">
                             <TextBlock Text="XAMPP installation folder" FontWeight="SemiBold" />
                             <Grid ColumnDefinitions="*,8,Auto">
-                                <TextBox x:Name="RootBox" Grid.Column="0" Watermark="C:\xampp" />
+                                <TextBox x:Name="RootBox" Grid.Column="0" PlaceholderText="C:\xampp" />
                                 <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseRoot_Click" />
                             </Grid>
                             <TextBlock x:Name="RootHint" Classes="muted" FontSize="12" />
@@ -44,7 +44,7 @@
                         <StackPanel Spacing="6">
                             <TextBlock Text="Editor" FontWeight="SemiBold" />
                             <Grid ColumnDefinitions="*,8,Auto">
-                                <TextBox x:Name="EditorBox" Grid.Column="0" Watermark="notepad.exe" />
+                                <TextBox x:Name="EditorBox" Grid.Column="0" PlaceholderText="notepad.exe" />
                                 <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseEditor_Click" />
                             </Grid>
                         </StackPanel>

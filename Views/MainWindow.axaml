@@ -22,7 +22,7 @@
         <!-- Header -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14">
-                <!-- XAMPP icon from Assets\xampp.png when present; otherwise the fallback glyph -->
+                <!-- The app icon from Assets\app.png when present; otherwise the fallback glyph -->
                 <Image x:Name="HeaderLogo" Width="44" Height="44" IsVisible="False"
                        RenderOptions.BitmapInterpolationMode="HighQuality" />
                 <Border x:Name="HeaderFallback" Width="42" Height="42" CornerRadius="10" Background="{DynamicResource AccentBrush}">
@@ -52,11 +52,15 @@
                 </StackPanel>
             </StackPanel>
 
-            <!-- Light/dark switch: the moon shows in the light theme, the sun in the dark one -->
-            <Button Grid.Column="1" x:Name="ThemeToggle" Classes="ghost" Width="36" Height="36"
-                    VerticalAlignment="Center" Click="ThemeToggle_Click">
-                <Path x:Name="ThemeIcon" Classes="icon" Width="18" Height="18" Data="{StaticResource IconMoon}" />
-            </Button>
+            <!-- About and the light/dark switch: the moon shows in the light theme, the sun in the dark one -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                <Button Classes="ghost" Width="36" Height="36" Click="About_Click" ToolTip.Tip="About this panel">
+                    <Path Classes="icon" Width="18" Height="18" Data="{StaticResource IconInfo}" />
+                </Button>
+                <Button x:Name="ThemeToggle" Classes="ghost" Width="36" Height="36" Click="ThemeToggle_Click">
+                    <Path x:Name="ThemeIcon" Classes="icon" Width="18" Height="18" Data="{StaticResource IconMoon}" />
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!-- Modules + side buttons -->
@@ -67,13 +71,28 @@
                 <DockPanel>
                     <!-- Column headers -->
                     <Border DockPanel.Dock="Top" Height="34" Padding="14,0" Background="{DynamicResource HeaderBrush}"
-                            BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
+                            CornerRadius="8,8,0,0" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="58,150,64,92,*">
                             <TextBlock Grid.Column="0" Classes="colhead" Text="SERVICE" />
                             <TextBlock Grid.Column="1" Classes="colhead" Text="MODULE" />
                             <TextBlock Grid.Column="2" Classes="colhead" Text="PID(S)" />
                             <TextBlock Grid.Column="3" Classes="colhead" Text="PORT(S)" />
                             <TextBlock Grid.Column="4" Classes="colhead" Text="ACTIONS" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Shown under the headers until a XAMPP folder is chosen -->
+                    <Border DockPanel.Dock="Top" Padding="14,10" IsVisible="{Binding !HasXampp}"
+                            Background="{DynamicResource UpdatePillBrush}" BorderBrush="{DynamicResource UpdatePillBorderBrush}"
+                            BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto,8,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Text="No XAMPP installation found" FontWeight="SemiBold" />
+                                <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                                           Text="{Binding Root, StringFormat='Nothing to control at {0}. Choose the folder that holds apache and mysql, or install XAMPP first.'}" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="tool" Content="Download XAMPP" Click="DownloadXampp_Click" />
+                            <Button Grid.Column="3" Classes="accent" Content="Choose folder…" Click="ChangeRoot_Click" />
                         </Grid>
                     </Border>
 

@@ -40,7 +40,7 @@
                                                 </StackPanel>
                                                 <TextBlock Classes="note" Text="{Binding Hint}" />
                                             </StackPanel>
-                                            <TextBox Grid.Column="2" Text="{Binding Value}" Watermark="not set"
+                                            <TextBox Grid.Column="2" Text="{Binding Value}" PlaceholderText="not set"
                                                      VerticalAlignment="Center" />
                                         </Grid>
                                     </Border>

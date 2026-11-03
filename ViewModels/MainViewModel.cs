@@ -18,6 +18,10 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     private int _logFontSize;
     private AppRelease? _appUpdate;
     private string _appUpdateNotes = "";
+    private bool _isInstallingAppUpdate;
+    private string _appUpdateStatus = "";
+    private double _appUpdateProgress;
+    private bool _isAppUpdateProgressIndeterminate = true;
 
     /// <summary>Loads the modules and runs the startup sequence in the background, which then starts polling.</summary>
     /// <param name="settings">The loaded settings; kept and updated in place when the Config dialog saves.</param>
@@ -86,6 +90,8 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             {
                 OnPropertyChanged(nameof(HasAppUpdate));
                 OnPropertyChanged(nameof(AppUpdateText));
+                OnPropertyChanged(nameof(CanInstallAppUpdate));
+                OnPropertyChanged(nameof(AppUpdateHint));
             }
         }
     }
@@ -111,6 +117,115 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 
     /// <summary>Opens the release page of <see cref="AppUpdate"/>, or the releases list when there is none.</summary>
     public RelayCommand OpenAppUpdateCommand { get; }
+
+    /// <summary>True when the update can be installed from here: the release has a zip and this is a plain exe.</summary>
+    public bool CanInstallAppUpdate => AppUpdate?.ZipUrl is not null && AppUpdater.CanSelfUpdate && !IsInstallingAppUpdate;
+
+    /// <summary>The line next to the What's new buttons: how the update is applied, or why it can't be from here.</summary>
+    public string AppUpdateHint
+    {
+        get
+        {
+            if (!AppUpdater.CanSelfUpdate)
+            {
+                return "Running from the IDE or not as an exe: download the zip from the release page instead.";
+            }
+            return AppUpdate?.ZipUrl is null
+                ? "This release has no zip to install from; download it from the release page."
+                : "Install downloads the signed zip, checks it, swaps XamppControl.exe and restarts the panel. " +
+                  "Your settings and XAMPP stay as they are.";
+        }
+    }
+
+    /// <summary>True while the update downloads; disables the buttons and shows the progress bar.</summary>
+    public bool IsInstallingAppUpdate
+    {
+        get => _isInstallingAppUpdate;
+        private set
+        {
+            if (SetField(ref _isInstallingAppUpdate, value))
+            {
+                OnPropertyChanged(nameof(CanInstallAppUpdate));
+            }
+        }
+    }
+
+    /// <summary>The update's current step, or the error it stopped at.</summary>
+    public string AppUpdateStatus
+    {
+        get => _appUpdateStatus;
+        private set
+        {
+            if (SetField(ref _appUpdateStatus, value))
+            {
+                OnPropertyChanged(nameof(HasAppUpdateStatus));
+            }
+        }
+    }
+
+    /// <summary>True once an update has started or failed, so the status area shows.</summary>
+    public bool HasAppUpdateStatus => AppUpdateStatus.Length > 0;
+
+    /// <summary>The download as 0..100.</summary>
+    public double AppUpdateProgress
+    {
+        get => _appUpdateProgress;
+        private set => SetField(ref _appUpdateProgress, value);
+    }
+
+    /// <summary>True while the size of the download isn't known.</summary>
+    public bool IsAppUpdateProgressIndeterminate
+    {
+        get => _isAppUpdateProgressIndeterminate;
+        private set => SetField(ref _isAppUpdateProgressIndeterminate, value);
+    }
+
+    /// <summary>
+    /// Downloads and stages <see cref="AppUpdate"/> and starts the script that swaps the exe after the panel exits.
+    /// </summary>
+    /// <returns>True when the caller should now close the panel; false when nothing was changed (the status says why).</returns>
+    public async Task<bool> InstallAppUpdateAsync()
+    {
+        if (AppUpdate is not { } release || !CanInstallAppUpdate)
+        {
+            return false;
+        }
+
+        IsInstallingAppUpdate = true;
+        IsAppUpdateProgressIndeterminate = true;
+        try
+        {
+            string newExe = await AppUpdater.DownloadAsync(
+                release,
+                status: text => AppUpdateStatus = text,
+                progress: fraction =>
+                {
+                    IsAppUpdateProgressIndeterminate = fraction is null;
+                    AppUpdateProgress = (fraction ?? 0) * 100;
+                });
+
+            AppUpdateStatus = "Restarting…";
+            if (!AppUpdater.ApplyOnExit(newExe))
+            {
+                AppUpdateStatus = "This build can't replace itself; download the zip from the release page.";
+                return false;
+            }
+
+            Write("update", $"Updating to {release.Version}: the panel restarts in a moment.", LogLevel.Ok);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // Downloads, checksums, zips and the script can each fail; the window reports it and nothing is changed.
+            Write("update", "Update failed: " + ex.Message, LogLevel.Error);
+            AppUpdateStatus = "Update failed: " + ex.Message;
+            return false;
+        }
+        finally
+        {
+            IsInstallingAppUpdate = false;
+        }
+    }
 
     /// <summary>True when the current folder contains apache or mysql.</summary>
     public bool HasXampp => XamppPaths.IsXampp(Root);
@@ -178,13 +293,18 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 
         if (Settings.CheckForAppUpdates)
         {
-            await CheckForAppUpdateAsync();
+            await CheckForAppUpdateAsync(isManual: false);
         }
     }
 
-    /// <summary>Looks for a newer release of the panel on GitHub and logs it when there is one.</summary>
-    /// <returns>A task that completes when the check has answered, failed or timed out.</returns>
-    private async Task CheckForAppUpdateAsync()
+    /// <summary>The About window's "Check for updates": the same check, with the outcome as one line.</summary>
+    /// <returns>"vX.Y.Z is available", "You have the newest version", or why the check failed.</returns>
+    public Task<string> CheckForAppUpdateNowAsync() => CheckForAppUpdateAsync(isManual: true);
+
+    /// <summary>Looks for a newer release; a manual check also reports "up to date" and failures.</summary>
+    /// <param name="isManual">True when started from the About window, so every outcome is returned.</param>
+    /// <returns>One line describing the outcome.</returns>
+    private async Task<string> CheckForAppUpdateAsync(bool isManual)
     {
         List<AppRelease> newerReleases;
         try
@@ -195,12 +315,16 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         {
             // Being offline is normal for a local server panel; the failure is only shown with debug output on.
             Debug("main", "Update check failed: " + ex.Message);
-            return;
+            return "Couldn't reach GitHub: " + ex.Message;
         }
 
         if (newerReleases.Count == 0)
         {
-            return;
+            if (isManual)
+            {
+                Write("update", $"You have the newest version ({BuildInfo.Version}).");
+            }
+            return $"You have the newest version ({BuildInfo.Version}).";
         }
 
         AppUpdateNotes = string.Join("\n\n", newerReleases.Select(release =>
@@ -210,6 +334,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             $"{BuildInfo.AppName} {AppUpdate.Version} is available (you have {BuildInfo.Version}). " +
             "Click the link in the header to see what's new.",
             LogLevel.Ok);
+        return $"{AppUpdate.Version} is available.";
     }
 
     /// <summary>Logs the XAMPP folder and which modules it has, or an error when the folder holds no XAMPP.</summary>
@@ -218,7 +343,8 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         if (!XamppPaths.IsXampp(Root))
         {
             Write("main",
-                $"No XAMPP installation found at \"{Root}\". Click \"Change…\" in the header or set it under Config.",
+                $"No XAMPP installation found at \"{Root}\". Choose the folder that holds apache and mysql " +
+                "(the banner above or \"Change…\" in the header), or install XAMPP from apachefriends.org first.",
                 LogLevel.Error);
             return;
         }

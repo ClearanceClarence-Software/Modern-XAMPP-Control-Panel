@@ -125,7 +125,7 @@
 
         <!-- Filter and controls -->
         <Grid Grid.Row="0" ColumnDefinitions="*,12,Auto,12,Auto,12,Auto,8,Auto" Margin="0,0,0,12">
-            <TextBox Grid.Column="0" Text="{Binding Filter}" Watermark="Filter by port, address, PID, program or service…"
+            <TextBox Grid.Column="0" Text="{Binding Filter}" PlaceholderText="Filter by port, address, PID, program or service…"
                      VerticalAlignment="Center" />
             <CheckBox Grid.Column="2" Content="XAMPP only" IsChecked="{Binding XamppOnly}" VerticalAlignment="Center" />
             <CheckBox Grid.Column="4" Content="IPv6" IsChecked="{Binding ShowIPv6}" VerticalAlignment="Center"

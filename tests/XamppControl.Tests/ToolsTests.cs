@@ -107,6 +107,18 @@ public sealed class ToolsTests : IDisposable
         Assert.Equal(expected, DatabasesViewModel.DatabaseNameFor(file));
 
     [Fact]
+    public void UpdateScript_WaitsForThePidThenCopiesAndStarts()
+    {
+        string script = AppUpdater.BuildScript(@"C:\t\XamppControl.new.exe", @"C:\xampp\XamppControl.exe", 4242);
+
+        Assert.Contains("tasklist /FI \"PID eq 4242\"", script, StringComparison.Ordinal);
+        Assert.Contains("copy /y \"%src%\" \"%dst%\"", script, StringComparison.Ordinal);
+        Assert.Contains("set \"dst=C:\\xampp\\XamppControl.exe\"", script, StringComparison.Ordinal);
+        Assert.Contains("start \"\" \"%dst%\"", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("\n\n\n", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void FirstFree_SkipsTakenPorts()
     {
         var listeners = new List<Listener> { new("0.0.0.0", 8080, 1234, false) };

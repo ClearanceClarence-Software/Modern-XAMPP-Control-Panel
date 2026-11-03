@@ -53,6 +53,26 @@ public static class BuildInfo
     /// <summary>The product name, without version.</summary>
     public const string AppName = "Modern XAMPP Control Panel";
 
+    /// <summary>Who makes the panel, for the About window.</summary>
+    public const string Publisher = "CC Software (ClearanceClarence)";
+
+    /// <summary>The copyright line, for the About window.</summary>
+    public const string Copyright = "Copyright © 2026 ClearanceClarence · MIT license";
+
+    /// <summary>The .NET runtime this build runs on, e.g. ".NET 10.0.2".</summary>
+    public static string Runtime => $".NET {Environment.Version}";
+
+    /// <summary>The Avalonia version the UI is built with.</summary>
+    public static string AvaloniaVersion =>
+        typeof(Avalonia.Application).Assembly.GetName().Version is { } version
+            ? $"Avalonia {version.Major}.{version.Minor}.{version.Build}"
+            : "Avalonia";
+
+    /// <summary>Everything the About window shows about the build, for the clipboard and bug reports.</summary>
+    public static string Summary =>
+        $"{AppName} {Version} (compiled {CompiledOn})\n{Runtime}, {AvaloniaVersion}, {Environment.OSVersion}" +
+        $"\n{Environment.ProcessPath}";
+
     /// <summary>"Modern XAMPP Control Panel v0.3.0   [ Compiled: Oct 27th 2026 ]"</summary>
     public static string WindowTitle => $"{AppName} {Version}   [ Compiled: {CompiledOn} ]";
 

@@ -26,7 +26,7 @@
 
         <Grid Grid.Row="2" ColumnDefinitions="120,8,*,8,Auto,8,Auto" Margin="0,12,0,0">
             <ComboBox x:Name="ModuleBox" Grid.Column="0" HorizontalAlignment="Stretch" />
-            <TextBox x:Name="PathBox" Grid.Column="2" Watermark="File path" />
+            <TextBox x:Name="PathBox" Grid.Column="2" PlaceholderText="File path" />
             <Button Grid.Column="4" Classes="tool" Content="Browse…" Click="Browse_Click" />
             <Button Grid.Column="6" Classes="tool" Content="Add" Click="Add_Click" />
         </Grid>

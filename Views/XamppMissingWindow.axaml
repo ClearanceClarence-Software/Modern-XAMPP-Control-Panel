@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="XamppControl.Views.XamppMissingWindow"
+        Title="Modern XAMPP Control Panel"
+        Width="540" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="22" Spacing="14">
+        <StackPanel Orientation="Horizontal" Spacing="14">
+            <Image x:Name="Logo" Width="40" Height="40" VerticalAlignment="Top" />
+            <StackPanel Spacing="4">
+                <TextBlock Text="XAMPP wasn't found" FontSize="17" FontWeight="SemiBold" />
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="This panel controls an existing XAMPP installation; it doesn't include Apache, MySQL or PHP itself. These folders were checked:" />
+            </StackPanel>
+        </StackPanel>
+
+        <Border Classes="card" Padding="12,8">
+            <ItemsControl x:Name="FolderList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Classes="mono" Text="{Binding}" Margin="0,2" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="If XAMPP is installed somewhere else, choose its folder (the one with apache and mysql inside). If it isn't installed yet, download it from Apache Friends, install it, and open this panel again. You can also continue now and pick the folder later from the header." />
+
+        <Grid ColumnDefinitions="Auto,*,Auto,8,Auto" Margin="0,4,0,0">
+            <Button Grid.Column="0" Classes="tool" Content="Download XAMPP" Click="Download_Click" />
+            <Button Grid.Column="2" Classes="tool" Content="Continue without" MinWidth="110" Click="Continue_Click" />
+            <Button Grid.Column="4" Classes="accent" Content="Choose folder…" MinWidth="120" Click="Choose_Click" />
+        </Grid>
+    </StackPanel>
+</Window>

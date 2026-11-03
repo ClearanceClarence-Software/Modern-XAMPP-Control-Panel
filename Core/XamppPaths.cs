@@ -26,6 +26,12 @@ public static partial class XamppPaths
         return string.IsNullOrWhiteSpace(configuredRoot) ? @"C:\xampp" : configuredRoot;
     }
 
+    /// <summary>Where XAMPP was looked for, for the "not found" message.</summary>
+    /// <param name="settings">Supplies the configured root.</param>
+    /// <returns>The folders <see cref="Resolve"/> tries, in order, without duplicates.</returns>
+    public static List<string> SearchedFolders(AppSettings settings) =>
+        Candidates(settings).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
     /// <summary>The folders <see cref="Resolve"/> tries, in order, without trailing separators.</summary>
     /// <param name="settings">Supplies the configured root, which comes first when set.</param>
     /// <returns>The configured root, the exe's folder, that folder's parent when there is one, then C:\xampp.</returns>

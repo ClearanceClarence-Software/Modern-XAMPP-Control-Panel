@@ -61,3 +61,9 @@ covers what they can't: processes, services, Windows prompts and the UI. Fifteen
 ## Updates
 
 - [ ] An older build shows the "vX.Y.Z is available" link and the What's new window lists the newer releases.
+- [ ] Install and restart: the download shows progress, the panel closes, the new version starts within a few
+      seconds, and `XamppControl.exe` has the new version in its properties. Settings are intact.
+- [ ] Install and restart with the exe in a folder that needs admin rights (Program Files): the UAC prompt appears
+      and the swap still happens.
+- [ ] Start the panel with no XAMPP (rename `C:\xampp` temporarily): the "XAMPP wasn't found" window lists the
+      checked folders; Continue shows the banner over the module rows; Choose folder… works from both.

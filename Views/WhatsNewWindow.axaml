@@ -4,10 +4,10 @@
         x:Class="XamppControl.Views.WhatsNewWindow"
         x:DataType="vm:MainViewModel"
         Title="What's new"
-        Width="620" Height="560" MinWidth="460" MinHeight="320"
+        Width="640" Height="600" MinWidth="480" MinHeight="360"
         WindowStartupLocation="CenterOwner">
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="18">
 
         <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
             <TextBlock Text="{Binding AppUpdateText}" FontSize="18" FontWeight="Bold" />
@@ -21,11 +21,22 @@
             </ScrollViewer>
         </Border>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,8,Auto" Margin="0,14,0,0">
+        <!-- Progress while the update downloads -->
+        <StackPanel Grid.Row="2" Spacing="8" Margin="0,12,0,0" IsVisible="{Binding HasAppUpdateStatus}">
+            <ProgressBar Height="6" IsVisible="{Binding IsInstallingAppUpdate}" Minimum="0" Maximum="100" Value="{Binding AppUpdateProgress}"
+                         IsIndeterminate="{Binding IsAppUpdateProgressIndeterminate}" />
+            <TextBlock Text="{Binding AppUpdateStatus}" FontSize="12" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,8,Auto,8,Auto" Margin="0,14,0,0">
             <TextBlock Grid.Column="0" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
-                       Text="Download the zip from the release page and replace XamppControl.exe; your settings stay." />
-            <Button Grid.Column="1" Classes="accent" Content="Open release page" Click="Download_Click" />
-            <Button Grid.Column="3" Classes="tool" Content="Later" Width="90" Click="Close_Click" />
+                       Margin="0,0,12,0" Text="{Binding AppUpdateHint}" />
+            <Button Grid.Column="1" Classes="accent" Content="Install and restart" Click="Install_Click"
+                    IsEnabled="{Binding CanInstallAppUpdate}" />
+            <Button Grid.Column="3" Classes="tool" Content="Release page" Click="Download_Click"
+                    IsEnabled="{Binding !IsInstallingAppUpdate}" />
+            <Button Grid.Column="5" Classes="tool" Content="Later" Width="80" Click="Close_Click"
+                    IsEnabled="{Binding !IsInstallingAppUpdate}" />
         </Grid>
     </Grid>
 </Window>

@@ -12,7 +12,9 @@ namespace XamppControl.Updates;
 /// <param name="Notes">
 /// The hand-written release notes as plain text, without GitHub's generated commit list; empty when there are none.
 /// </param>
-public sealed record AppRelease(string Version, string Url, string Notes);
+/// <param name="ZipUrl">Download URL of the win-x64 zip; null when the release has none, so it can't self-install.</param>
+/// <param name="ShaUrl">Download URL of the zip's .sha256 file; null when the release has none.</param>
+public sealed record AppRelease(string Version, string Url, string Notes, string? ZipUrl = null, string? ShaUrl = null);
 
 /// <summary>Asks GitHub which newer versions of the panel have been released, with their notes.</summary>
 public static partial class AppUpdateCheck
@@ -100,7 +102,36 @@ public static partial class AppUpdateCheck
 
         string url = ReadString(release, "html_url") ?? ReleasesUrl;
         string notes = PlainNotes(ReadString(release, "body") ?? "");
-        return new AppRelease("v" + version, url, notes);
+        (string? zipUrl, string? shaUrl) = ReadAssets(release);
+        return new AppRelease("v" + version, url, notes, zipUrl, shaUrl);
+    }
+
+    /// <summary>Finds the win-x64 zip and its checksum file among a release's assets.</summary>
+    /// <param name="release">A release from GitHub's list.</param>
+    /// <returns>The two download URLs; either is null when the asset is missing.</returns>
+    private static (string? ZipUrl, string? ShaUrl) ReadAssets(JsonElement release)
+    {
+        if (!release.TryGetProperty("assets", out JsonElement assets) || assets.ValueKind != JsonValueKind.Array)
+        {
+            return (null, null);
+        }
+
+        string? zipUrl = null;
+        string? shaUrl = null;
+        foreach (JsonElement asset in assets.EnumerateArray())
+        {
+            string name = ReadString(asset, "name") ?? "";
+            string? downloadUrl = ReadString(asset, "browser_download_url");
+            if (name.EndsWith("-win-x64.zip", StringComparison.OrdinalIgnoreCase))
+            {
+                zipUrl = downloadUrl;
+            }
+            else if (name.EndsWith("-win-x64.zip.sha256", StringComparison.OrdinalIgnoreCase))
+            {
+                shaUrl = downloadUrl;
+            }
+        }
+        return (zipUrl, shaUrl);
     }
 
     /// <summary>

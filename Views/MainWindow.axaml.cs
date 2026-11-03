@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -50,12 +51,16 @@ public partial class MainWindow : Window
                 Hide();
             }
 
-            // No XAMPP at the configured or default location: ask for the folder right away.
-            if (ViewModel is { HasXampp: false })
-            {
-                await PickRootAsync(isXamppMissing: true);
-            }
+            // No XAMPP at the configured or default location: explain, then offer the folder picker.
+            await ExplainMissingXamppAsync();
         };
+    }
+
+    /// <summary>Closes the panel without the running-modules question, for the update script to swap the exe.</summary>
+    public void QuitForUpdate()
+    {
+        _isClosingConfirmed = true;
+        Close();
     }
 
     /// <summary>The tray icon, set by the app after the window is created; null when there is none.</summary>
@@ -143,6 +148,28 @@ public partial class MainWindow : Window
 
     private async void ChangeRoot_Click(object? sender, RoutedEventArgs e) =>
         await PickRootAsync(isXamppMissing: false);
+
+    private void DownloadXampp_Click(object? sender, RoutedEventArgs e) =>
+        Shell.OpenUrl("https://www.apachefriends.org/download.html", ViewModel?.Settings.Browser);
+
+    /// <summary>
+    /// While no XAMPP is found and the window shows: says which folders were checked and offers a download, the
+    /// folder picker, or carrying on without.
+    /// </summary>
+    /// <returns>A task that completes when XAMPP is found or the user chose to continue without it.</returns>
+    private async Task ExplainMissingXamppAsync()
+    {
+        while (ViewModel is { HasXampp: false } viewModel && IsVisible)
+        {
+            MissingXamppChoice choice = await XamppMissingWindow.AskAsync(
+                this, XamppPaths.SearchedFolders(viewModel.Settings), viewModel.Settings.Browser);
+            if (choice != MissingXamppChoice.ChooseFolder)
+            {
+                return;
+            }
+            await PickRootAsync(isXamppMissing: true);
+        }
+    }
 
     /// <summary>Asks for a XAMPP folder and switches to it; logs an error when the folder is not XAMPP.</summary>
     /// <param name="isXamppMissing">True when no XAMPP was found, which the picker's title tells the user.</param>
@@ -324,6 +351,14 @@ public partial class MainWindow : Window
         if (ViewModel is { } viewModel)
         {
             await new WhatsNewWindow { DataContext = viewModel }.ShowDialog(this);
+        }
+    }
+
+    private async void About_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await new AboutWindow { DataContext = viewModel }.ShowDialog(this);
         }
     }
 

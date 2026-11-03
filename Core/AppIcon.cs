@@ -5,18 +5,18 @@ using Avalonia.Platform;
 namespace XamppControl.Core;
 
 /// <summary>
-/// The XAMPP icon, if Assets\xampp.png / xampp.ico were created with tools\Get-XamppIcon.ps1.
-/// Without them the app falls back to its built-in stack glyph.
+/// The panel's own icon (a server rack), from Assets\app.png and app.ico. Without them the app falls back to its
+/// built-in stack glyph.
 /// </summary>
 public static class AppIcon
 {
-    private static readonly Uri _pngUri = new("avares://XamppControl/Assets/xampp.png");
-    private static readonly Uri _icoUri = new("avares://XamppControl/Assets/xampp.ico");
+    private static readonly Uri _pngUri = new("avares://XamppControl/Assets/app.png");
+    private static readonly Uri _icoUri = new("avares://XamppControl/Assets/app.ico");
 
-    /// <summary>True when the build includes Assets\xampp.png.</summary>
+    /// <summary>True when the build includes Assets\app.png.</summary>
     public static bool HasLogo => AssetLoader.Exists(_pngUri);
 
-    /// <summary>Loads the XAMPP logo for the header.</summary>
+    /// <summary>Loads the logo for the header.</summary>
     /// <returns>The decoded logo; null when the build has no logo or it cannot be decoded.</returns>
     public static Bitmap? LoadLogo()
     {
@@ -31,7 +31,7 @@ public static class AppIcon
         }
     }
 
-    /// <summary>Sets the window's icon to the XAMPP .ico, or else the .png; unchanged when neither exists.</summary>
+    /// <summary>Sets the window's icon to the .ico, or else the .png; unchanged when neither exists.</summary>
     /// <param name="window">The window whose title bar and taskbar icon change.</param>
     public static void Apply(Window window)
     {
