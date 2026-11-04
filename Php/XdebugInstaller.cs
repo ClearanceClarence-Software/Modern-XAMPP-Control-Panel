@@ -9,7 +9,8 @@ namespace XamppControl.Php;
 /// <param name="PhpVersion">The PHP version, e.g. "8.4.27".</param>
 /// <param name="Branch">The PHP branch the build is for, e.g. "8.4".</param>
 /// <param name="Compiler">The Visual Studio tag PHP was built with, e.g. "vs17"; Xdebug must match it.</param>
-public sealed record PhpBuildInfo(string PhpVersion, string Branch, string Compiler);
+/// <param name="IsThreadSafe">True for a TS build (XAMPP's, since PHP runs as an Apache module); false for NTS.</param>
+public sealed record PhpBuildInfo(string PhpVersion, string Branch, string Compiler, bool IsThreadSafe = true);
 
 /// <summary>
 /// Installs the Xdebug build that matches the active PHP (branch, thread safety and compiler) from PECL's Windows
@@ -17,7 +18,6 @@ public sealed record PhpBuildInfo(string PhpVersion, string Branch, string Compi
 /// </summary>
 public static partial class XdebugInstaller
 {
-    private const string PeclPackagePage = "https://pecl.php.net/package/xdebug";
     private const string PeclWindowsBuilds = "https://downloads.php.net/~windows/pecl/releases/xdebug/";
 
     /// <summary>The name of the DLL the panel installs, kept stable so php.ini keeps working across updates.</summary>
@@ -52,31 +52,72 @@ public static partial class XdebugInstaller
         {
             return null;
         }
-        return new PhpBuildInfo(version, VersionUtil.MajorMinor(version), compiler);
+        bool isThreadSafe = !ThreadSafetyLine().IsMatch(phpInfo.Output);
+        return new PhpBuildInfo(version, VersionUtil.MajorMinor(version), compiler, isThreadSafe);
     }
 
-    /// <summary>The newest stable Xdebug version listed on PECL.</summary>
-    /// <returns>The version, e.g. "3.5.3".</returns>
-    /// <exception cref="HttpRequestException">PECL cannot be reached.</exception>
-    /// <exception cref="InvalidOperationException">The page lists no stable release.</exception>
-    public static async Task<string> LatestVersionAsync()
+    /// <summary>
+    /// The stable Xdebug versions that have Windows builds, newest first, read from the folder listing on
+    /// downloads.php.net (which is where the zips come from, so a listed version really exists).
+    /// </summary>
+    /// <returns>Versions such as "3.5.3"; alphas, betas and release candidates are left out.</returns>
+    /// <exception cref="HttpRequestException">downloads.php.net cannot be reached.</exception>
+    /// <exception cref="InvalidOperationException">The listing names no stable 3.x release.</exception>
+    public static async Task<List<string>> ListVersionsAsync()
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        string page = await ReleaseFeeds.Http.GetStringAsync(PeclPackagePage, timeout.Token);
-        return StableRelease().Matches(page)
-            .Select(match => match.Groups["v"].Value)
-            .Where(version => VersionUtil.Parse(version) >= new Version(3, 0))
-            .OrderByDescending(VersionUtil.Parse)
-            .FirstOrDefault()
-            ?? throw new InvalidOperationException("PECL lists no stable Xdebug release.");
+        string listing = await ReleaseFeeds.Http.GetStringAsync(PeclWindowsBuilds, timeout.Token);
+        List<string> versions = ParseVersions(listing);
+        return versions.Count > 0
+            ? versions
+            : throw new InvalidOperationException("downloads.php.net lists no stable Xdebug release.");
     }
 
-    /// <summary>The download URL of the Thread Safe x64 build for a PHP build.</summary>
+    /// <summary>The stable 3.x version folders in a listing, newest first.</summary>
+    /// <param name="listing">The HTML of the releases folder.</param>
+    /// <returns>Distinct versions such as "3.5.3"; pre-release folders are left out.</returns>
+    internal static List<string> ParseVersions(string listing) =>
+        VersionFolder().Matches(listing)
+            .Select(match => match.Groups["v"].Value)
+            .Distinct()
+            .Where(version => VersionUtil.Parse(version) >= new Version(3, 0))
+            .OrderByDescending(VersionUtil.Parse)
+            .ToList();
+
+    /// <summary>
+    /// The newest of the given versions that has a build for a PHP: a brand-new PHP branch often has to wait a
+    /// release or two, so the versions are tried newest first until one answers.
+    /// </summary>
+    /// <param name="versions">Candidate versions, newest first; from <see cref="ListVersionsAsync"/>.</param>
+    /// <param name="php">The active PHP build.</param>
+    /// <returns>The first version whose zip exists; null when none of them has a build for this PHP.</returns>
+    /// <exception cref="HttpRequestException">downloads.php.net cannot be reached at all.</exception>
+    public static async Task<string?> FindBuildAsync(IEnumerable<string> versions, PhpBuildInfo php)
+    {
+        foreach (string version in versions)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Head, ZipUrl(version, php));
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using HttpResponseMessage response = await ReleaseFeeds.Http.SendAsync(request, timeout.Token);
+            if (response.IsSuccessStatusCode)
+            {
+                return version;
+            }
+            if (response.StatusCode != System.Net.HttpStatusCode.NotFound)
+            {
+                response.EnsureSuccessStatusCode();
+            }
+        }
+        return null;
+    }
+
+    /// <summary>The download URL of the x64 build that matches a PHP build.</summary>
     /// <param name="xdebugVersion">The Xdebug version, e.g. "3.5.3".</param>
     /// <param name="php">The active PHP build.</param>
     /// <returns>The zip's URL on downloads.php.net.</returns>
     public static string ZipUrl(string xdebugVersion, PhpBuildInfo php) =>
-        $"{PeclWindowsBuilds}{xdebugVersion}/php_xdebug-{xdebugVersion}-{php.Branch}-ts-{php.Compiler}-x64.zip";
+        $"{PeclWindowsBuilds}{xdebugVersion}/php_xdebug-{xdebugVersion}-{php.Branch}-" +
+        $"{(php.IsThreadSafe ? "ts" : "nts")}-{php.Compiler}-x64.zip";
 
     /// <summary>Downloads the matching build and puts its DLL in php\ext as <see cref="DllName"/>.</summary>
     /// <param name="phpDir">XAMPP's php folder.</param>
@@ -161,6 +202,10 @@ public static partial class XdebugInstaller
     [GeneratedRegex(@"^Compiler => Visual C\+\+ (?<year>\d{4})", RegexOptions.Multiline)]
     private static partial Regex CompilerLine();
 
-    [GeneratedRegex(@"/package/xdebug/(?<v>\d+\.\d+\.\d+)""[^<]*</a>\s*</t[dh]>\s*<t[dh][^>]*>\s*stable", RegexOptions.IgnoreCase)]
-    private static partial Regex StableRelease();
+    [GeneratedRegex(@"^Thread Safety => disabled", RegexOptions.Multiline)]
+    private static partial Regex ThreadSafetyLine();
+
+    // Apache's folder listing: <a href="3.5.3/">3.5.3/</a>; pre-releases are folders like 3.5.0RC1/ and don't match.
+    [GeneratedRegex(@"href=""(?:[^""]*/)?(?<v>\d+\.\d+\.\d+)/""")]
+    private static partial Regex VersionFolder();
 }

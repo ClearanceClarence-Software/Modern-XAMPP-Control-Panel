@@ -243,9 +243,13 @@ public sealed class PhpSettingsViewModel : ObservableObject
         }
         try
         {
-            string latest = await XdebugInstaller.LatestVersionAsync();
+            // Only a version with a build for this PHP counts, so the button never offers what can't be installed.
+            PhpBuildInfo? php = await XdebugInstaller.ReadPhpBuildAsync(PhpDir);
+            string? latest = php is null
+                ? null
+                : await XdebugInstaller.FindBuildAsync(await XdebugInstaller.ListVersionsAsync(), php);
             string? installed = XdebugInstaller.InstalledVersion(PhpDir);
-            XdebugUpdate = VersionUtil.Parse(latest) > VersionUtil.Parse(installed) ? latest : null;
+            XdebugUpdate = latest is not null && VersionUtil.Parse(latest) > VersionUtil.Parse(installed) ? latest : null;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
         {
@@ -277,8 +281,12 @@ public sealed class PhpSettingsViewModel : ObservableObject
             PhpBuildInfo php = await XdebugInstaller.ReadPhpBuildAsync(PhpDir)
                 ?? throw new InvalidOperationException("php.exe didn't report a version and compiler PECL builds for.");
 
-            Status = "Asking PECL for the newest Xdebug…";
-            version ??= await XdebugInstaller.LatestVersionAsync();
+            Status = "Looking for the newest Xdebug build for this PHP…";
+            IEnumerable<string> candidates = version is null ? await XdebugInstaller.ListVersionsAsync() : [version];
+            version = await XdebugInstaller.FindBuildAsync(candidates, php)
+                ?? throw new InvalidOperationException(
+                    $"PECL has no Windows build of Xdebug for PHP {php.Branch} ({php.Compiler}, " +
+                    $"{(php.IsThreadSafe ? "TS" : "NTS")}) yet.");
 
             string file = await XdebugInstaller.InstallAsync(PhpDir, php, version, fraction =>
                 Status = fraction is { } done
@@ -288,11 +296,6 @@ public sealed class PhpSettingsViewModel : ObservableObject
 
             await WriteXdebugAsync(true);
             Status = $"Xdebug {version} installed and on. Set your editor to listen on port 9003.";
-        }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            // PECL builds each Xdebug release per PHP branch; a brand-new PHP may not have one yet.
-            Status = "PECL has no Xdebug build for this PHP version yet.";
         }
         catch (Exception ex)
         {

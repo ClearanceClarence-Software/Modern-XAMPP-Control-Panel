@@ -3,6 +3,14 @@
 All notable changes to Modern XAMPP Control Panel. The release script copies the section for each version into
 its GitHub release.
 
+## [0.3.2] - 2026-11-04
+
+### Fixed
+
+- Xdebug install failed with "PECL lists no stable Xdebug release": the version list now comes from the
+  downloads.php.net folder the zips live in, and the newest version that has a build for your PHP branch is
+  picked (a brand-new PHP branch gets the previous Xdebug instead of a download error).
+
 ## [0.3.1] - 2026-11-03
 
 ### Added
@@ -11,8 +19,8 @@ its GitHub release.
   release's signed zip, checks its SHA-256 against the published checksum, swaps `XamppControl.exe` after the
   panel closes and starts the new version. Settings and XAMPP are untouched. Running modules keep running.
 - **About window.** Version, build date, runtime, exe location, a "Check for updates" button, links to GitHub,
-  releases, the issue form and the license, and "Copy build details" for bug reports. Opens from the new About
-  side button.
+  releases, the issue form and the license, and "Copy build details" for bug reports. Opens from the ⓘ button in
+  the header.
 - **Clear message without XAMPP.** When no XAMPP is found, a window lists the folders that were checked and offers
   to download XAMPP, choose its folder, or continue; the panel also shows a banner with the same choices until a
   folder is set.
@@ -115,6 +123,7 @@ First release: the XAMPP-style panel with clean MySQL/MariaDB shutdown, explaine
 conflict finder, Netstat, XAMPP-style configuration, and installing, switching and rolling back PHP and
 MariaDB versions.
 
+[0.3.2]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.2
 [0.3.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.1
 [0.3.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.0
 [0.2.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.2.1

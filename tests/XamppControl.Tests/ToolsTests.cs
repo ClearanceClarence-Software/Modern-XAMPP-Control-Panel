@@ -24,6 +24,29 @@ public sealed class ToolsTests : IDisposable
     }
 
     [Fact]
+    public void XdebugZipUrl_UsesNtsForNonThreadSafeBuilds()
+    {
+        var php = new PhpBuildInfo("8.3.29", "8.3", "vs16", IsThreadSafe: false);
+        Assert.EndsWith("/3.4.5/php_xdebug-3.4.5-8.3-nts-vs16-x64.zip", XdebugInstaller.ZipUrl("3.4.5", php), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void XdebugParseVersions_KeepsStableFoldersNewestFirst()
+    {
+        const string listing = """
+            <a href="../">Parent Directory</a>
+            <a href="2.9.8/">2.9.8/</a>
+            <a href="3.4.5/">3.4.5/</a>
+            <a href="3.5.0RC1/">3.5.0RC1/</a>
+            <a href="3.5.3/">3.5.3/</a>
+            <a href="3.5.3/">3.5.3/</a>
+            <a href="https://downloads.php.net/~windows/pecl/releases/xdebug/3.5.1/">3.5.1/</a>
+            """;
+        string[] expected = ["3.5.3", "3.5.1", "3.4.5"];
+        Assert.Equal(expected, XdebugInstaller.ParseVersions(listing));
+    }
+
+    [Fact]
     public void XdebugSetEnabled_AddsZendLineAndDefaults_ThenCommentsItOut()
     {
         string ini = Path.Combine(_folder, "php.ini");

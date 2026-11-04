@@ -41,7 +41,8 @@ covers what they can't: processes, services, Windows prompts and the UI. Fifteen
       old data.
 - [ ] Logs window: follows `error.log` while Apache serves requests; the filter narrows lines; "Clear view" works.
 - [ ] PHP window, Xdebug: Install downloads the build for the active PHP, `phpinfo()` shows Xdebug 3.x in debug
-      mode; Turn off removes it from `phpinfo()`; a stale `php_xdebug.dll` shows the Update button.
+      mode; Turn off removes it from `phpinfo()`; a stale `php_xdebug.dll` shows the Update button. On a PHP
+      branch PECL hasn't built for yet, the status names the branch instead of failing on the download.
 - [ ] Databases: with MySQL running, the list matches phpMyAdmin; Export writes a `.sql` in `mysql_dumps`;
       Import into… a new name creates the database; Drop needs two clicks and the database is gone.
 - [ ] Databases with a root password set under Service and Port Settings: list and export still work.
