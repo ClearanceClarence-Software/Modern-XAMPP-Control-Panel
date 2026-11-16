@@ -69,6 +69,8 @@ folder that you didn't ask for.
 3. Run it. It finds XAMPP in its own folder, the folder above it, or `C:\xampp`. If none of those has
    an install it says which folders it checked and lets you pick the right one or download XAMPP.
 
+To find it from Windows search afterwards, tick **Config › Show in the Start menu**.
+
 **Requirements:** Windows 10 or 11 (x64) and XAMPP for Windows, any recent version. The original
 control panel keeps working; the two can be used side by side.
 
@@ -87,6 +89,8 @@ control panel keeps working; the two can be used side by side.
 - **Familiar layout.** Module rows for Apache, MySQL, FileZilla, Mercury, Tomcat and Mailpit with
   Service, PID(s), Port(s), Start/Stop, Admin, Config and Logs, plus Config, Netstat, Versions,
   Databases, Logs, Sites, PHP, Shell, Explorer, Services, Help and About buttons.
+- **Your language.** English and Norwegian Bokmål are built in; Config › Language switches at once. Adding a
+  language is one JSON file, see [docs/translating.md](docs/translating.md).
 - **Light and dark themes.** Follows Windows by default; the sun/moon button in the header switches.
 - **Tray icon.** Shows what runs, starts and stops modules from its menu, keeps the panel out of
   the taskbar when minimized.
@@ -269,6 +273,11 @@ dotnet test XamppControl.slnx
 
 and make sure none of them reports anything. The tests in `tests/` cover the parsers (release feeds,
 `php.ini`, virtual hosts, the hosts file, port rewriting); add one when you change those.
+
+## Translating
+
+Every text is in `Lang/en.json`. Copy it to `Lang/<code>.json`, translate the values, and open a pull request;
+[docs/translating.md](docs/translating.md) has the rules and shows how to try a translation without building.
 
 ## Security
 

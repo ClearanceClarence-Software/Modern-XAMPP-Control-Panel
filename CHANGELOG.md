@@ -3,6 +3,25 @@
 All notable changes to Modern XAMPP Control Panel. The release script copies the section for each version into
 its GitHub release.
 
+## [0.4.0] - 2026-11-16
+
+### Added
+
+- **Start menu shortcut.** Config has a "Show in the Start menu" box. It adds a shortcut for the current user, so
+  typing "XAMPP" in Windows search finds the panel, and removes it again when unticked. If the exe is moved, the
+  shortcut is pointed at the new place the next time the panel starts.
+- **Languages.** The panel can be translated. Every text lives in one JSON file per language in `Lang/`; English
+  and Norwegian Bokmål ship with it, and Config has a Language box (it follows Windows by default and switches
+  open windows at once). A translation can be tried by dropping a `<code>.json` into a `lang` folder next to the
+  exe, without building. `docs/translating.md` explains how to add a language. The log stays in English in every
+  language, so bug reports read the same.
+
+### Changed
+
+- Texts with counts ("1 table", "3 tables") and sentences with values are single translatable entries instead of
+  glued fragments; tests fail when a text used in the app is missing from `Lang/en.json` or a translation's
+  placeholders differ from English.
+
 ## [0.3.2] - 2026-11-04
 
 ### Fixed
@@ -123,6 +142,7 @@ First release: the XAMPP-style panel with clean MySQL/MariaDB shutdown, explaine
 conflict finder, Netstat, XAMPP-style configuration, and installing, switching and rolling back PHP and
 MariaDB versions.
 
+[0.4.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.4.0
 [0.3.2]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.2
 [0.3.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.1
 [0.3.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.0

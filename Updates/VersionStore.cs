@@ -193,17 +193,17 @@ public static class VersionStore
     {
         string version = DetectVersion(component, folder)
             ?? throw new InvalidOperationException(component == Component.Php
-                ? "That folder has no php.exe."
-                : "That folder has no bin\\mariadbd.exe or bin\\mysqld.exe.");
+                ? Loc.T("Updates.FolderHasNoPhpExe")
+                : Loc.T("Updates.FolderHasNoMariadbd"));
 
         string fullPath = Path.GetFullPath(folder).TrimEnd('\\', '/');
         if (string.Equals(fullPath, Path.GetFullPath(ActiveDir(root, component)), StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("That's the active install already.");
+            throw new InvalidOperationException(Loc.T("Updates.ActiveInstallAlready"));
         }
         if (fullPath.StartsWith(Path.GetFullPath(StoreDir(root, component)), StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("That folder is already in the version store.");
+            throw new InvalidOperationException(Loc.T("Updates.FolderAlreadyInStore"));
         }
 
         Directory.Move(fullPath, ParkPath(root, component, version));
@@ -218,7 +218,7 @@ public static class VersionStore
     {
         if (version.IsActive)
         {
-            throw new InvalidOperationException("Switch to another version before removing the active one.");
+            throw new InvalidOperationException(Loc.T("Updates.SwitchBeforeRemovingActive"));
         }
 
         FileTools.ClearReadOnly(version.Path);

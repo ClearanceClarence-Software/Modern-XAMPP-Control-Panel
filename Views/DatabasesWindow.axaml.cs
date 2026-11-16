@@ -49,7 +49,7 @@ public partial class DatabasesWindow : Window
             return;
         }
 
-        if (await PickSqlAsync($"Choose the .sql file to import into {database.Name}") is { } sqlFile)
+        if (await PickSqlAsync(Loc.T("Databases.ChooseSqlFileToImportInto", database.Name)) is { } sqlFile)
         {
             await viewModel.ImportAsync(database.Name, sqlFile);
         }
@@ -62,7 +62,7 @@ public partial class DatabasesWindow : Window
             return;
         }
 
-        if (await PickSqlAsync("Choose the .sql file to import (a new database is created from its name)") is { } sqlFile)
+        if (await PickSqlAsync(Loc.T("Databases.ChooseSqlFileToImport")) is { } sqlFile)
         {
             await viewModel.ImportAsync(DatabasesViewModel.DatabaseNameFor(sqlFile), sqlFile);
         }
@@ -91,7 +91,7 @@ public partial class DatabasesWindow : Window
             Title = title,
             AllowMultiple = false,
             SuggestedStartLocation = start,
-            FileTypeFilter = [new FilePickerFileType("SQL dumps") { Patterns = ["*.sql"] }],
+            FileTypeFilter = [new FilePickerFileType(Loc.T("Databases.SqlDumps")) { Patterns = ["*.sql"] }],
         });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }

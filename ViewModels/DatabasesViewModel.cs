@@ -71,11 +71,11 @@ public sealed class DatabasesViewModel : ObservableObject
         if (_main.FindModule("MySQL") is not { IsRunning: true })
         {
             Databases.Clear();
-            Status = "MySQL isn't running. Start it to see the databases.";
+            Status = Loc.T("Databases.MySqlIsntRunning");
             return;
         }
 
-        await RunAsync("Reading databases…", async () =>
+        await RunAsync(Loc.T("Databases.ReadingDatabases"), async () =>
         {
             List<DatabaseInfo> databases = await DatabaseTools.ListAsync(_main.Root, ConnectionArgs, Environment);
             Databases.Clear();
@@ -84,8 +84,8 @@ public sealed class DatabasesViewModel : ObservableObject
                 Databases.Add(database);
             }
             return databases.Count == 0
-                ? "No databases yet besides the system ones."
-                : $"{databases.Count} database{(databases.Count == 1 ? "" : "s")}.";
+                ? Loc.T("Databases.NoDatabasesYet")
+                : Loc.Plural("Databases.Count", databases.Count);
         });
     }
 
@@ -93,12 +93,12 @@ public sealed class DatabasesViewModel : ObservableObject
     /// <param name="database">The database to export.</param>
     /// <returns>A task that completes when the dump is written or the error is shown.</returns>
     public Task ExportAsync(DatabaseInfo database) =>
-        RunAsync($"Exporting {database.Name}…", async () =>
+        RunAsync(Loc.T("Databases.Exporting", database.Name), async () =>
         {
             string file = await DatabaseTools.ExportAsync(_main.Root, database.Name, ConnectionArgs, Environment);
             string size = Updates.FileTools.FormatSize(new FileInfo(file).Length);
             _main.Write(LogTag, $"Exported {database.Name} to \"{file}\" ({size}).", LogLevel.Ok);
-            return $"Exported {database.Name} to {Path.GetFileName(file)} ({size}).";
+            return Loc.T("Databases.ExportedTo", database.Name, Path.GetFileName(file), size);
         });
 
     /// <summary>Runs a .sql file into a database, creating it when needed, then refreshes the list.</summary>
@@ -107,11 +107,11 @@ public sealed class DatabasesViewModel : ObservableObject
     /// <returns>A task that completes when the import is done or the error is shown.</returns>
     public async Task ImportAsync(string database, string sqlFile)
     {
-        await RunAsync($"Importing {Path.GetFileName(sqlFile)} into {database}…", async () =>
+        await RunAsync(Loc.T("Databases.ImportingInto", Path.GetFileName(sqlFile), database), async () =>
         {
             await DatabaseTools.ImportAsync(_main.Root, database, sqlFile, ConnectionArgs, Environment);
             _main.Write(LogTag, $"Imported \"{sqlFile}\" into {database}.", LogLevel.Ok);
-            return $"Imported {Path.GetFileName(sqlFile)} into {database}.";
+            return Loc.T("Databases.ImportedInto", Path.GetFileName(sqlFile), database);
         });
         await RefreshAsync();
     }
@@ -128,17 +128,16 @@ public sealed class DatabasesViewModel : ObservableObject
         if (_pendingDrop != database.Name)
         {
             _pendingDrop = database.Name;
-            Status = $"Click Drop again to delete {database.Name} ({database.TableText}, {database.Size}). " +
-                "Export it first if you may need it.";
+            Status = Loc.T("Databases.ClickDropAgainToDelete", database.Name, database.TableText, database.Size);
             return;
         }
 
         _pendingDrop = null;
-        await RunAsync($"Dropping {database.Name}…", async () =>
+        await RunAsync(Loc.T("Databases.Dropping", database.Name), async () =>
         {
             await DatabaseTools.DropAsync(_main.Root, database.Name, ConnectionArgs, Environment);
             _main.Write(LogTag, $"Dropped database {database.Name}.", LogLevel.Warn);
-            return $"Dropped {database.Name}.";
+            return Loc.T("Databases.Dropped", database.Name);
         });
         await RefreshAsync();
     }
@@ -193,7 +192,7 @@ public sealed class DatabasesViewModel : ObservableObject
             // Runs straight from a button click and drives external tools, so any failure (a wrong password, a
             // locked file, a broken dump) must end up in the status line rather than crash the app.
             _main.Write(LogTag, ex.Message, LogLevel.Error);
-            Status = ex.Message + " (check the root password under Config › Service and Port Settings)";
+            Status = Loc.T("Databases.CheckTheRootPassword", ex.Message);
         }
         finally
         {

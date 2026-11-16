@@ -70,7 +70,7 @@ public static partial class XdebugInstaller
         List<string> versions = ParseVersions(listing);
         return versions.Count > 0
             ? versions
-            : throw new InvalidOperationException("downloads.php.net lists no stable Xdebug release.");
+            : throw new InvalidOperationException(Loc.T("PhpSettings.NoStableXdebugRelease"));
     }
 
     /// <summary>The stable 3.x version folders in a listing, newest first.</summary>
@@ -144,7 +144,7 @@ public static partial class XdebugInstaller
             ZipArchiveEntry dll = zip.Entries.FirstOrDefault(entry =>
                     entry.Name.StartsWith("php_xdebug", StringComparison.OrdinalIgnoreCase)
                     && entry.Name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException("The downloaded zip holds no php_xdebug DLL.");
+                ?? throw new InvalidDataException(Loc.T("PhpSettings.ZipHoldsNoXdebugDll"));
             dll.ExtractToFile(target, overwrite: true);
         }
         FileTools.TryDeleteFile(zipPath);

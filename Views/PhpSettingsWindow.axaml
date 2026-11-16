@@ -3,7 +3,7 @@
         xmlns:vm="using:XamppControl.ViewModels"
         x:Class="XamppControl.Views.PhpSettingsWindow"
         x:DataType="vm:PhpSettingsViewModel"
-        Title="PHP settings"
+        Title="{DynamicResource PhpSettings.Title}"
         Width="960" Height="680" MinWidth="780" MinHeight="480"
         WindowStartupLocation="CenterOwner">
 
@@ -24,7 +24,7 @@
             <!-- Common values -->
             <Border Grid.Column="0" Classes="card" Padding="16,12" IsEnabled="{Binding HasIni}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Settings" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
+                    <TextBlock DockPanel.Dock="Top" Text="{DynamicResource PhpSettings.Settings}" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
                     <!-- Right margin keeps the boxes clear of the scroll bar -->
                     <ScrollViewer>
                         <ItemsControl ItemsSource="{Binding Settings}" Margin="0,0,14,0">
@@ -40,7 +40,7 @@
                                                 </StackPanel>
                                                 <TextBlock Classes="note" Text="{Binding Hint}" />
                                             </StackPanel>
-                                            <TextBox Grid.Column="2" Text="{Binding Value}" PlaceholderText="not set"
+                                            <TextBox Grid.Column="2" Text="{Binding Value}" PlaceholderText="{DynamicResource PhpSettings.NotSetPlaceholder}"
                                                      VerticalAlignment="Center" />
                                         </Grid>
                                     </Border>
@@ -54,9 +54,9 @@
             <!-- Extensions -->
             <Border Grid.Column="2" Classes="card" Padding="16,12" IsEnabled="{Binding HasIni}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Extensions" FontSize="16" FontWeight="Bold" Margin="0,0,0,4" />
+                    <TextBlock DockPanel.Dock="Top" Text="{DynamicResource PhpSettings.Extensions}" FontSize="16" FontWeight="Bold" Margin="0,0,0,4" />
                     <TextBlock DockPanel.Dock="Top" Classes="note" Margin="0,0,0,8"
-                               Text="Every extension DLL in php\ext. Checked ones load with Apache." />
+                               Text="{DynamicResource PhpSettings.EveryExtensionDLLInPhp}" />
 
                     <!-- Xdebug: installed from PECL and switched with one button -->
                     <Border DockPanel.Dock="Top" Padding="12,10" Margin="0,0,14,10" CornerRadius="6"
@@ -66,7 +66,7 @@
                                 <TextBlock Text="Xdebug" FontWeight="SemiBold" />
                                 <TextBlock Classes="note" Text="{Binding XdebugStatus}" />
                             </StackPanel>
-                            <Button Grid.Column="2" Classes="tool" Content="{Binding XdebugUpdate, StringFormat='Update to {0}'}"
+                            <Button Grid.Column="2" Classes="tool" Content="{Binding XdebugUpdateLabel}"
                                     IsVisible="{Binding HasXdebugUpdate}" Click="XdebugUpdate_Click" VerticalAlignment="Center" />
                             <Button Grid.Column="4" Classes="tool" Content="{Binding XdebugAction}" MinWidth="110"
                                     Click="Xdebug_Click" VerticalAlignment="Center" />
@@ -93,12 +93,12 @@
         <TextBlock Grid.Row="2" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,12,0,0" />
 
         <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,8,Auto" Margin="0,12,0,0">
-            <Button Grid.Column="0" Classes="tool" Content="Open php.ini" Click="OpenIni_Click" IsEnabled="{Binding HasIni}" />
+            <Button Grid.Column="0" Classes="tool" Content="{DynamicResource PhpSettings.OpenPhpIni}" Click="OpenIni_Click" IsEnabled="{Binding HasIni}" />
             <TextBlock Grid.Column="1" Classes="note" VerticalAlignment="Center" Margin="12,0"
-                       Text="Saving keeps the previous file as php.ini.bak and restarts Apache when it runs." />
-            <Button Grid.Column="2" Classes="accent" Content="Save" Width="100" Click="Save_Click"
+                       Text="{DynamicResource PhpSettings.SavingKeepsThePreviousFile}" />
+            <Button Grid.Column="2" Classes="accent" Content="{DynamicResource Common.Save}" Width="100" Click="Save_Click"
                     IsEnabled="{Binding CanSave}" />
-            <Button Grid.Column="4" Classes="tool" Content="Close" Width="90" Click="Close_Click"
+            <Button Grid.Column="4" Classes="tool" Content="{DynamicResource Common.Close}" Width="90" Click="Close_Click"
                     IsEnabled="{Binding IsIdle}" />
         </Grid>
     </Grid>

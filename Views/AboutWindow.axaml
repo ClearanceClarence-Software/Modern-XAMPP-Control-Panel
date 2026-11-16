@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="XamppControl.Views.AboutWindow"
-        Title="About"
+        Title="{DynamicResource About.Title}"
         Width="520" SizeToContent="Height" CanResize="False"
         WindowStartupLocation="CenterOwner">
 
@@ -40,44 +40,44 @@
         </StackPanel>
 
         <TextBlock Classes="muted" TextWrapping="Wrap"
-                   Text="A drop-in replacement for the XAMPP Control Panel on Windows: the same layout, with clean MySQL shutdowns, readable errors, PHP and MariaDB versions, HTTPS local sites, Xdebug, Mailpit and a port conflict fixer." />
+                   Text="{DynamicResource About.ADropInReplacementFor}" />
 
         <!-- Build details -->
         <Border Classes="card" Padding="14,10">
             <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto" >
-                <TextBlock Grid.Row="0" Grid.Column="0" Classes="k" Text="Version" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Classes="k" Text="{DynamicResource About.Version}" />
                 <TextBlock Grid.Row="0" Grid.Column="1" Classes="v" x:Name="VersionLine" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Classes="k" Text="Runtime" Margin="0,4,0,0" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Classes="k" Text="{DynamicResource About.Runtime}" Margin="0,4,0,0" />
                 <TextBlock Grid.Row="1" Grid.Column="1" Classes="v" x:Name="RuntimeLine" Margin="0,4,0,0" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Classes="k" Text="Windows" Margin="0,4,0,0" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Classes="k" Text="{DynamicResource About.Windows}" Margin="0,4,0,0" />
                 <TextBlock Grid.Row="2" Grid.Column="1" Classes="v" x:Name="OsLine" Margin="0,4,0,0" />
-                <TextBlock Grid.Row="3" Grid.Column="0" Classes="k" Text="Location" Margin="0,4,0,0" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Classes="k" Text="{DynamicResource About.Location}" Margin="0,4,0,0" />
                 <TextBlock Grid.Row="3" Grid.Column="1" Classes="v mono" x:Name="PathLine" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
             </Grid>
         </Border>
 
         <!-- Update check -->
         <Grid ColumnDefinitions="Auto,12,*">
-            <Button Grid.Column="0" Classes="tool" x:Name="CheckButton" Content="Check for updates" Click="CheckUpdates_Click" />
+            <Button Grid.Column="0" Classes="tool" x:Name="CheckButton" Content="{DynamicResource About.CheckForUpdates}" Click="CheckUpdates_Click" />
             <TextBlock Grid.Column="2" x:Name="UpdateText" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap" />
         </Grid>
 
         <!-- Links -->
         <WrapPanel>
             <Button Classes="link" Content="GitHub" Click="Repo_Click" Margin="0,0,16,0" />
-            <Button Classes="link" Content="Releases" Click="Releases_Click" Margin="0,0,16,0" />
-            <Button Classes="link" Content="Report a problem" Click="Issue_Click" Margin="0,0,16,0" />
-            <Button Classes="link" Content="License" Click="License_Click" Margin="0,0,16,0" />
-            <Button Classes="link" Content="Copy build details" Click="Copy_Click" />
+            <Button Classes="link" Content="{DynamicResource About.Releases}" Click="Releases_Click" Margin="0,0,16,0" />
+            <Button Classes="link" Content="{DynamicResource About.ReportAProblem}" Click="Issue_Click" Margin="0,0,16,0" />
+            <Button Classes="link" Content="{DynamicResource About.License}" Click="License_Click" Margin="0,0,16,0" />
+            <Button Classes="link" Content="{DynamicResource About.CopyBuildDetails}" Click="Copy_Click" />
         </WrapPanel>
 
         <!-- Credits -->
         <StackPanel Spacing="4">
             <TextBlock x:Name="CopyrightText" Classes="muted" FontSize="11" />
             <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap"
-                       Text="Built with Avalonia and .NET. Unofficial, not affiliated with Apache Friends. XAMPP is a trademark of Apache Friends; Apache, MariaDB, MySQL, PHP, Xdebug and Mailpit belong to their respective owners." />
+                       Text="{DynamicResource About.BuiltWithAvaloniaAndNET}" />
         </StackPanel>
 
-        <Button Classes="accent" Content="Close" Width="90" HorizontalAlignment="Right" Click="Close_Click" />
+        <Button Classes="accent" Content="{DynamicResource Common.Close}" Width="90" HorizontalAlignment="Right" Click="Close_Click" />
     </StackPanel>
 </Window>

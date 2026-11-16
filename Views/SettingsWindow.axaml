@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="XamppControl.Views.SettingsWindow"
-        Title="Configuration of Control Panel"
+        Title="{DynamicResource Settings.Title}"
         Width="640" SizeToContent="Height" MaxHeight="760"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
@@ -14,14 +14,14 @@
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Path Data="M6,6 L18,18 M18,6 L6,18" Width="11" Height="11" Stretch="Uniform"
                           Stroke="#DC2626" StrokeThickness="2.6" StrokeLineCap="Round" />
-                    <TextBlock Text="Abort" VerticalAlignment="Center" />
+                    <TextBlock Text="{DynamicResource Common.Abort}" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <Button Classes="tool" Width="110" Height="34" Click="Save_Click">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Path Data="M4,12 L10,18 L20,6" Width="13" Height="11" Stretch="Uniform"
                           Stroke="#16A34A" StrokeThickness="2.6" StrokeLineCap="Round" StrokeJoin="Round" />
-                    <TextBlock Text="Save" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    <TextBlock Text="{DynamicResource Common.Save}" VerticalAlignment="Center" FontWeight="SemiBold" />
                 </StackPanel>
             </Button>
         </StackPanel>
@@ -33,27 +33,27 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="12">
                         <StackPanel Spacing="6">
-                            <TextBlock Text="XAMPP installation folder" FontWeight="SemiBold" />
+                            <TextBlock Text="{DynamicResource Settings.XAMPPInstallationFolder}" FontWeight="SemiBold" />
                             <Grid ColumnDefinitions="*,8,Auto">
-                                <TextBox x:Name="RootBox" Grid.Column="0" PlaceholderText="C:\xampp" />
-                                <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseRoot_Click" />
+                                <TextBox x:Name="RootBox" Grid.Column="0" PlaceholderText="{DynamicResource Settings.CXamppPlaceholder}" />
+                                <Button Grid.Column="2" Classes="tool" Content="{DynamicResource Common.Browse}" Click="BrowseRoot_Click" />
                             </Grid>
                             <TextBlock x:Name="RootHint" Classes="muted" FontSize="12" />
                         </StackPanel>
 
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Editor" FontWeight="SemiBold" />
+                            <TextBlock Text="{DynamicResource Common.Editor}" FontWeight="SemiBold" />
                             <Grid ColumnDefinitions="*,8,Auto">
-                                <TextBox x:Name="EditorBox" Grid.Column="0" PlaceholderText="notepad.exe" />
-                                <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseEditor_Click" />
+                                <TextBox x:Name="EditorBox" Grid.Column="0" PlaceholderText="{DynamicResource Settings.NotepadExePlaceholder}" />
+                                <Button Grid.Column="2" Classes="tool" Content="{DynamicResource Common.Browse}" Click="BrowseEditor_Click" />
                             </Grid>
                         </StackPanel>
 
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Browser (empty = system default)" FontWeight="SemiBold" />
+                            <TextBlock Text="{DynamicResource Settings.BrowserEmptySystemDefault}" FontWeight="SemiBold" />
                             <Grid ColumnDefinitions="*,8,Auto">
                                 <TextBox x:Name="BrowserBox" Grid.Column="0" />
-                                <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="BrowseBrowser_Click" />
+                                <Button Grid.Column="2" Classes="tool" Content="{DynamicResource Common.Browse}" Click="BrowseBrowser_Click" />
                             </Grid>
                         </StackPanel>
                     </StackPanel>
@@ -62,7 +62,7 @@
                 <!-- Autostart -->
                 <Border Classes="card" Padding="16,12">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Autostart of modules" FontWeight="SemiBold" />
+                        <TextBlock Text="{DynamicResource Settings.AutostartOfModules}" FontWeight="SemiBold" />
                         <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
                             <CheckBox x:Name="AutoApache" Grid.Row="0" Grid.Column="0" Content="Apache" />
                             <CheckBox x:Name="AutoFileZilla" Grid.Row="0" Grid.Column="1" Content="FileZilla" />
@@ -71,7 +71,7 @@
                             <CheckBox x:Name="AutoMercury" Grid.Row="1" Grid.Column="1" Content="Mercury" />
                             <CheckBox x:Name="AutoMailpit" Grid.Row="1" Grid.Column="2" Content="Mailpit" />
                         </Grid>
-                        <TextBlock Text="Selected modules will be started on next launch of the Control Panel."
+                        <TextBlock Text="{DynamicResource Settings.SelectedModulesWillBeStarted}"
                                    FontSize="12" Classes="info" TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
@@ -79,21 +79,26 @@
                 <!-- Options -->
                 <Border Classes="card" Padding="16,12">
                     <StackPanel Spacing="10">
-                        <Grid ColumnDefinitions="Auto,12,180">
-                            <TextBlock Grid.Column="0" Text="Theme" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Grid ColumnDefinitions="Auto,12,180,24,Auto,12,180">
+                            <TextBlock Grid.Column="0" Text="{DynamicResource Settings.Theme}" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <ComboBox Grid.Column="2" x:Name="ThemeBox" HorizontalAlignment="Stretch">
-                                <ComboBoxItem Content="Same as Windows" />
-                                <ComboBoxItem Content="Light" />
-                                <ComboBoxItem Content="Dark" />
+                                <ComboBoxItem Content="{DynamicResource Settings.SameAsWindows}" />
+                                <ComboBoxItem Content="{DynamicResource Settings.Light}" />
+                                <ComboBoxItem Content="{DynamicResource Settings.Dark}" />
                             </ComboBox>
+                            <TextBlock Grid.Column="4" Text="{DynamicResource Settings.Language}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <!-- Filled in code: "Same as Windows" and every language file found -->
+                            <ComboBox Grid.Column="6" x:Name="LanguageBox" HorizontalAlignment="Stretch" />
                         </Grid>
                         <UniformGrid Columns="2">
-                            <CheckBox x:Name="StartMinimizedBox" Content="Start minimized" />
-                            <CheckBox x:Name="MinimizeToTrayBox" Content="Minimize to the tray" />
-                            <CheckBox x:Name="CheckUpdatesBox" Content="Check for new versions" />
-                            <CheckBox x:Name="CheckPortsBox" Content="Check default ports on startup" />
-                            <CheckBox x:Name="TomcatWindowBox" Content="Tomcat output window" />
-                            <CheckBox x:Name="DebugBox" Content="Show debug information" />
+                            <CheckBox x:Name="StartMinimizedBox" Content="{DynamicResource Settings.StartMinimized}" />
+                            <CheckBox x:Name="MinimizeToTrayBox" Content="{DynamicResource Settings.MinimizeToTheTray}" />
+                            <CheckBox x:Name="CheckUpdatesBox" Content="{DynamicResource Settings.CheckForNewVersions}" />
+                            <CheckBox x:Name="StartMenuBox" Content="{DynamicResource Settings.ShowInStartMenu}"
+                                      ToolTip.Tip="{DynamicResource Settings.ShowInStartMenuTip}" />
+                            <CheckBox x:Name="CheckPortsBox" Content="{DynamicResource Settings.CheckDefaultPortsOnStartup}" />
+                            <CheckBox x:Name="TomcatWindowBox" Content="{DynamicResource Settings.TomcatOutputWindow}" />
+                            <CheckBox x:Name="DebugBox" Content="{DynamicResource Settings.ShowDebugInformation}" />
                         </UniformGrid>
                     </StackPanel>
                 </Border>
@@ -101,11 +106,11 @@
                 <!-- Sub-dialogs -->
                 <Grid ColumnDefinitions="*,8,*,8,*">
                     <Button Grid.Column="0" Classes="side" HorizontalContentAlignment="Center"
-                            Content="User Defined Files" Click="UserFiles_Click" />
+                            Content="{DynamicResource Common.UserDefinedFiles}" Click="UserFiles_Click" />
                     <Button Grid.Column="2" Classes="side" HorizontalContentAlignment="Center"
-                            Content="Service and Ports" Click="ServicePorts_Click" />
+                            Content="{DynamicResource Settings.ServiceAndPorts}" Click="ServicePorts_Click" />
                     <Button Grid.Column="4" Classes="side" HorizontalContentAlignment="Center"
-                            Content="Log Options" Click="LogOptions_Click" />
+                            Content="{DynamicResource Common.LogOptions}" Click="LogOptions_Click" />
                 </Grid>
             </StackPanel>
         </ScrollViewer>

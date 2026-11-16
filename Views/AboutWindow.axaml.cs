@@ -24,8 +24,8 @@ public partial class AboutWindow : Window
         }
 
         AppName.Text = BuildInfo.AppName;
-        VersionText.Text = $"{BuildInfo.Version} · compiled {BuildInfo.CompiledOn}";
-        PublisherText.Text = "by " + BuildInfo.Publisher;
+        VersionText.Text = Loc.T("About.VersionCompiled", BuildInfo.Version, BuildInfo.CompiledOn);
+        PublisherText.Text = Loc.T("About.ByPublisher", BuildInfo.Publisher);
         VersionLine.Text = BuildInfo.Version;
         RuntimeLine.Text = $"{BuildInfo.Runtime}, {BuildInfo.AvaloniaVersion}";
         OsLine.Text = Environment.OSVersion.VersionString;
@@ -45,7 +45,7 @@ public partial class AboutWindow : Window
         }
 
         CheckButton.IsEnabled = false;
-        UpdateText.Text = "Checking GitHub…";
+        UpdateText.Text = Loc.T("About.CheckingGitHub");
         try
         {
             UpdateText.Text = await viewModel.CheckForAppUpdateNowAsync();
@@ -79,7 +79,7 @@ public partial class AboutWindow : Window
         if (Clipboard is { } clipboard)
         {
             await clipboard.SetTextAsync(BuildInfo.Summary);
-            UpdateText.Text = "Build details copied.";
+            UpdateText.Text = Loc.T("About.BuildDetailsCopied");
         }
     }
 

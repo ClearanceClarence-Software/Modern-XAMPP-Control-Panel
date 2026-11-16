@@ -36,7 +36,9 @@ public partial class SitesWindow : Window
 
         IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = $"Choose the folder for {(row.Host.Length > 0 ? row.Host : "the site")}",
+            Title = row.Host.Length > 0
+                ? Loc.T("Sites.ChooseTheFolderFor", row.Host)
+                : Loc.T("Sites.ChooseTheFolderForTheSite"),
             AllowMultiple = false,
         });
         if (folders.Count > 0 && folders[0].TryGetLocalPath() is { } path)

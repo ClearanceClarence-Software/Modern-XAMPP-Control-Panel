@@ -39,6 +39,7 @@ public partial class MainWindow : Window
         DataContextChanged += (_, _) => Subscribe();
         ActualThemeVariantChanged += (_, _) => UpdateThemeToggle();
         UpdateThemeToggle();
+        Loc.Changed += OnLanguageChanged;
 
         Opened += async (_, _) =>
         {
@@ -61,6 +62,21 @@ public partial class MainWindow : Window
     {
         _isClosingConfirmed = true;
         Close();
+    }
+
+    /// <summary>Stops following language changes once the window is gone.</summary>
+    /// <param name="e">Carries nothing.</param>
+    protected override void OnClosed(EventArgs e)
+    {
+        Loc.Changed -= OnLanguageChanged;
+        base.OnClosed(e);
+    }
+
+    /// <summary>Rebuilds the texts this window sets in code: the title and the theme button's tooltip.</summary>
+    private void OnLanguageChanged()
+    {
+        Title = BuildInfo.WindowTitle;
+        UpdateThemeToggle();
     }
 
     /// <summary>The tray icon, set by the app after the window is created; null when there is none.</summary>
@@ -103,15 +119,12 @@ public partial class MainWindow : Window
                 Tray?.ShowWindow();
             }
 
-            bool isOne = running.Count == 1;
-            string names = string.Join(" and ", running.Select(module => module.Name));
+            string names = string.Join(Loc.T("Common.AndSeparator"), running.Select(module => module.Name));
             ConfirmChoice choice = await ConfirmWindow.AskAsync(this,
-                $"{names} {(isOne ? "is" : "are")} still running",
-                $"Stop {(isOne ? "it" : "them")} with a clean shutdown before quitting, or leave " +
-                $"{(isOne ? "it" : "them")} running in the background? Modules installed as Windows services keep " +
-                "running either way.",
-                "Stop and quit",
-                "Leave running");
+                Loc.Plural("Main.StillRunning", running.Count, names),
+                Loc.Plural("Main.StopBeforeQuitting", running.Count),
+                Loc.T("Main.StopAndQuit"),
+                Loc.T("Main.LeaveRunning"));
             if (choice == ConfirmChoice.Cancel)
             {
                 return;
@@ -183,7 +196,7 @@ public partial class MainWindow : Window
 
         IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = isXamppMissing ? "XAMPP not found - choose your XAMPP folder" : "Choose your XAMPP folder",
+            Title = isXamppMissing ? Loc.T("Main.XamppNotFoundChooseFolder") : Loc.T("Main.ChooseYourXamppFolder"),
             AllowMultiple = false,
         });
         if (folders.Count == 0 || folders[0].TryGetLocalPath() is not { } path)
@@ -230,21 +243,20 @@ public partial class MainWindow : Window
         }
 
         string lines = string.Join(Environment.NewLine, prompt.Conflicts.Select(conflict =>
-            $"Port {conflict.Port}: {conflict.OwnerName} (PID {conflict.Pid})"));
+            Loc.T("Main.PortHeldBy", conflict.Port, conflict.OwnerName, conflict.Pid)));
         string hint = prompt.Conflicts.Any(conflict => conflict.IsSystem)
-            ? Environment.NewLine + Environment.NewLine + "\"System\" means Windows itself holds the port, usually for IIS."
+            ? Environment.NewLine + Environment.NewLine + Loc.T("Main.SystemMeansWindowsItself")
             : "";
         string message = $"{lines}{hint}{Environment.NewLine}{Environment.NewLine}" +
             (prompt.MoveLabel is null
-                ? "End the program to free the port, or cancel and change the port under Config."
-                : $"Free the port, or move {prompt.ModuleName} to other ports (its config files and the panel's " +
-                  "settings are updated).");
+                ? Loc.T("Main.EndTheProgramToFree")
+                : Loc.T("Main.FreeThePortOrMove", prompt.ModuleName));
 
         // Primary is the free action when it exists; otherwise moving takes its place.
         string primary = prompt.FreeLabel ?? prompt.MoveLabel!;
         string? secondary = prompt.FreeLabel is null ? null : prompt.MoveLabel;
-        ConfirmChoice choice = await ConfirmWindow.AskAsync(this, $"{prompt.ModuleName} can't start: port in use",
-            message, primary, secondary);
+        ConfirmChoice choice = await ConfirmWindow.AskAsync(this,
+            Loc.T("Main.CantStartPortInUse", prompt.ModuleName), message, primary, secondary);
         return choice switch
         {
             ConfirmChoice.Primary => prompt.FreeLabel is null ? PortConflictChoice.MovePorts : PortConflictChoice.FreePorts,
@@ -385,7 +397,7 @@ public partial class MainWindow : Window
         {
             ThemeIcon.Data = geometry;
         }
-        ToolTip.SetTip(ThemeToggle, IsDark ? "Switch to the light theme" : "Switch to the dark theme");
+        ToolTip.SetTip(ThemeToggle, IsDark ? Loc.T("Main.SwitchToTheLightTheme") : Loc.T("Main.SwitchToTheDarkTheme"));
     }
 
     private async void CopySelected_Click(object? sender, RoutedEventArgs e)

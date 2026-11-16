@@ -8,7 +8,7 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>XamppControl</AssemblyName>
     <RootNamespace>XamppControl</RootNamespace>
-    <Version>0.3.2</Version>
+    <Version>0.4.0</Version>
     <Product>Modern XAMPP Control Panel</Product>
     <Authors>ClearanceClarence</Authors>
     <Company>ClearanceClarence</Company>
@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Include="Lang\*.json" />
   </ItemGroup>
 
   <!-- Build date shown in the title bar, like "[ Compiled: Oct 27th 2026 ]". -->

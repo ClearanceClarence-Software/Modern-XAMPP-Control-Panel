@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="XamppControl.Views.ConfirmWindow"
-        Title="Modern XAMPP Control Panel"
+        Title="{DynamicResource Confirm.Title}"
         Width="460" SizeToContent="Height" CanResize="False"
         WindowStartupLocation="CenterOwner">
 

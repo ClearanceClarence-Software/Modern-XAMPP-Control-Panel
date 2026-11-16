@@ -40,6 +40,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             () => Shell.OpenUrl(AppUpdate?.Url ?? AppUpdateCheck.ReleasesUrl, Settings.Browser));
 
         LoadModules();
+        Loc.Changed += OnLanguageChanged;
 
         _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
         _pollTimer.Tick += async (_, _) => await RefreshAsync(quiet: false);
@@ -60,8 +61,17 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     public string Root
     {
         get => _root;
-        private set => SetField(ref _root, value);
+        private set
+        {
+            if (SetField(ref _root, value))
+            {
+                OnPropertyChanged(nameof(MissingXamppText));
+            }
+        }
     }
+
+    /// <summary>The banner shown while <see cref="HasXampp"/> is false; names the folder that holds no XAMPP.</summary>
+    public string MissingXamppText => Loc.T("Main.NothingToControlAt", Root);
 
     /// <summary>The header's second line: "PHP version · folder", or the folder alone when php.exe has none.</summary>
     public string Subtitle
@@ -100,10 +110,10 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     public bool HasAppUpdate => AppUpdate is not null;
 
     /// <summary>The header's update link, e.g. "v0.2.1 is available"; empty without an update.</summary>
-    public string AppUpdateText => AppUpdate is { } update ? $"{update.Version} is available" : "";
+    public string AppUpdateText => AppUpdate is { } update ? Loc.T("Main.VersionIsAvailable", update.Version) : "";
 
     /// <summary>The line under the What's new title, naming the running version.</summary>
-    public string AppUpdateSubtitle => $"You have {BuildInfo.Version}. Here's what changed since then.";
+    public string AppUpdateSubtitle => Loc.T("WhatsNew.YouHaveHeresWhatChanged", BuildInfo.Version);
 
     /// <summary>
     /// What changed since the running version: the notes of every newer release, newest first, each under its
@@ -128,12 +138,11 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         {
             if (!AppUpdater.CanSelfUpdate)
             {
-                return "Running from the IDE or not as an exe: download the zip from the release page instead.";
+                return Loc.T("WhatsNew.RunningFromTheIde");
             }
             return AppUpdate?.ZipUrl is null
-                ? "This release has no zip to install from; download it from the release page."
-                : "Install downloads the signed zip, checks it, swaps XamppControl.exe and restarts the panel. " +
-                  "Your settings and XAMPP stay as they are.";
+                ? Loc.T("WhatsNew.ThisReleaseHasNoZip")
+                : Loc.T("WhatsNew.InstallDownloadsTheSignedZip");
         }
     }
 
@@ -204,10 +213,10 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
                     AppUpdateProgress = (fraction ?? 0) * 100;
                 });
 
-            AppUpdateStatus = "Restarting…";
+            AppUpdateStatus = Loc.T("WhatsNew.Restarting");
             if (!AppUpdater.ApplyOnExit(newExe))
             {
-                AppUpdateStatus = "This build can't replace itself; download the zip from the release page.";
+                AppUpdateStatus = Loc.T("WhatsNew.ThisBuildCantReplaceItself");
                 return false;
             }
 
@@ -218,7 +227,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         {
             // Downloads, checksums, zips and the script can each fail; the window reports it and nothing is changed.
             Write("update", "Update failed: " + ex.Message, LogLevel.Error);
-            AppUpdateStatus = "Update failed: " + ex.Message;
+            AppUpdateStatus = Loc.T("WhatsNew.UpdateFailed", ex.Message);
             return false;
         }
         finally
@@ -261,6 +270,19 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         string? phpVersion = XamppPaths.FileVersion(Path.Combine(Root, "php", "php.exe"));
         Subtitle = phpVersion is null ? Root : $"PHP {phpVersion} · {Root}";
         OnPropertyChanged(nameof(HasXampp));
+        OnPropertyChanged(nameof(MissingXamppText));
+    }
+
+    /// <summary>
+    /// Re-reads the texts this class builds itself after the language changed. The module rows need nothing here:
+    /// <see cref="ApplySettingsAsync"/> rebuilds them right after it switches the language.
+    /// </summary>
+    private void OnLanguageChanged()
+    {
+        OnPropertyChanged(nameof(AppUpdateText));
+        OnPropertyChanged(nameof(AppUpdateSubtitle));
+        OnPropertyChanged(nameof(AppUpdateHint));
+        OnPropertyChanged(nameof(MissingXamppText));
     }
 
     /// <summary>
@@ -291,6 +313,12 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 
         Write("main", "Control Panel Ready");
 
+        // A shortcut the user removed by hand stays removed; one that points at an old location is rewritten.
+        if (Settings.StartMenuShortcut && StartMenu.Exists)
+        {
+            await SyncStartMenuShortcutAsync();
+        }
+
         if (Settings.CheckForAppUpdates)
         {
             await CheckForAppUpdateAsync(isManual: false);
@@ -315,7 +343,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         {
             // Being offline is normal for a local server panel; the failure is only shown with debug output on.
             Debug("main", "Update check failed: " + ex.Message);
-            return "Couldn't reach GitHub: " + ex.Message;
+            return Loc.T("About.CouldntReachGitHub", ex.Message);
         }
 
         if (newerReleases.Count == 0)
@@ -324,7 +352,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             {
                 Write("update", $"You have the newest version ({BuildInfo.Version}).");
             }
-            return $"You have the newest version ({BuildInfo.Version}).";
+            return Loc.T("About.YouHaveTheNewestVersion", BuildInfo.Version);
         }
 
         AppUpdateNotes = string.Join("\n\n", newerReleases.Select(release =>
@@ -334,7 +362,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             $"{BuildInfo.AppName} {AppUpdate.Version} is available (you have {BuildInfo.Version}). " +
             "Click the link in the header to see what's new.",
             LogLevel.Ok);
-        return $"{AppUpdate.Version} is available.";
+        return Loc.T("About.VersionIsAvailable", AppUpdate.Version);
     }
 
     /// <summary>Logs the XAMPP folder and which modules it has, or an error when the folder holds no XAMPP.</summary>
@@ -377,7 +405,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     {
         foreach (ModuleViewModel module in Modules.Where(candidate => candidate.IsRunning))
         {
-            Write(module.Driver.Tag, $"{module.Name} already running{ModuleDriver.PidText(PidList(module))}");
+            Write(module.Driver.Tag, $"{module.Name} already running{ModuleDriver.PidText(module.PidValues)}");
         }
     }
 
@@ -403,25 +431,63 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         }
     }
 
-    /// <summary>Reads the PIDs back from a module's PID column.</summary>
-    /// <param name="module">The module whose <see cref="ModuleViewModel.Pids"/> text is read.</param>
-    /// <returns>The PIDs shown: one or two, or only the first of a longer list ("+n more" is skipped).</returns>
-    private static List<int> PidList(ModuleViewModel module) =>
-        module.Pids.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => int.TryParse(line, out int pid) ? pid : 0)
-            .Where(pid => pid > 0)
-            .ToList();
+
+    /// <summary>
+    /// Makes the Start menu match the setting: creates the shortcut when it is wanted and missing or points at an
+    /// exe that has since moved, and removes it when it is no longer wanted.
+    /// </summary>
+    /// <returns>A task that completes when the shortcut is in step; failures are logged, never thrown.</returns>
+    private async Task SyncStartMenuShortcutAsync()
+    {
+        string exe = Environment.ProcessPath ?? "";
+        if (!Settings.StartMenuShortcut)
+        {
+            if (StartMenu.Exists)
+            {
+                bool isRemoved = StartMenu.Remove();
+                Write("main",
+                    isRemoved ? "Start menu shortcut removed." : "The Start menu shortcut couldn't be removed.",
+                    isRemoved ? LogLevel.Info : LogLevel.Warn);
+            }
+            return;
+        }
+
+        bool isCurrent = StartMenu.Exists
+            && string.Equals(Settings.ShortcutTarget, exe, StringComparison.OrdinalIgnoreCase);
+        if (isCurrent)
+        {
+            return;
+        }
+
+        if (await StartMenu.CreateAsync())
+        {
+            Settings.ShortcutTarget = exe;
+            Settings.Save();
+            Write("main", "Start menu shortcut created: search Windows for \"XAMPP\".", LogLevel.Ok);
+        }
+        else
+        {
+            Write("main", "The Start menu shortcut couldn't be created.", LogLevel.Warn);
+        }
+    }
 
     /// <summary>Saves the settings edited in the Config dialog and reloads the modules so they take effect.</summary>
     /// <param name="edited">The dialog's edited copy; its values are copied into <see cref="Settings"/>.</param>
     /// <returns>A task that completes after the modules are reloaded and "Configuration saved" is logged.</returns>
     public async Task ApplySettingsAsync(AppSettings edited)
     {
+        bool isLanguageChanged = !string.Equals(Settings.Language, edited.Language, StringComparison.OrdinalIgnoreCase);
         Settings.CopyFrom(edited);
         Settings.Save();
         AppTheme.Apply(Settings.Theme);
+        if (isLanguageChanged)
+        {
+            // Open windows switch at once; text that code built earlier (status lines) follows as it is rebuilt.
+            Loc.Apply(Settings.Language);
+        }
         LogFontSize = Settings.LogFontSize;
         TrimLog();
+        await SyncStartMenuShortcutAsync();
 
         // Rebuild modules so new paths, ports, service names and user-defined files take effect.
         await ReloadModulesAsync();
@@ -518,7 +584,9 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         string? moveLabel = null;
         if (moveTo.Http is { } http)
         {
-            moveLabel = moveTo.Https is { } https ? $"Use ports {http} and {https}" : $"Use port {http}";
+            moveLabel = moveTo.Https is { } https
+                ? Loc.T("Main.UsePortsAnd", http, https)
+                : Loc.T("Main.UsePort", http);
         }
 
         var prompt = new PortConflictPrompt(module.Name, conflicts, freeLabel, moveLabel);
@@ -569,7 +637,9 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             }
 
             // PID 4 is the Windows kernel, which has no executable path or process name to show.
-            string ownerName = ownerPath ?? ProcessScan.NameOf(pid) ?? (pid == 4 ? "System" : "unknown process");
+            string ownerName = ownerPath
+                ?? ProcessScan.NameOf(pid)
+                ?? (pid == 4 ? "System" : Loc.T("Main.UnknownProcess"));
             conflicts.Add(new PortConflict(port, pid, ownerName));
         }
         return conflicts;
@@ -619,21 +689,17 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
             return null;
         }
 
-        var parts = new List<string>();
-        if (hasSystem && hasIis)
-        {
-            parts.Add("Stop IIS");
-        }
+        // One whole text per combination, so a translation can order and inflect the words as it needs.
+        bool stopsIis = hasSystem && hasIis;
         string[] names = processes.Select(process => process.ShortName).Distinct().ToArray();
-        if (names.Length == 1)
+        return names.Length switch
         {
-            parts.Add($"End {names[0]}");
-        }
-        else if (names.Length > 1)
-        {
-            parts.Add($"End the {names.Length} programs");
-        }
-        return string.Join(" and ", parts);
+            0 => stopsIis ? Loc.T("Main.StopIis") : "",
+            1 => stopsIis ? Loc.T("Main.StopIisAndEndProgram", names[0]) : Loc.T("Main.EndProgram", names[0]),
+            _ => stopsIis
+                ? Loc.T("Main.StopIisAndEndThePrograms", names.Length)
+                : Loc.T("Main.EndThePrograms", names.Length),
+        };
     }
 
     /// <summary>Free ports a module could move to.</summary>
@@ -934,6 +1000,10 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         }
     }
 
-    /// <summary>Stops the status polling.</summary>
-    public void Dispose() => _pollTimer.Stop();
+    /// <summary>Stops the status polling and stops following language changes.</summary>
+    public void Dispose()
+    {
+        Loc.Changed -= OnLanguageChanged;
+        _pollTimer.Stop();
+    }
 }

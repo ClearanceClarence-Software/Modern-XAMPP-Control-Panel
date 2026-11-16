@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="XamppControl.Views.LogOptionsWindow"
-        Title="Log Options"
+        Title="{DynamicResource Common.LogOptions}"
         Width="460" SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
@@ -11,19 +11,19 @@
             <StackPanel Spacing="14">
                 <Grid ColumnDefinitions="*,12,*">
                     <StackPanel Grid.Column="0" Spacing="4">
-                        <TextBlock Text="Font size" FontWeight="SemiBold" />
+                        <TextBlock Text="{DynamicResource LogOptions.FontSize}" FontWeight="SemiBold" />
                         <ComboBox x:Name="FontSizeBox" HorizontalAlignment="Stretch" />
                     </StackPanel>
                     <StackPanel Grid.Column="2" Spacing="4">
-                        <TextBlock Text="Lines kept in the window" FontWeight="SemiBold" />
+                        <TextBlock Text="{DynamicResource LogOptions.LinesKeptInTheWindow}" FontWeight="SemiBold" />
                         <TextBox x:Name="MaxLinesBox" />
                     </StackPanel>
                 </Grid>
 
                 <StackPanel Spacing="6">
-                    <CheckBox x:Name="LogToFileBox" Content="Also write the log to a file" />
+                    <CheckBox x:Name="LogToFileBox" Content="{DynamicResource LogOptions.AlsoWriteTheLogTo}" />
                     <TextBlock x:Name="LogPathText" Classes="mono" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" />
-                    <Button Classes="tool" Content="Open log folder" HorizontalAlignment="Left" Click="OpenFolder_Click" />
+                    <Button Classes="tool" Content="{DynamicResource LogOptions.OpenLogFolder}" HorizontalAlignment="Left" Click="OpenFolder_Click" />
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -31,8 +31,8 @@
         <TextBlock x:Name="ErrorText" Classes="error" FontSize="12" IsVisible="False" />
 
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-            <Button Classes="tool" Width="90" Height="34" Content="Abort" Click="Abort_Click" />
-            <Button Classes="tool" Width="90" Height="34" Content="Save" FontWeight="SemiBold" Click="Save_Click" />
+            <Button Classes="tool" Width="90" Height="34" Content="{DynamicResource Common.Abort}" Click="Abort_Click" />
+            <Button Classes="tool" Width="90" Height="34" Content="{DynamicResource Common.Save}" FontWeight="SemiBold" Click="Save_Click" />
         </StackPanel>
     </StackPanel>
 </Window>

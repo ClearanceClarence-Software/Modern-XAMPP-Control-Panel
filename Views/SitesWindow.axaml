@@ -3,7 +3,7 @@
         xmlns:vm="using:XamppControl.ViewModels"
         x:Class="XamppControl.Views.SitesWindow"
         x:DataType="vm:SitesViewModel"
-        Title="Sites (virtual hosts)"
+        Title="{DynamicResource Sites.Title}"
         Width="960" Height="600" MinWidth="820" MinHeight="420"
         WindowStartupLocation="CenterOwner">
 
@@ -19,7 +19,7 @@
 
         <!-- Intro -->
         <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
-            <TextBlock Text="Give each project its own address, such as https://myproject.test, with a trusted certificate."
+            <TextBlock Text="{DynamicResource Sites.GiveEachProjectItsOwn}"
                        TextWrapping="Wrap" />
             <TextBlock Classes="note" Text="{Binding LocalhostNote}" />
         </StackPanel>
@@ -30,16 +30,16 @@
                 <Border DockPanel.Dock="Top" Height="34" Padding="12,0" Background="{DynamicResource HeaderBrush}" CornerRadius="8,8,0,0"
                         BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
                     <Grid ColumnDefinitions="200,10,*,10,70,10,286">
-                        <TextBlock Grid.Column="0" Classes="colhead" Text="HOST NAME" />
-                        <TextBlock Grid.Column="2" Classes="colhead" Text="FOLDER" />
+                        <TextBlock Grid.Column="0" Classes="colhead" Text="{DynamicResource Sites.HOSTNAME}" />
+                        <TextBlock Grid.Column="2" Classes="colhead" Text="{DynamicResource Sites.FOLDER}" />
                         <TextBlock Grid.Column="4" Classes="colhead" Text="HTTPS" />
                     </Grid>
                 </Border>
 
                 <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*" Margin="12,8">
-                    <Button Grid.Column="0" Classes="tool" Content="Add site" Command="{Binding AddCommand}" />
+                    <Button Grid.Column="0" Classes="tool" Content="{DynamicResource Sites.AddSite}" Command="{Binding AddCommand}" />
                     <TextBlock Grid.Column="1" Classes="note" VerticalAlignment="Center" Margin="12,0,0,0"
-                               Text="Use names ending in .test: they are reserved for local use and never clash with real websites." />
+                               Text="{DynamicResource Sites.UseNamesEndingInTest}" />
                 </Grid>
 
                 <ScrollViewer>
@@ -48,21 +48,21 @@
                             <DataTemplate x:DataType="vm:SiteRow">
                                 <Border Padding="12,8" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
                                     <Grid ColumnDefinitions="200,10,*,10,70,10,286">
-                                        <TextBox Grid.Column="0" Text="{Binding Host}" PlaceholderText="myproject.test" />
+                                        <TextBox Grid.Column="0" Text="{Binding Host}" PlaceholderText="{DynamicResource Sites.MyprojectTestPlaceholder}" />
                                         <Grid Grid.Column="2" ColumnDefinitions="*,6,Auto">
                                             <TextBox Grid.Column="0" Text="{Binding Folder}"
-                                                     PlaceholderText="C:\xampp\htdocs\myproject" />
-                                            <Button Grid.Column="2" Classes="tool" Content="Browse…" Click="Browse_Click" />
+                                                     PlaceholderText="{DynamicResource Sites.CXamppHtdocsMyprojectPlaceholder}" />
+                                            <Button Grid.Column="2" Classes="tool" Content="{DynamicResource Common.Browse}" Click="Browse_Click" />
                                         </Grid>
                                         <CheckBox Grid.Column="4" IsChecked="{Binding UseHttps}" VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="6">
-                                            <Button Classes="tool" Content="Open" Command="{Binding OpenCommand}"
+                                            <Button Classes="tool" Content="{DynamicResource Common.Open}" Command="{Binding OpenCommand}"
                                                     ToolTip.Tip="{Binding Url}" />
-                                            <Button Classes="tool" Content="Editor" Command="{Binding EditorCommand}"
-                                                    ToolTip.Tip="Open the folder in the editor set under Config (Explorer when none is set)" />
-                                            <Button Classes="tool" Content="Terminal" Command="{Binding TerminalCommand}"
-                                                    ToolTip.Tip="Command prompt in the folder with php and mysql on PATH" />
-                                            <Button Classes="tool" Content="Remove" Click="Remove_Click" />
+                                            <Button Classes="tool" Content="{DynamicResource Common.Editor}" Command="{Binding EditorCommand}"
+                                                    ToolTip.Tip="{DynamicResource Sites.OpenTheFolderInTheTip}" />
+                                            <Button Classes="tool" Content="{DynamicResource Sites.Terminal}" Command="{Binding TerminalCommand}"
+                                                    ToolTip.Tip="{DynamicResource Sites.CommandPromptInTheFolderTip}" />
+                                            <Button Classes="tool" Content="{DynamicResource Common.Remove}" Click="Remove_Click" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -79,11 +79,11 @@
                 <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
                     <TextBlock Text="{Binding TrustStatus}" TextWrapping="Wrap" />
                     <TextBlock Classes="note"
-                               Text="Firefox keeps its own list: import local-ca.crt there, or set security.enterprise_roots.enabled to true." />
+                               Text="{DynamicResource Sites.FirefoxKeepsItsOwnList}" />
                 </StackPanel>
-                <Button Grid.Column="1" Classes="tool" Content="Trust" Click="Trust_Click"
+                <Button Grid.Column="1" Classes="tool" Content="{DynamicResource Sites.Trust}" Click="Trust_Click"
                         IsVisible="{Binding CanTrust}" IsEnabled="{Binding IsIdle}" />
-                <Button Grid.Column="3" Classes="tool" Content="Show local-ca.crt" Click="ShowAuthority_Click" />
+                <Button Grid.Column="3" Classes="tool" Content="{DynamicResource Sites.ShowLocalCaCrt}" Click="ShowAuthority_Click" />
             </Grid>
         </Border>
 
@@ -93,10 +93,10 @@
         <!-- Apply / Close -->
         <Grid Grid.Row="4" ColumnDefinitions="*,Auto,8,Auto" Margin="0,12,0,0">
             <TextBlock Grid.Column="0" Classes="note" VerticalAlignment="Center"
-                       Text="Apply writes httpd-vhosts.conf and the hosts file (Windows asks for admin rights), then restarts Apache." />
-            <Button Grid.Column="1" Classes="accent" Content="Apply" Width="100" Click="Apply_Click"
+                       Text="{DynamicResource Sites.ApplyWritesHttpdVhostsConf}" />
+            <Button Grid.Column="1" Classes="accent" Content="{DynamicResource Sites.Apply}" Width="100" Click="Apply_Click"
                     IsEnabled="{Binding IsIdle}" />
-            <Button Grid.Column="3" Classes="tool" Content="Close" Width="90" Click="Close_Click"
+            <Button Grid.Column="3" Classes="tool" Content="{DynamicResource Common.Close}" Width="90" Click="Close_Click"
                     IsEnabled="{Binding IsIdle}" />
         </Grid>
     </Grid>

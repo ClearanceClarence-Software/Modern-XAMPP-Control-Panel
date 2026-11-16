@@ -26,8 +26,7 @@ public static partial class FileZillaUpdater
     {
         if (!InstallerName().IsMatch(Path.GetFileName(installerPath)))
         {
-            return UpdateResult.Fail("That isn't a FileZilla Server installer. Pick the " +
-                "FileZilla_Server_…_win64-setup.exe file from filezilla-project.org.");
+            return UpdateResult.Fail(Loc.T("Updates.NotFileZillaInstaller"));
         }
 
         string? previousFolder = FileZillaServer.FindInstallFolder();
@@ -37,30 +36,28 @@ public static partial class FileZillaUpdater
 
         if (previousFolder is null && !await StopLegacyServerAsync(ctx))
         {
-            return UpdateResult.Fail("XAMPP's FileZilla Server didn't stop, so nothing was changed.");
+            return UpdateResult.Fail(Loc.T("Updates.FileZillaDidntStop"));
         }
 
-        ctx.Status("Running the FileZilla Server installer (Windows asks for admin rights)…");
+        ctx.Status(Loc.T("Updates.RunningFileZillaInstaller"));
         ctx.Progress(null);
         string installerFolder = Path.GetDirectoryName(installerPath) ?? ctx.Root;
         int exitCode = await Shell.RunElevatedAsync(installerPath, "", installerFolder, showWindow: true);
         if (exitCode == -2)
         {
-            return UpdateResult.Fail("Canceled at the admin prompt. Nothing was changed.");
+            return UpdateResult.Fail(Loc.T("Updates.CanceledAtAdminPrompt"));
         }
 
         string? installFolder = FileZillaServer.FindInstallFolder();
         if (installFolder is null)
         {
-            return UpdateResult.Fail("FileZilla Server wasn't found after the installer closed " +
-                $"(exit code {exitCode}). If you canceled it, nothing was changed.");
+            return UpdateResult.Fail(Loc.T("Updates.FileZillaNotFoundAfter", exitCode));
         }
 
         string newVersion = FileZillaServer.VersionOf(installFolder) ?? "1.x";
         if (exitCode != 0 && newVersion == previousVersion)
         {
-            return UpdateResult.Fail($"The installer didn't finish (exit code {exitCode}); " +
-                $"FileZilla Server {previousVersion} is still installed.");
+            return UpdateResult.Fail(Loc.T("Updates.InstallerDidntFinish", exitCode, previousVersion));
         }
 
         ctx.Log($"FileZilla Server {newVersion} is installed in \"{installFolder}\" as the " +
@@ -69,16 +66,13 @@ public static partial class FileZillaUpdater
 
         if (previousFolder is not null)
         {
-            return new UpdateResult(true,
-                $"FileZilla Server {newVersion} is installed. Your users and settings were kept.");
+            return new UpdateResult(true, Loc.T("Updates.FileZillaInstalledKept", newVersion));
         }
 
         string oldSettings = Path.Combine(ctx.Root, "FileZillaFTP", "FileZilla Server.xml");
         ctx.Log("FileZilla Server 1.x can't read the old settings, so set up your FTP users again with its Admin " +
             $"program. The old users and folders are listed in \"{oldSettings}\" for reference.", LogLevel.Warn);
-        return new UpdateResult(true,
-            $"FileZilla Server {newVersion} is installed and the FileZilla row now controls it. " +
-            "Set up your FTP users again with Admin; the old settings are kept in FileZillaFTP.");
+        return new UpdateResult(true, Loc.T("Updates.FileZillaInstalledRow", newVersion));
     }
 
     /// <summary>Stops XAMPP's FileZilla Server 0.9.41 when it runs, so it doesn't hold the FTP port.</summary>
@@ -91,7 +85,7 @@ public static partial class FileZillaUpdater
             return true;
         }
 
-        ctx.Status("Stopping XAMPP's FileZilla Server…");
+        ctx.Status(Loc.T("Updates.StoppingFileZilla"));
         return await fileZilla.StopForMaintenanceAsync();
     }
 

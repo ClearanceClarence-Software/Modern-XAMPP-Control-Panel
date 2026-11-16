@@ -45,7 +45,7 @@ public static class AppUpdater
     public static async Task<string> DownloadAsync(AppRelease release, Action<string> status, Action<double?> progress)
     {
         string zipUrl = release.ZipUrl
-            ?? throw new InvalidOperationException("This release has no win-x64 zip to install from.");
+            ?? throw new InvalidOperationException(Loc.T("Updates.ReleaseHasNoZip"));
 
         string folder = Path.Combine(StagingFolder, release.Version.TrimStart('v'));
         if (Directory.Exists(folder))
@@ -55,23 +55,23 @@ public static class AppUpdater
         Directory.CreateDirectory(folder);
 
         string zipPath = Path.Combine(folder, "update.zip");
-        status($"Downloading {release.Version}…");
+        status(Loc.T("Updates.Downloading", release.Version));
         await ReleaseFeeds.DownloadAsync(zipUrl, zipPath, progress);
 
         if (release.ShaUrl is { } shaUrl)
         {
-            status("Checking the download…");
+            status(Loc.T("Updates.CheckingDownload"));
             progress(null);
             await VerifyAsync(zipPath, shaUrl);
         }
 
-        status("Unpacking…");
+        status(Loc.T("Updates.Unpacking"));
         string newExe = Path.Combine(folder, "XamppControl.new.exe");
         using (ZipArchive zip = ZipFile.OpenRead(zipPath))
         {
             ZipArchiveEntry exe = zip.Entries.FirstOrDefault(entry =>
                     entry.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException("The downloaded zip holds no exe.");
+                ?? throw new InvalidDataException(Loc.T("Updates.ZipHoldsNoExe"));
             exe.ExtractToFile(newExe, overwrite: true);
         }
         FileTools.TryDeleteFile(zipPath);
@@ -154,14 +154,13 @@ public static class AppUpdater
         string text = await ReleaseFeeds.Http.GetStringAsync(shaUrl, timeout.Token);
         string? expected = text.Split(' ', '\t', '*', '\n', '\r')
             .FirstOrDefault(part => part.Length == 64)?.ToLowerInvariant()
-            ?? throw new InvalidOperationException("The release's .sha256 file holds no checksum.");
+            ?? throw new InvalidOperationException(Loc.T("Updates.Sha256HoldsNoChecksum"));
 
         string actual = await ReleaseFeeds.Sha256Async(zipPath);
         if (actual != expected)
         {
             FileTools.TryDeleteFile(zipPath);
-            throw new InvalidOperationException(
-                "The download's checksum doesn't match the release. Nothing was changed.");
+            throw new InvalidOperationException(Loc.T("Updates.ChecksumDoesntMatch"));
         }
     }
 

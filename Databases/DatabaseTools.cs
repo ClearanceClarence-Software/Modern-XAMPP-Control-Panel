@@ -13,7 +13,7 @@ public sealed record DatabaseInfo(string Name, int Tables, long SizeBytes)
     public string Size => FileTools.FormatSize(SizeBytes);
 
     /// <summary>"3 tables" or "1 table".</summary>
-    public string TableText => Tables == 1 ? "1 table" : $"{Tables} tables";
+    public string TableText => Loc.Plural("Databases.Tables", Tables);
 }
 
 /// <summary>Lists, dumps and restores databases with the MariaDB command-line clients of the active install.</summary>
@@ -49,7 +49,7 @@ public static class DatabaseTools
         string connectionArgs,
         IDictionary<string, string> environment)
     {
-        string client = ClientExe(root) ?? throw new InvalidOperationException("No mariadb.exe in mysql\\bin.");
+        string client = ClientExe(root) ?? throw new InvalidOperationException(Loc.T("Databases.NoMariadbExe"));
         const string query = "SELECT s.schema_name, COUNT(t.table_name), " +
             "COALESCE(SUM(t.data_length + t.index_length), 0) " +
             "FROM information_schema.schemata s " +
@@ -63,7 +63,7 @@ public static class DatabaseTools
             environment);
         if (result.ExitCode != 0)
         {
-            throw new InvalidOperationException(FirstLine(result.Error) ?? "The database list query failed.");
+            throw new InvalidOperationException(FirstLine(result.Error) ?? Loc.T("Databases.ListQueryFailed"));
         }
 
         var databases = new List<DatabaseInfo>();
@@ -92,7 +92,7 @@ public static class DatabaseTools
         string connectionArgs,
         IDictionary<string, string> environment)
     {
-        string dumpExe = DumpExe(root) ?? throw new InvalidOperationException("No mariadb-dump.exe in mysql\\bin.");
+        string dumpExe = DumpExe(root) ?? throw new InvalidOperationException(Loc.T("Databases.NoMariadbDumpExe"));
         Directory.CreateDirectory(DumpFolder(root));
         string file = Path.Combine(DumpFolder(root), $"{FileTools.Safe(database)}_{FileTools.Stamp()}.sql");
 
@@ -106,7 +106,7 @@ public static class DatabaseTools
         if (result.ExitCode != 0)
         {
             FileTools.TryDeleteFile(file);
-            throw new InvalidOperationException(FirstLine(result.Error) ?? "The dump failed.");
+            throw new InvalidOperationException(FirstLine(result.Error) ?? Loc.T("Databases.TheDumpFailed"));
         }
         return file;
     }
@@ -125,7 +125,7 @@ public static class DatabaseTools
         string connectionArgs,
         IDictionary<string, string> environment)
     {
-        string client = ClientExe(root) ?? throw new InvalidOperationException("No mariadb.exe in mysql\\bin.");
+        string client = ClientExe(root) ?? throw new InvalidOperationException(Loc.T("Databases.NoMariadbExe"));
         string create = $"CREATE DATABASE IF NOT EXISTS `{database.Replace("`", "``", StringComparison.Ordinal)}`";
         Shell.RunResult created = await Shell.RunAsync(
             client,
@@ -135,7 +135,7 @@ public static class DatabaseTools
             environment);
         if (created.ExitCode != 0)
         {
-            throw new InvalidOperationException(FirstLine(created.Error) ?? "Creating the database failed.");
+            throw new InvalidOperationException(FirstLine(created.Error) ?? Loc.T("Databases.CreatingTheDatabaseFailed"));
         }
 
         // cmd redirects the file into the client's stdin; the client reads it statement by statement.
@@ -148,7 +148,7 @@ public static class DatabaseTools
             environment);
         if (imported.ExitCode != 0)
         {
-            throw new InvalidOperationException(FirstLine(imported.Error) ?? "The import failed.");
+            throw new InvalidOperationException(FirstLine(imported.Error) ?? Loc.T("Databases.TheImportFailed"));
         }
     }
 
@@ -164,7 +164,7 @@ public static class DatabaseTools
         string connectionArgs,
         IDictionary<string, string> environment)
     {
-        string client = ClientExe(root) ?? throw new InvalidOperationException("No mariadb.exe in mysql\\bin.");
+        string client = ClientExe(root) ?? throw new InvalidOperationException(Loc.T("Databases.NoMariadbExe"));
         string drop = $"DROP DATABASE `{database.Replace("`", "``", StringComparison.Ordinal)}`";
         Shell.RunResult result = await Shell.RunAsync(
             client,
@@ -174,7 +174,7 @@ public static class DatabaseTools
             environment);
         if (result.ExitCode != 0)
         {
-            throw new InvalidOperationException(FirstLine(result.Error) ?? "Dropping the database failed.");
+            throw new InvalidOperationException(FirstLine(result.Error) ?? Loc.T("Databases.DroppingTheDatabaseFailed"));
         }
     }
 

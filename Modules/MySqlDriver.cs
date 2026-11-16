@@ -93,13 +93,13 @@ public sealed class MySqlDriver(string root, AppSettings settings) : ModuleDrive
     public override IEnumerable<(string Label, string Relative)> ConfigFiles =>
     [
         ("my.ini", @"mysql\bin\my.ini"),
-        ("<Browse> mysql", @"mysql"),
+        (Loc.T("Module.BrowseFolder", "mysql"), @"mysql"),
     ];
 
     public override IEnumerable<(string Label, string Relative)> LogFiles =>
     [
         ("mysql_error.log", @"mysql\data\mysql_error.log"),
-        ("<Browse> mysql\\data", @"mysql\data"),
+        (Loc.T("Module.BrowseFolder", @"mysql\data"), @"mysql\data"),
     ];
 
     public override async Task StartAsync(IModuleHost host)

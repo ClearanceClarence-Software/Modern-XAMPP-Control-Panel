@@ -56,8 +56,8 @@ public static class BuildInfo
     /// <summary>Who makes the panel, for the About window.</summary>
     public const string Publisher = "CC Software (ClearanceClarence)";
 
-    /// <summary>The copyright line, for the About window.</summary>
-    public const string Copyright = "Copyright © 2026 ClearanceClarence · MIT license";
+    /// <summary>The copyright line, for the About window, in the panel's language.</summary>
+    public static string Copyright => Loc.T("About.Copyright");
 
     /// <summary>The .NET runtime this build runs on, e.g. ".NET 10.0.2".</summary>
     public static string Runtime => $".NET {Environment.Version}";
@@ -73,8 +73,8 @@ public static class BuildInfo
         $"{AppName} {Version} (compiled {CompiledOn})\n{Runtime}, {AvaloniaVersion}, {Environment.OSVersion}" +
         $"\n{Environment.ProcessPath}";
 
-    /// <summary>"Modern XAMPP Control Panel v0.3.0   [ Compiled: Oct 27th 2026 ]"</summary>
-    public static string WindowTitle => $"{AppName} {Version}   [ Compiled: {CompiledOn} ]";
+    /// <summary>"Modern XAMPP Control Panel v0.3.0   [ Compiled: Oct 27th 2026 ]", in the panel's language.</summary>
+    public static string WindowTitle => Loc.T("Main.WindowTitle", AppName, Version, CompiledOn);
 
     /// <summary>The English ordinal suffix for a day of the month.</summary>
     /// <param name="day">Day of the month, 1 to 31.</param>

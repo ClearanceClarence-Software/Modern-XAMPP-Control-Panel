@@ -14,7 +14,7 @@ namespace XamppControl.Updates;
 /// </param>
 public sealed record PhpBranch(string Branch, string Version, string ZipUrl, string? Sha256)
 {
-    public override string ToString() => $"PHP {Branch}   ·   newest {Version}";
+    public override string ToString() => Loc.T("Updates.PhpBranchNewest", Branch, Version);
 }
 
 /// <summary>A stable MariaDB release series (e.g. 12.3).</summary>
@@ -26,9 +26,14 @@ public sealed record MariaDbMajor(string Id, string Support, string? Eol)
     /// <summary>True when <see cref="Support"/> names long-term support; false for a rolling series.</summary>
     public bool IsLts => Support.Contains("Long", StringComparison.OrdinalIgnoreCase);
 
-    public override string ToString() =>
-        $"MariaDB {Id}   ·   {(IsLts ? "LTS" : "rolling")}" +
-        (string.IsNullOrEmpty(Eol) ? "" : $", supported until {Eol}");
+    public override string ToString()
+    {
+        if (string.IsNullOrEmpty(Eol))
+        {
+            return Loc.T(IsLts ? "Updates.MariaSeriesLts" : "Updates.MariaSeriesRolling", Id);
+        }
+        return Loc.T(IsLts ? "Updates.MariaSeriesLtsUntil" : "Updates.MariaSeriesRollingUntil", Id, Eol);
+    }
 }
 
 /// <summary>The newest Windows x64 zip of a MariaDB release series.</summary>
@@ -276,7 +281,7 @@ public static partial class ReleaseFeeds
     {
         using var document = JsonDocument.Parse(await GetStringAsync($"{MariaDbApi}{major}/latest/"));
         return FindWindowsZip(document.RootElement)
-            ?? throw new InvalidOperationException($"No Windows x64 ZIP found for MariaDB {major}.");
+            ?? throw new InvalidOperationException(Loc.T("Updates.NoWindowsZipForMaria", major));
     }
 
     /// <summary>Searches a JSON tree depth first, in document order, for the first winx64 zip file entry.</summary>

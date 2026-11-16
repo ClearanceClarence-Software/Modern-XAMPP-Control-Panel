@@ -31,11 +31,10 @@ public static partial class PhpUpdater
 
         if (ctx.Main.FindModule(ApacheModule) is { IsServiceInstalled: true })
         {
-            return UpdateResult.Fail("Apache is installed as a Windows service. " +
-                "Remove the service (Service checkbox) before updating PHP.");
+            return UpdateResult.Fail(Loc.T("Updates.ApacheIsServicePhpUpdate"));
         }
 
-        ctx.Status("Unpacking PHP…");
+        ctx.Status(Loc.T("Updates.UnpackingPhp"));
         ctx.Progress(null);
         string content;
         try
@@ -45,7 +44,7 @@ public static partial class PhpUpdater
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {
             FileTools.TryDelete(staging);
-            return UpdateResult.Fail("Couldn't unpack the zip: " + ex.Message);
+            return UpdateResult.Fail(Loc.T("Updates.CouldntUnpackZip", ex.Message));
         }
 
         if (BuildProblem(content) is { } buildProblem)
@@ -61,8 +60,8 @@ public static partial class PhpUpdater
         {
             FileTools.TryDelete(staging);
             return UpdateResult.Fail(existing.IsActive
-                ? $"PHP {newVersion} is already the active version."
-                : $"PHP {newVersion} is already installed. Use Switch to make it active.");
+                ? Loc.T("Updates.PhpAlreadyActiveVersion", newVersion)
+                : Loc.T("Updates.PhpAlreadyInstalled", newVersion));
         }
         ctx.Log($"Installed: PHP {oldVersion}. New: PHP {newVersion}.");
 
@@ -71,11 +70,11 @@ public static partial class PhpUpdater
         if (apacheWasRunning && !await StopApacheAsync(ctx))
         {
             FileTools.TryDelete(staging);
-            return UpdateResult.Fail("Apache could not be stopped, so nothing was changed.");
+            return UpdateResult.Fail(Loc.T("Updates.ApacheNotStoppedNothingChanged"));
         }
 
         string backup = VersionStore.ParkPath(root, Component.Php, oldVersion);
-        ctx.Status($"Keeping PHP {oldVersion} as an installed version…");
+        ctx.Status(Loc.T("Updates.KeepingPhpInstalled", oldVersion));
         string? swapFailure = SwapInNewBuild(phpDir, content, backup);
         FileTools.TryDelete(staging);
         if (swapFailure is not null)
@@ -94,14 +93,14 @@ public static partial class PhpUpdater
         // XAMPP folder setting changes before the user clicks it.
         async Task RollBackAsync()
         {
-            ctx.Status($"Rolling back to PHP {oldVersion}…");
+            ctx.Status(Loc.T("Updates.RollingBackToPhp", oldVersion));
             bool apacheIsRunning = false;
             if (ctx.Main.FindModule(ApacheModule) is { IsRunning: true } apache)
             {
                 apacheIsRunning = true;
                 if (!await apache.StopForMaintenanceAsync())
                 {
-                    throw new InvalidOperationException("Apache could not be stopped.");
+                    throw new InvalidOperationException(Loc.T("Updates.ApacheNotStopped"));
                 }
             }
 
@@ -116,21 +115,20 @@ public static partial class PhpUpdater
             await StartApacheAgainAsync(ctx, apacheIsRunning || apacheWasRunning);
         }
 
-        string rollbackLabel = $"Switch back to PHP {oldVersion}";
+        string rollbackLabel = Loc.T("Updates.SwitchBackToPhp", oldVersion);
 
         if (apacheWasRunning && !await StartApacheWithNewBuildAsync(ctx))
         {
             await ctx.Main.ReloadModulesAsync();
             return new UpdateResult(false,
-                $"PHP {newVersion} is installed, but Apache didn't start with it. " +
-                "The log shows why; you can roll back.",
+                Loc.T("Updates.PhpInstalledApacheDidntStart", newVersion),
                 RollBackAsync,
                 rollbackLabel);
         }
 
         await ctx.Main.ReloadModulesAsync();
         return new UpdateResult(true,
-            $"PHP {newVersion} is installed and active. PHP {oldVersion} stays installed.",
+            Loc.T("Updates.PhpInstalledAndActive", newVersion, oldVersion),
             RollBackAsync,
             rollbackLabel);
     }
@@ -142,12 +140,11 @@ public static partial class PhpUpdater
     {
         if (!File.Exists(Path.Combine(content, "php.exe")))
         {
-            return "This zip doesn't contain php.exe, so it isn't a PHP for Windows build.";
+            return Loc.T("Updates.ZipHasNoPhpExe");
         }
         if (!File.Exists(Path.Combine(content, "php8apache2_4.dll")))
         {
-            return "This zip has no php8apache2_4.dll. " +
-                "XAMPP needs a PHP 8 Thread Safe x64 build (not Non Thread Safe).";
+            return Loc.T("Updates.ZipHasNoApacheDll");
         }
         return null;
     }
@@ -157,9 +154,9 @@ public static partial class PhpUpdater
     /// <returns>False when Apache is still running afterwards.</returns>
     private static async Task<bool> StopApacheAsync(UpdateContext ctx)
     {
-        ctx.Status("Stopping Apache…");
+        ctx.Status(Loc.T("Updates.StoppingApache"));
         ModuleViewModel apache = ctx.Main.FindModule(ApacheModule)
-            ?? throw new InvalidOperationException("The Apache module isn't available.");
+            ?? throw new InvalidOperationException(Loc.T("Updates.ApacheModuleUnavailable"));
         return await apache.StopForMaintenanceAsync();
     }
 
@@ -182,8 +179,7 @@ public static partial class PhpUpdater
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return $"Couldn't move the php folder ({ex.Message}). Close terminals, editors " +
-                "or Composer runs that use PHP and try again. Nothing was changed.";
+            return Loc.T("Updates.CouldntMovePhpFolder", ex.Message);
         }
 
         try
@@ -196,7 +192,7 @@ public static partial class PhpUpdater
             {
                 Directory.Move(backup, phpDir);
             }
-            return $"Couldn't put the new PHP in place ({ex.Message}). The old PHP was restored.";
+            return Loc.T("Updates.CouldntPutNewPhp", ex.Message);
         }
 
         return null;
@@ -211,7 +207,7 @@ public static partial class PhpUpdater
     /// <param name="phpDir">XAMPP's php folder, already holding the new build.</param>
     private static async Task CarryOverXamppFilesAsync(UpdateContext ctx, string backup, string phpDir)
     {
-        ctx.Status("Carrying over php.ini and XAMPP's PHP files…");
+        ctx.Status(Loc.T("Updates.CarryingOverPhpIni"));
         if (Directory.Exists(backup))
         {
             List<string> copied = await Task.Run(() => FileTools.CopyMissing(backup, phpDir));
@@ -260,9 +256,9 @@ public static partial class PhpUpdater
     /// <returns>False when Apache isn't running within 10 seconds, usually because the new PHP won't load.</returns>
     private static async Task<bool> StartApacheWithNewBuildAsync(UpdateContext ctx)
     {
-        ctx.Status("Starting Apache with the new PHP…");
+        ctx.Status(Loc.T("Updates.StartingApacheNewPhp"));
         ModuleViewModel apache = ctx.Main.FindModule(ApacheModule)
-            ?? throw new InvalidOperationException("The Apache module isn't available.");
+            ?? throw new InvalidOperationException(Loc.T("Updates.ApacheModuleUnavailable"));
         await apache.StartAfterMaintenanceAsync();
         return await ctx.WaitForModuleAsync(ApacheModule, running: true, TimeSpan.FromSeconds(10));
     }

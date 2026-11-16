@@ -195,7 +195,7 @@ public static class LocalCertificates
 
     private static void CreateParentFolder(string filePath) =>
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)
-            ?? throw new InvalidOperationException($"\"{filePath}\" has no parent folder."));
+            ?? throw new InvalidOperationException(Loc.T("Sites.HasNoParentFolder", filePath)));
 
     private static DateTimeOffset Min(DateTimeOffset first, DateTimeOffset second) => first < second ? first : second;
 }

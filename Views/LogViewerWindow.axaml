@@ -3,7 +3,7 @@
         xmlns:vm="using:XamppControl.ViewModels"
         x:Class="XamppControl.Views.LogViewerWindow"
         x:DataType="vm:LogViewerViewModel"
-        Title="Server logs"
+        Title="{DynamicResource LogViewer.Title}"
         Width="960" Height="620" MinWidth="600" MinHeight="360"
         WindowStartupLocation="CenterOwner">
 
@@ -11,9 +11,9 @@
 
         <Grid Grid.Row="0" ColumnDefinitions="300,10,*,10,Auto" Margin="0,0,0,12">
             <ComboBox Grid.Column="0" ItemsSource="{Binding Sources}" SelectedItem="{Binding Selected}"
-                      HorizontalAlignment="Stretch" PlaceholderText="No log files found" />
-            <TextBox Grid.Column="2" Text="{Binding Filter}" PlaceholderText="Filter lines, e.g. error or a file name" />
-            <Button Grid.Column="4" Classes="tool" Content="Clear view" Command="{Binding ClearCommand}" />
+                      HorizontalAlignment="Stretch" PlaceholderText="{DynamicResource LogViewer.NoLogFilesFoundPlaceholder}" />
+            <TextBox Grid.Column="2" Text="{Binding Filter}" PlaceholderText="{DynamicResource LogViewer.FilterLinesEGErrorPlaceholder}" />
+            <Button Grid.Column="4" Classes="tool" Content="{DynamicResource LogViewer.ClearView}" Command="{Binding ClearCommand}" />
         </Grid>
 
         <Border Grid.Row="1" Classes="card">
@@ -21,8 +21,8 @@
                      Padding="0,6" SelectionMode="Multiple">
                 <ListBox.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Copy selected" Click="CopySelected_Click" />
-                        <MenuItem Header="Copy all shown" Click="CopyAll_Click" />
+                        <MenuItem Header="{DynamicResource Common.CopySelected}" Click="CopySelected_Click" />
+                        <MenuItem Header="{DynamicResource LogViewer.CopyAllShown}" Click="CopyAll_Click" />
                     </ContextMenu>
                 </ListBox.ContextMenu>
                 <ListBox.ItemTemplate>

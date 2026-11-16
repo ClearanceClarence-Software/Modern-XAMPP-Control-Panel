@@ -1,3 +1,4 @@
+using XamppControl.Core;
 using XamppControl.Modules;
 
 namespace XamppControl.Updates;
@@ -32,20 +33,19 @@ public static class VersionSwitcher
 
         if (apacheWasRunning)
         {
-            ctx.Status("Stopping Apache…");
+            ctx.Status(Loc.T("Updates.StoppingApache"));
             if (!await StopModuleAsync(ctx, "Apache"))
             {
-                return UpdateResult.Fail("Apache could not be stopped, so nothing was changed.");
+                return UpdateResult.Fail(Loc.T("Updates.ApacheNotStoppedNothingChanged"));
             }
         }
 
-        ctx.Status($"Switching to PHP {target.Version}…");
+        ctx.Status(Loc.T("Updates.SwitchingToPhp", target.Version));
         string? parkedPath = await SwapAsync(ctx, Component.Php, activeDir, target.Path, currentVersion);
         if (parkedPath is null)
         {
             await StartIfWantedAsync(ctx, "Apache", apacheWasRunning);
-            return UpdateResult.Fail("Couldn't swap the php folders. Close terminals, editors or Composer runs " +
-                "that use PHP and try again. Nothing was changed.");
+            return UpdateResult.Fail(Loc.T("Updates.CouldntSwapPhpFolders"));
         }
 
         DllSync.Sync(ctx, activeDir, Path.Combine(ctx.Root, "apache", "bin"));
@@ -53,24 +53,24 @@ public static class VersionSwitcher
 
         var previous = new InstalledVersion(Component.Php, currentVersion, parkedPath, IsActive: false);
         Func<Task> rollback = RollbackTo(ctx, previous);
-        string rollbackLabel = $"Switch back to PHP {currentVersion}";
+        string rollbackLabel = Loc.T("Updates.SwitchBackToPhp", currentVersion);
 
         if (apacheWasRunning)
         {
-            ctx.Status("Starting Apache…");
+            ctx.Status(Loc.T("Updates.StartingApache"));
             await StartIfWantedAsync(ctx, "Apache", true);
             bool apacheStarted = await ctx.WaitForModuleAsync("Apache", running: true, TimeSpan.FromSeconds(10));
             if (!apacheStarted)
             {
                 return new UpdateResult(false,
-                    $"Switched to PHP {target.Version}, but Apache didn't start with it (see the log).",
+                    Loc.T("Updates.SwitchedPhpApacheDidntStart", target.Version),
                     rollback,
                     rollbackLabel);
             }
         }
 
         return new UpdateResult(true,
-            $"PHP {target.Version} is now active. PHP {currentVersion} stays installed.",
+            Loc.T("Updates.PhpNowActive", target.Version, currentVersion),
             rollback,
             rollbackLabel);
     }
@@ -83,17 +83,15 @@ public static class VersionSwitcher
     {
         if (target.IsActive)
         {
-            return $"PHP {target.Version} is already active.";
+            return Loc.T("Updates.PhpAlreadyActive", target.Version);
         }
         if (!File.Exists(Path.Combine(target.Path, "php8apache2_4.dll")))
         {
-            return $"PHP {target.Version} has no php8apache2_4.dll. " +
-                "Only PHP 8 Thread Safe builds work with XAMPP's Apache config.";
+            return Loc.T("Updates.PhpHasNoApacheDll", target.Version);
         }
         if (ctx.Main.FindModule("Apache") is { IsServiceInstalled: true })
         {
-            return "Apache is installed as a Windows service. " +
-                "Remove the service (Service checkbox) before switching PHP.";
+            return Loc.T("Updates.ApacheIsServicePhpSwitch");
         }
         return null;
     }
@@ -116,21 +114,20 @@ public static class VersionSwitcher
 
         if (mySqlWasRunning)
         {
-            ctx.Status($"Shutting down MariaDB {currentVersion} cleanly…");
+            ctx.Status(Loc.T("Updates.ShuttingDownMariaCleanly", currentVersion));
             bool stoppedCleanly = await StopModuleAsync(ctx, "MySQL") && !await UpdateContext.PortOpenAsync(port);
             if (!stoppedCleanly)
             {
-                return UpdateResult.Fail("MariaDB didn't shut down cleanly, so nothing was changed.");
+                return UpdateResult.Fail(Loc.T("Updates.MariaNotCleanSoNothingChanged"));
             }
         }
 
-        ctx.Status($"Switching to MariaDB {target.Version}…");
+        ctx.Status(Loc.T("Updates.SwitchingToMaria", target.Version));
         string? parkedPath = await SwapAsync(ctx, Component.MariaDb, activeDir, target.Path, currentVersion);
         if (parkedPath is null)
         {
             await StartIfWantedAsync(ctx, "MySQL", mySqlWasRunning);
-            return UpdateResult.Fail("Couldn't swap the mysql folders. Close programs that use them and try again. " +
-                "Nothing was changed.");
+            return UpdateResult.Fail(Loc.T("Updates.CouldntSwapMysqlFolders"));
         }
 
         await ctx.Main.ReloadModulesAsync();
@@ -139,23 +136,23 @@ public static class VersionSwitcher
 
         var previous = new InstalledVersion(Component.MariaDb, currentVersion, parkedPath, IsActive: false);
         Func<Task> rollback = RollbackTo(ctx, previous);
-        string rollbackLabel = $"Switch back to MariaDB {currentVersion}";
+        string rollbackLabel = Loc.T("Updates.SwitchBackToMaria", currentVersion);
 
         if (mySqlWasRunning)
         {
-            ctx.Status($"Starting MariaDB {target.Version}…");
+            ctx.Status(Loc.T("Updates.StartingMaria", target.Version));
             await StartIfWantedAsync(ctx, "MySQL", true);
             if (!await UpdateContext.WaitForPortAsync(port, TimeSpan.FromSeconds(60)))
             {
                 return new UpdateResult(false,
-                    $"Switched to MariaDB {target.Version}, but it didn't start (see the log).",
+                    Loc.T("Updates.SwitchedMariaDidntStart", target.Version),
                     rollback,
                     rollbackLabel);
             }
         }
 
         return new UpdateResult(true,
-            $"MariaDB {target.Version} is now active. MariaDB {currentVersion} stays installed.",
+            Loc.T("Updates.MariaNowActive", target.Version, currentVersion),
             rollback,
             rollbackLabel);
     }
@@ -168,12 +165,11 @@ public static class VersionSwitcher
     {
         if (target.IsActive)
         {
-            return $"MariaDB {target.Version} is already active.";
+            return Loc.T("Updates.MariaAlreadyActive", target.Version);
         }
         if (ctx.Main.FindModule("MySQL") is { IsServiceInstalled: true })
         {
-            return "MySQL is installed as a Windows service. " +
-                "Remove the service (Service checkbox) before switching.";
+            return Loc.T("Updates.MySqlIsServiceSwitch");
         }
         return null;
     }

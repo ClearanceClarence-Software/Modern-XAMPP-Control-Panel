@@ -57,7 +57,7 @@ public partial class UpdatesWindow : Window
 
     private async void PhpZip_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is { } viewModel && await PickZipAsync("Choose a PHP Thread Safe x64 zip") is { } zip)
+        if (ViewModel is { } viewModel && await PickZipAsync(Loc.T("Updates.ChoosePhpZip")) is { } zip)
         {
             await viewModel.InstallPhpFromZipAsync(zip);
         }
@@ -73,7 +73,7 @@ public partial class UpdatesWindow : Window
 
     private async void MariaZip_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is { } viewModel && await PickZipAsync("Choose a MariaDB winx64 zip") is { } zip)
+        if (ViewModel is { } viewModel && await PickZipAsync(Loc.T("Updates.ChooseMariaZip")) is { } zip)
         {
             await viewModel.InstallMariaFromZipAsync(zip);
         }
@@ -100,9 +100,12 @@ public partial class UpdatesWindow : Window
 
         IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Choose the FileZilla Server installer (FileZilla_Server_…_win64-setup.exe)",
+            Title = Loc.T("Updates.ChooseFileZillaInstaller"),
             AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("Installers") { Patterns = ["FileZilla_Server*.exe", "*.exe"] }],
+            FileTypeFilter =
+            [
+                new FilePickerFileType(Loc.T("Updates.Installers")) { Patterns = ["FileZilla_Server*.exe", "*.exe"] },
+            ],
         });
         if (files.Count > 0 && files[0].TryGetLocalPath() is { } installer)
         {
@@ -137,7 +140,7 @@ public partial class UpdatesWindow : Window
 
     private async void PhpImport_Click(object? sender, RoutedEventArgs e)
     {
-        const string title = "Choose a PHP folder to add (contains php.exe)";
+        string title = Loc.T("Updates.ChoosePhpFolder");
         if (ViewModel is { } viewModel && await PickFolderAsync(title) is { } folder)
         {
             viewModel.Import(Component.Php, folder);
@@ -146,7 +149,7 @@ public partial class UpdatesWindow : Window
 
     private async void MariaImport_Click(object? sender, RoutedEventArgs e)
     {
-        const string title = "Choose a MariaDB/MySQL folder to add (contains bin\\mariadbd.exe)";
+        string title = Loc.T("Updates.ChooseMariaFolder");
         if (ViewModel is { } viewModel && await PickFolderAsync(title) is { } folder)
         {
             viewModel.Import(Component.MariaDb, folder);
@@ -177,7 +180,7 @@ public partial class UpdatesWindow : Window
         {
             Title = title,
             AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("Zip archives") { Patterns = ["*.zip"] }],
+            FileTypeFilter = [new FilePickerFileType(Loc.T("Updates.ZipArchives")) { Patterns = ["*.zip"] }],
         });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }

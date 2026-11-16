@@ -142,6 +142,10 @@ public sealed class ToolsTests : IDisposable
     }
 
     [Fact]
+    public void StartMenuQuote_DoublesSingleQuotes() =>
+        Assert.Equal(@"C:\Users\O''Brien\XamppControl.exe", StartMenu.Quote(@"C:\Users\O'Brien\XamppControl.exe"));
+
+    [Fact]
     public void FirstFree_SkipsTakenPorts()
     {
         var listeners = new List<Listener> { new("0.0.0.0", 8080, 1234, false) };

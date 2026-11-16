@@ -81,13 +81,13 @@ public sealed class NetstatRow(
     public bool IsBlocking => BlocksModule.Length > 0;
 
     /// <summary>"blocks Apache", for the warning pill.</summary>
-    public string BlockingText => $"blocks {BlocksModule}";
+    public string BlockingText => Loc.T("Netstat.BlocksModule", BlocksModule);
 
     /// <summary>Who can reach the socket: "all interfaces" for the wildcard address, "this PC only" for loopback, else "".</summary>
     public string Reach => Address switch
     {
-        "0.0.0.0" or "::" => "all interfaces",
-        "127.0.0.1" or "::1" => "this PC only",
+        "0.0.0.0" or "::" => Loc.T("Netstat.AllInterfaces"),
+        "127.0.0.1" or "::1" => Loc.T("Netstat.ThisPcOnly"),
         _ => "",
     };
 
@@ -159,9 +159,7 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
         [1433] = "SQL Server",
         [1521] = "Oracle",
         [1883] = "MQTT",
-        [3000] = "Node dev",
         [3306] = "MySQL",
-        [3389] = "Remote Desktop",
         [5173] = "Vite",
         [5357] = "WSD",
         [5432] = "PostgreSQL",
@@ -204,6 +202,7 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         _refreshTimer.Tick += async (_, _) => await RefreshAsync();
         _refreshTimer.Start();
+        Loc.Changed += OnLanguageChanged;
         _ = RefreshAsync();
     }
 
@@ -278,7 +277,7 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>"Pause" or "Resume", for the button.</summary>
-    public string PauseLabel => IsPaused ? "Resume" : "Pause";
+    public string PauseLabel => IsPaused ? Loc.T("Netstat.Resume") : Loc.T("Netstat.Pause");
 
     /// <summary>The column the rows are sorted by: Port, Address, Pid or Name.</summary>
     public string SortColumn
@@ -342,16 +341,16 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>The PORT header with the sort arrow when sorted by it.</summary>
-    public string PortHeader => HeaderFor("Port", "PORT");
+    public string PortHeader => HeaderFor("Port", Loc.T("Netstat.PORT"));
 
     /// <summary>The ADDRESS header with the sort arrow when sorted by it.</summary>
-    public string AddressHeader => HeaderFor("Address", "ADDRESS");
+    public string AddressHeader => HeaderFor("Address", Loc.T("Netstat.ADDRESS"));
 
     /// <summary>The PID header with the sort arrow when sorted by it.</summary>
-    public string PidHeader => HeaderFor("Pid", "PID");
+    public string PidHeader => HeaderFor("Pid", Loc.T("Netstat.PID"));
 
     /// <summary>The PROCESS header with the sort arrow when sorted by it.</summary>
-    public string NameHeader => HeaderFor("Name", "PROCESS");
+    public string NameHeader => HeaderFor("Name", Loc.T("Netstat.PROCESS"));
 
     private string HeaderFor(string column, string text) =>
         SortColumn == column ? $"{text} {(SortDescending ? "▼" : "▲")}" : text;
@@ -362,6 +361,14 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(AddressHeader));
         OnPropertyChanged(nameof(PidHeader));
         OnPropertyChanged(nameof(NameHeader));
+    }
+
+    /// <summary>Rebuilds the texts built in code after the language changed.</summary>
+    private void OnLanguageChanged()
+    {
+        RaiseHeaders();
+        OnPropertyChanged(nameof(PauseLabel));
+        ApplyView();
     }
 
     /// <summary>Sorts by a column; clicking the current column again flips the direction.</summary>
@@ -407,12 +414,12 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
         if (_pendingEndPid != row.Pid)
         {
             _pendingEndPid = row.Pid;
-            Status = $"Click End again to end {row.Name} (PID {row.Pid}) and every port it holds. Unsaved work in it is lost.";
+            Status = Loc.T("Netstat.ClickEndAgainTo", row.Name, row.Pid);
             return;
         }
 
         _pendingEndPid = null;
-        Status = $"Ending {row.Name} (PID {row.Pid})…";
+        Status = Loc.T("Netstat.EndingProcess", row.Name, row.Pid);
         await Task.Run(() => ProcessScan.KillTree(row.Pid));
         if (ProcessScan.NameOf(row.Pid) is not null)
         {
@@ -421,14 +428,14 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
             if (exitCode != 0)
             {
                 Status = exitCode == -2
-                    ? $"Canceled at the admin prompt; {row.Name} keeps running."
-                    : $"{row.Name} couldn't be ended (taskkill exited with {exitCode}).";
+                    ? Loc.T("Netstat.CanceledAtTheAdminPrompt", row.Name)
+                    : Loc.T("Netstat.CouldntBeEnded", row.Name, exitCode);
                 _main.Write(LogTag, Status, LogLevel.Warn);
                 return;
             }
         }
 
-        Status = $"Ended {row.Name} (PID {row.Pid}).";
+        Status = Loc.T("Netstat.EndedProcess", row.Name, row.Pid);
         _main.Write(LogTag, $"Ended {row.Name} (PID {row.Pid}) from the Netstat window.", LogLevel.Warn);
         await RefreshAsync();
     }
@@ -495,9 +502,10 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
 
         int newCount = shown.Count(row => row.IsNew);
         int closedCount = shown.Count(row => row.IsOld);
-        string hidden = shown.Count == _allRows.Count ? "" : $" of {_allRows.Count}";
-        Summary = $"{shown.Count}{hidden} sockets shown · {newCount} new · {closedCount} closed · "
-            + $"refreshed {DateTime.Now:HH:mm:ss}{(IsPaused ? " · paused" : "")}";
+        string summary = shown.Count == _allRows.Count
+            ? Loc.T("Netstat.SocketsShown", shown.Count, newCount, closedCount, DateTime.Now)
+            : Loc.T("Netstat.SocketsShownOf", shown.Count, _allRows.Count, newCount, closedCount, DateTime.Now);
+        Summary = IsPaused ? Loc.T("Netstat.SummaryPaused", summary) : summary;
     }
 
     /// <summary>Sorts by up to three keys in the chosen direction; the first key flips, the others break ties.</summary>
@@ -580,7 +588,7 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
             bool isXampp = IsXampp(path);
             string service = modulePorts.TryGetValue(listener.Port, out string? module)
                 ? module
-                : _wellKnownPorts.GetValueOrDefault(listener.Port, "");
+                : WellKnownService(listener.Port);
             bool blocks = !isXampp && state != SocketState.Old && stoppedModulePorts.Contains(listener.Port)
                 && modulePorts.TryGetValue(listener.Port, out _);
             return new NetstatRow(listener, name, path, isXampp, state, service, blocks ? service : "");
@@ -637,6 +645,19 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
         };
     }
 
+    /// <summary>What a port is normally used for when no module claims it.</summary>
+    /// <param name="port">The TCP port.</param>
+    /// <returns>
+    /// A protocol or product name, the same in every language since some are compared (see
+    /// <see cref="NetstatRow.IsWeb"/>); the two descriptive ones in the panel's language; empty when unknown.
+    /// </returns>
+    private static string WellKnownService(int port) => port switch
+    {
+        3000 => Loc.T("Netstat.NodeDev"),
+        3389 => Loc.T("Netstat.RemoteDesktop"),
+        _ => _wellKnownPorts.GetValueOrDefault(port, ""),
+    };
+
     /// <summary>Whether an executable lies inside the XAMPP folder.</summary>
     /// <param name="path">Full path of the executable; empty never counts.</param>
     /// <returns>True when the path starts with the XAMPP folder, ignoring case.</returns>
@@ -645,6 +666,10 @@ public sealed class NetstatViewModel : ObservableObject, IDisposable
 
     private static string KeyOf(Listener listener) => $"{listener.Address}|{listener.Port}|{listener.Pid}";
 
-    /// <summary>Stops the refresh timer.</summary>
-    public void Dispose() => _refreshTimer.Stop();
+    /// <summary>Stops the refresh timer and stops following language changes.</summary>
+    public void Dispose()
+    {
+        Loc.Changed -= OnLanguageChanged;
+        _refreshTimer.Stop();
+    }
 }

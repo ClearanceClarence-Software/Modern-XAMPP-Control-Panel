@@ -26,12 +26,14 @@ public sealed class ModuleViewModel : ObservableObject
         Driver = driver;
         _main = main;
 
-        Subtitle = !driver.IsInstalled ? "Not installed" : driver.VersionLabel ?? "";
+        Subtitle = !driver.IsInstalled ? Loc.T("Module.NotInstalled") : driver.VersionLabel ?? "";
 
         IEnumerable<(string Label, string Relative)> userFiles = main.Settings.UserFiles
             .Where(userFile => userFile.Path.Length > 0 &&
                                string.Equals(userFile.Module, driver.DisplayName, StringComparison.OrdinalIgnoreCase))
-            .Select(userFile => (Label: $"{Path.GetFileName(userFile.Path)} (user defined)", Relative: userFile.Path));
+            .Select(userFile => (
+                Label: Loc.T("Module.UserDefinedFile", Path.GetFileName(userFile.Path)),
+                Relative: userFile.Path));
         ConfigFiles = Links(driver.ConfigFiles.Concat(userFiles));
         LogFiles = Links(driver.LogFiles);
 
@@ -87,14 +89,13 @@ public sealed class ModuleViewModel : ObservableObject
         {
             if (Driver.ServiceName is null)
             {
-                return "This module can't run as a Windows service";
+                return Loc.T("Module.CantRunAsAService");
             }
             if (Driver.IsAlwaysService)
             {
-                return $"{Driver.VersionLabel ?? Name} always runs as the \"{Driver.ServiceName}\" Windows service; " +
-                    "uninstall it from Windows Settings › Apps to remove it";
+                return Loc.T("Module.AlwaysRunsAsTheService", Driver.VersionLabel ?? Name, Driver.ServiceName);
             }
-            return $"Install or remove the \"{Driver.ServiceName}\" Windows service (asks for admin rights)";
+            return Loc.T("Module.InstallOrRemoveTheService", Driver.ServiceName);
         }
     }
 
@@ -144,6 +145,9 @@ public sealed class ModuleViewModel : ObservableObject
         private set => SetField(ref _isServiceInstalled, value);
     }
 
+    /// <summary>The module's process IDs as numbers; <see cref="Pids"/> is their display text.</summary>
+    public IReadOnlyList<int> PidValues { get; private set; } = [];
+
     /// <summary>The PID column: empty, one or two PIDs on separate lines, or the first PID and "+n more".</summary>
     public string Pids
     {
@@ -169,9 +173,9 @@ public sealed class ModuleViewModel : ObservableObject
             }
             if (ForceStopPending)
             {
-                return "Force stop";
+                return Loc.T("Module.ForceStop");
             }
-            return IsRunning ? "Stop" : "Start";
+            return IsRunning ? Loc.T("Module.Stop") : Loc.T("Module.Start");
         }
     }
 
@@ -198,11 +202,12 @@ public sealed class ModuleViewModel : ObservableObject
     /// <param name="quiet">True updates the row silently; false logs a change between running and stopped.</param>
     internal void Apply(IReadOnlyList<int> pids, string ports, bool quiet)
     {
+        PidValues = pids;
         Pids = pids.Count switch
         {
             0 => "",
             <= 2 => string.Join("\n", pids),
-            _ => $"{pids[0]}\n+{pids.Count - 1} more",
+            _ => $"{pids[0]}\n{Loc.T("Module.MorePids", pids.Count - 1)}",
         };
         Ports = ports;
 
@@ -260,7 +265,7 @@ public sealed class ModuleViewModel : ObservableObject
             return true;
         }
 
-        _busyLabel = "Stopping…";
+        _busyLabel = Loc.T("Module.Stopping");
         IsBusy = true;
         try
         {
@@ -277,7 +282,7 @@ public sealed class ModuleViewModel : ObservableObject
     /// <returns>A task that completes after the start attempt and the following refresh.</returns>
     public async Task StartAfterMaintenanceAsync()
     {
-        _busyLabel = "Starting…";
+        _busyLabel = Loc.T("Module.Starting");
         IsBusy = true;
         try
         {
@@ -331,7 +336,7 @@ public sealed class ModuleViewModel : ObservableObject
         bool wasRunning = IsRunning;
 
         // Set before IsBusy, whose change raises ActionLabel.
-        _busyLabel = ForceStopPending || wasRunning ? "Stopping…" : "Starting…";
+        _busyLabel = ForceStopPending || wasRunning ? Loc.T("Module.Stopping") : Loc.T("Module.Starting");
         IsBusy = true;
         try
         {

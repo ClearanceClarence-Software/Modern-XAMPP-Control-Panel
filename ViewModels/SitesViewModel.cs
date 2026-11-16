@@ -157,7 +157,8 @@ public sealed class SitesViewModel : ObservableObject
     public RelayCommand AddCommand { get; }
 
     /// <summary>The address that keeps serving htdocs, as a reminder above the list.</summary>
-    public string LocalhostNote => $"localhost keeps serving \"{VirtualHosts.MainDocumentRoot(_main.Root)}\".";
+    public string LocalhostNote =>
+        Loc.T("Sites.LocalhostKeepsServing", VirtualHosts.MainDocumentRoot(_main.Root));
 
     /// <summary>True while the sites are being applied; the window's buttons are disabled meanwhile.</summary>
     public bool IsBusy
@@ -223,7 +224,7 @@ public sealed class SitesViewModel : ObservableObject
             // Applying writes files, runs httpd and restarts Apache, so anything may fail; the window reports it
             // and stays usable instead of crashing the panel.
             _main.Write("sites", ex.Message, LogLevel.Error);
-            Status = "Applying the sites failed: " + ex.Message;
+            Status = Loc.T("Sites.ApplyingTheSitesFailed", ex.Message);
         }
         finally
         {
@@ -260,7 +261,7 @@ public sealed class SitesViewModel : ObservableObject
     {
         if (!File.Exists(LocalCertificates.AuthorityPfxPath))
         {
-            TrustStatus = "The local certificate authority is created the first time a site with HTTPS is applied.";
+            TrustStatus = Loc.T("Sites.AuthorityIsCreatedFirstTime");
             CanTrust = false;
             return;
         }
@@ -269,14 +270,12 @@ public sealed class SitesViewModel : ObservableObject
         {
             using X509Certificate2 authority = LocalCertificates.LoadOrCreateAuthority();
             bool isTrusted = LocalCertificates.IsTrusted(authority);
-            TrustStatus = isTrusted
-                ? "Windows trusts the local certificate authority: Chrome and Edge open the HTTPS sites safely."
-                : "Windows doesn't trust the local certificate authority yet, so browsers warn about the HTTPS sites.";
+            TrustStatus = Loc.T(isTrusted ? "Sites.WindowsTrustsTheAuthority" : "Sites.WindowsDoesntTrustTheAuthority");
             CanTrust = !isTrusted;
         }
         catch (Exception ex) when (ex is CryptographicException or IOException or UnauthorizedAccessException)
         {
-            TrustStatus = "The local certificate authority can't be read: " + ex.Message;
+            TrustStatus = Loc.T("Sites.AuthorityCantBeRead", ex.Message);
             CanTrust = false;
         }
     }

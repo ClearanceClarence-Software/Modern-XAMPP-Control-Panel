@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text;
 using Avalonia.Threading;
+using XamppControl.Core;
 using XamppControl.Updates;
 
 namespace XamppControl.ViewModels;
@@ -60,7 +61,7 @@ public sealed class LogViewerViewModel : ObservableObject, IDisposable
         Selected = Sources.FirstOrDefault();
         if (Selected is null)
         {
-            Status = "No log files found. Start a module and its log appears here.";
+            Status = Loc.T("LogViewer.NoLogFilesFound");
         }
     }
 
@@ -117,7 +118,7 @@ public sealed class LogViewerViewModel : ObservableObject, IDisposable
         Refilter();
         if (Selected is not { } source)
         {
-            Status = "No log files found. Start a module and its log appears here.";
+            Status = Loc.T("LogViewer.NoLogFilesFound");
             return;
         }
 
@@ -137,7 +138,7 @@ public sealed class LogViewerViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Status = $"Can't read {source.Path}: {ex.Message}";
+            Status = Loc.T("LogViewer.CantRead", source.Path, ex.Message);
         }
         finally
         {
@@ -200,7 +201,7 @@ public sealed class LogViewerViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Status = $"Can't read {source.Path}: {ex.Message}";
+            Status = Loc.T("LogViewer.CantRead", source.Path, ex.Message);
         }
         finally
         {

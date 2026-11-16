@@ -65,7 +65,7 @@ public partial class ServicePortsWindow : Window
                 return port;
             }
 
-            errors.Add($"{fieldName} must be a number between 1 and 65535.");
+            errors.Add(Loc.T("ServicePorts.MustBeANumberBetween", fieldName));
             return 0;
         }
 
@@ -75,17 +75,17 @@ public partial class ServicePortsWindow : Window
         var services = new ServiceSettings
         {
             ApacheServiceName = NameOrDefault(ApacheService, "Apache2.4"),
-            ApachePort = ParsePort(ApachePort, "Apache main port"),
-            ApacheSslPort = ParsePort(ApacheSslPort, "Apache SSL port"),
+            ApachePort = ParsePort(ApachePort, Loc.T("ServicePorts.ApacheMainPort")),
+            ApacheSslPort = ParsePort(ApacheSslPort, Loc.T("ServicePorts.ApacheSslPort")),
             MySqlServiceName = NameOrDefault(MySqlService, "mysql"),
-            MySqlPort = ParsePort(MySqlPort, "MySQL port"),
-            FileZillaPort = ParsePort(FileZillaPort, "FileZilla main port"),
-            FileZillaAdminPort = ParsePort(FileZillaAdminPort, "FileZilla admin port"),
-            TomcatPort = ParsePort(TomcatPort, "Tomcat main port"),
-            TomcatShutdownPort = ParsePort(TomcatShutdownPort, "Tomcat shutdown port"),
-            TomcatAjpPort = ParsePort(TomcatAjpPort, "Tomcat AJP port"),
-            MailpitSmtpPort = ParsePort(MailpitSmtpPort, "Mailpit SMTP port"),
-            MailpitHttpPort = ParsePort(MailpitHttpPort, "Mailpit web port"),
+            MySqlPort = ParsePort(MySqlPort, Loc.T("ServicePorts.MySqlPort")),
+            FileZillaPort = ParsePort(FileZillaPort, Loc.T("ServicePorts.FileZillaMainPort")),
+            FileZillaAdminPort = ParsePort(FileZillaAdminPort, Loc.T("ServicePorts.FileZillaAdminPort")),
+            TomcatPort = ParsePort(TomcatPort, Loc.T("ServicePorts.TomcatMainPort")),
+            TomcatShutdownPort = ParsePort(TomcatShutdownPort, Loc.T("ServicePorts.TomcatShutdownPort")),
+            TomcatAjpPort = ParsePort(TomcatAjpPort, Loc.T("ServicePorts.TomcatAjpPort")),
+            MailpitSmtpPort = ParsePort(MailpitSmtpPort, Loc.T("ServicePorts.MailpitSmtpPort")),
+            MailpitHttpPort = ParsePort(MailpitHttpPort, Loc.T("ServicePorts.MailpitWebPort")),
             MercuryPorts = MercuryPorts.Text?.Trim() ?? "",
         };
 

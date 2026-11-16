@@ -18,8 +18,10 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var viewModel = new MainViewModel(AppSettings.Load());
-            AppSettings settings = viewModel.Settings;
+            // The language is loaded before anything builds text, so the first window opens in it.
+            AppSettings settings = AppSettings.Load();
+            Loc.Apply(settings.Language);
+            var viewModel = new MainViewModel(settings);
             AppTheme.Apply(settings.Theme);
             var mainWindow = new MainWindow
             {

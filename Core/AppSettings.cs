@@ -110,11 +110,23 @@ public sealed class AppSettings
     /// </summary>
     public string Theme { get; set; } = AppTheme.System;
 
+    /// <summary>
+    /// The display language: a code such as "en" or "nb" (a file in Lang), or <see cref="Loc.FollowWindows"/> to
+    /// follow Windows' display language.
+    /// </summary>
+    public string Language { get; set; } = Loc.FollowWindows;
+
     /// <summary>True hides the main window to the tray icon when it is minimized.</summary>
     public bool MinimizeToTray { get; set; } = true;
 
     /// <summary>True checks GitHub for a newer version of the panel when it starts.</summary>
     public bool CheckForAppUpdates { get; set; } = true;
+
+    /// <summary>True keeps a shortcut to the panel in the Start menu, so Windows search finds it.</summary>
+    public bool StartMenuShortcut { get; set; }
+
+    /// <summary>The exe the Start menu shortcut points at; when the exe has moved, the shortcut is rewritten.</summary>
+    public string ShortcutTarget { get; set; } = "";
 
     /// <summary>True starts Tomcat in a visible console window; false starts it hidden.</summary>
     public bool TomcatOutputWindow { get; set; } = true;
@@ -177,6 +189,7 @@ public sealed class AppSettings
         settings.AutoStart ??= [];
         settings.Sites ??= [];
         settings.Theme = AppTheme.Normalize(settings.Theme);
+        settings.Language ??= Loc.FollowWindows;
         settings.LogFontSize = Math.Clamp(settings.LogFontSize, 10, 18);
         settings.MaxLogLines = Math.Clamp(settings.MaxLogLines, 100, 100_000);
         return settings;
@@ -247,9 +260,12 @@ public sealed class AppSettings
         MySqlRootPassword = other.MySqlRootPassword;
         AutoStart = [.. other.AutoStart];
         Theme = other.Theme;
+        Language = other.Language;
         StartMinimized = other.StartMinimized;
         MinimizeToTray = other.MinimizeToTray;
         CheckForAppUpdates = other.CheckForAppUpdates;
+        StartMenuShortcut = other.StartMenuShortcut;
+        ShortcutTarget = other.ShortcutTarget;
         TomcatOutputWindow = other.TomcatOutputWindow;
         CheckPortsOnStartup = other.CheckPortsOnStartup;
         ShowDebug = other.ShowDebug;

@@ -40,7 +40,7 @@ public partial class ConfirmWindow : Window
         PrimaryButton.Content = primary;
         SecondaryButton.Content = secondary ?? "";
         SecondaryButton.IsVisible = secondary is not null;
-        CancelButton.Content = "Cancel";
+        CancelButton.Content = Loc.T("Common.Cancel");
     }
 
     /// <summary>Shows the dialog over a window and waits for the choice.</summary>

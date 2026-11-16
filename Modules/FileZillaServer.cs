@@ -130,13 +130,13 @@ public sealed class FileZillaServiceDriver(string root, AppSettings settings, st
 
     public override IEnumerable<(string Label, string Relative)> ConfigFiles =>
     [
-        ("<Browse> FileZilla Server settings", FileZillaServer.ConfigFolder),
-        ("Old XAMPP settings (FileZilla Server.xml)", @"FileZillaFTP\FileZilla Server.xml"),
+        (Loc.T("Module.BrowseFileZillaServerSettings"), FileZillaServer.ConfigFolder),
+        (Loc.T("Module.OldXamppSettingsFile", "FileZilla Server.xml"), @"FileZillaFTP\FileZilla Server.xml"),
     ];
 
     public override IEnumerable<(string Label, string Relative)> LogFiles =>
     [
-        ("<Browse> FileZilla Server logs", Path.Combine(FileZillaServer.ConfigFolder, "logs")),
+        (Loc.T("Module.BrowseFileZillaServerLogs"), Path.Combine(FileZillaServer.ConfigFolder, "logs")),
     ];
 
     public override IReadOnlyList<int> DetectPids(IReadOnlyDictionary<int, SortedSet<int>> listening) =>

@@ -24,7 +24,7 @@ public sealed class MailpitDriver(string root, AppSettings settings) : ModuleDri
     public override string? VersionLabel => Updates.MailpitUpdater.InstalledVersion(Root) switch
     {
         null => null,
-        "?" => "installed",
+        "?" => Loc.T("Module.Installed"),
         { } version => version,
     };
     public override IReadOnlyList<int> ConfiguredPorts => [Services.MailpitSmtpPort, Services.MailpitHttpPort];

@@ -32,10 +32,10 @@ public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriv
         ("Apache (httpd.conf)", @"apache\conf\httpd.conf"),
         ("Apache SSL (httpd-ssl.conf)", @"apache\conf\extra\httpd-ssl.conf"),
         ("Apache XAMPP (httpd-xampp.conf)", @"apache\conf\extra\httpd-xampp.conf"),
-        ("Virtual hosts (httpd-vhosts.conf)", @"apache\conf\extra\httpd-vhosts.conf"),
+        (Loc.T("Module.VirtualHostsFile", "httpd-vhosts.conf"), @"apache\conf\extra\httpd-vhosts.conf"),
         ("PHP (php.ini)", @"php\php.ini"),
         ("phpMyAdmin (config.inc.php)", @"phpMyAdmin\config.inc.php"),
-        ("<Browse> apache\\conf", @"apache\conf"),
+        (Loc.T("Module.BrowseFolder", @"apache\conf"), @"apache\conf"),
     ];
 
     public override IEnumerable<(string Label, string Relative)> LogFiles =>
@@ -43,7 +43,7 @@ public sealed class ApacheDriver(string root, AppSettings settings) : ModuleDriv
         ("Apache (error.log)", @"apache\logs\error.log"),
         ("Apache (access.log)", @"apache\logs\access.log"),
         ("PHP (php_error_log)", @"php\logs\php_error_log"),
-        ("<Browse> apache\\logs", @"apache\logs"),
+        (Loc.T("Module.BrowseFolder", @"apache\logs"), @"apache\logs"),
     ];
 
     public override async Task StartAsync(IModuleHost host)

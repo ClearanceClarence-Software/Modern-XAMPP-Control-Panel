@@ -41,7 +41,7 @@ public partial class UserFilesWindow : Window
     {
         IReadOnlyList<IStorageFile> pickedFiles = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Choose a file",
+            Title = Loc.T("UserFiles.ChooseAFile"),
             AllowMultiple = false,
         });
         if (pickedFiles.Count > 0 && pickedFiles[0].TryGetLocalPath() is { } path)

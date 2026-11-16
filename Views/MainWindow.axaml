@@ -3,7 +3,7 @@
         xmlns:vm="using:XamppControl.ViewModels"
         x:Class="XamppControl.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="Modern XAMPP Control Panel"
+        Title="{DynamicResource Main.Title}"
         Width="1040" Height="800"
         MinWidth="900" MinHeight="680"
         WindowStartupLocation="CenterScreen">
@@ -32,7 +32,7 @@
                 </Border>
                 <StackPanel VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Modern XAMPP Control Panel" FontSize="20" FontWeight="Bold" />
+                        <TextBlock Text="{DynamicResource Main.ModernXAMPPControlPanel}" FontSize="20" FontWeight="Bold" />
                         <TextBlock Text="{Binding Version}" FontSize="13" Foreground="{DynamicResource MutedBrush}"
                                    VerticalAlignment="Bottom" Margin="0,0,0,3" />
                         <Button Content="{Binding AppUpdateText}" Click="AppUpdate_Click"
@@ -40,21 +40,21 @@
                                 Padding="8,1" FontSize="11" MinHeight="0" CornerRadius="10"
                                 Background="{DynamicResource UpdatePillBrush}" BorderBrush="{DynamicResource UpdatePillBorderBrush}"
                                 BorderThickness="1" Foreground="{DynamicResource LinkBrush}"
-                                ToolTip.Tip="See what's new and download it" />
+                                ToolTip.Tip="{DynamicResource Main.SeeWhatSNewAndTip}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource MutedBrush}"
                                    VerticalAlignment="Center" />
-                        <Button Content="Change…" Click="ChangeRoot_Click" Padding="6,1" FontSize="11" MinHeight="0"
+                        <Button Content="{DynamicResource Main.Change}" Click="ChangeRoot_Click" Padding="6,1" FontSize="11" MinHeight="0"
                                 Background="Transparent" BorderThickness="0" Foreground="{DynamicResource LinkBrush}"
-                                ToolTip.Tip="Choose the XAMPP installation folder" />
+                                ToolTip.Tip="{DynamicResource Main.ChooseTheXAMPPInstallationFolderTip}" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
 
             <!-- About and the light/dark switch: the moon shows in the light theme, the sun in the dark one -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                <Button Classes="ghost" Width="36" Height="36" Click="About_Click" ToolTip.Tip="About this panel">
+                <Button Classes="ghost" Width="36" Height="36" Click="About_Click" ToolTip.Tip="{DynamicResource Main.AboutThisPanelTip}">
                     <Path Classes="icon" Width="18" Height="18" Data="{StaticResource IconInfo}" />
                 </Button>
                 <Button x:Name="ThemeToggle" Classes="ghost" Width="36" Height="36" Click="ThemeToggle_Click">
@@ -73,11 +73,11 @@
                     <Border DockPanel.Dock="Top" Height="34" Padding="14,0" Background="{DynamicResource HeaderBrush}"
                             CornerRadius="8,8,0,0" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="58,150,64,92,*">
-                            <TextBlock Grid.Column="0" Classes="colhead" Text="SERVICE" />
-                            <TextBlock Grid.Column="1" Classes="colhead" Text="MODULE" />
-                            <TextBlock Grid.Column="2" Classes="colhead" Text="PID(S)" />
-                            <TextBlock Grid.Column="3" Classes="colhead" Text="PORT(S)" />
-                            <TextBlock Grid.Column="4" Classes="colhead" Text="ACTIONS" />
+                            <TextBlock Grid.Column="0" Classes="colhead" Text="{DynamicResource Main.SERVICE}" />
+                            <TextBlock Grid.Column="1" Classes="colhead" Text="{DynamicResource Main.MODULE}" />
+                            <TextBlock Grid.Column="2" Classes="colhead" Text="{DynamicResource Main.PIDS}" />
+                            <TextBlock Grid.Column="3" Classes="colhead" Text="{DynamicResource Main.PORTS}" />
+                            <TextBlock Grid.Column="4" Classes="colhead" Text="{DynamicResource Common.ACTIONS}" />
                         </Grid>
                     </Border>
 
@@ -87,12 +87,12 @@
                             BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="*,Auto,8,Auto">
                             <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center" Margin="0,0,12,0">
-                                <TextBlock Text="No XAMPP installation found" FontWeight="SemiBold" />
+                                <TextBlock Text="{DynamicResource Main.NoXAMPPInstallationFound}" FontWeight="SemiBold" />
                                 <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                                           Text="{Binding Root, StringFormat='Nothing to control at {0}. Choose the folder that holds apache and mysql, or install XAMPP first.'}" />
+                                           Text="{Binding MissingXamppText}" />
                             </StackPanel>
-                            <Button Grid.Column="1" Classes="tool" Content="Download XAMPP" Click="DownloadXampp_Click" />
-                            <Button Grid.Column="3" Classes="accent" Content="Choose folder…" Click="ChangeRoot_Click" />
+                            <Button Grid.Column="1" Classes="tool" Content="{DynamicResource Common.DownloadXAMPP}" Click="DownloadXampp_Click" />
+                            <Button Grid.Column="3" Classes="accent" Content="{DynamicResource Common.ChooseFolder}" Click="ChangeRoot_Click" />
                         </Grid>
                     </Border>
 
@@ -136,15 +136,15 @@
                                                     Classes.stop="{Binding ShowStop}"
                                                     Content="{Binding ActionLabel}"
                                                     Command="{Binding ActionCommand}" />
-                                            <Button Classes="tool" Content="Admin" Command="{Binding AdminCommand}" />
+                                            <Button Classes="tool" Content="{DynamicResource Main.Admin}" Command="{Binding AdminCommand}" />
 
-                                            <Button Classes="tool" Content="Config" IsEnabled="{Binding HasConfig}">
+                                            <Button Classes="tool" Content="{DynamicResource Main.Config}" IsEnabled="{Binding HasConfig}">
                                                 <Button.Flyout>
                                                     <MenuFlyout Placement="BottomEdgeAlignedLeft" ItemsSource="{Binding ConfigFiles}" />
                                                 </Button.Flyout>
                                             </Button>
 
-                                            <Button Classes="tool" Content="Logs" IsEnabled="{Binding HasLogs}">
+                                            <Button Classes="tool" Content="{DynamicResource Main.Logs}" IsEnabled="{Binding HasLogs}">
                                                 <Button.Flyout>
                                                     <MenuFlyout Placement="BottomEdgeAlignedLeft" ItemsSource="{Binding LogFiles}" />
                                                 </Button.Flyout>
@@ -163,37 +163,37 @@
                 <Button Classes="side" Click="Settings_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconGear}" />
-                        <TextBlock Text="Config" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Config}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Netstat_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconGlobe}" />
-                        <TextBlock Text="Netstat" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Netstat}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Updates_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconUpdate}" />
-                        <TextBlock Text="Versions" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Common.Versions}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Databases_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconDatabase}" />
-                        <TextBlock Text="Databases" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Common.Databases}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Logs_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconLogs}" />
-                        <TextBlock Text="Logs" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Logs}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Sites_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconSites}" />
-                        <TextBlock Text="Sites" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Sites}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="PhpSettings_Click">
@@ -205,31 +205,31 @@
                 <Button Classes="side" Command="{Binding ShellCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconShell}" />
-                        <TextBlock Text="Shell" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Shell}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Command="{Binding ExplorerCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconFolder}" />
-                        <TextBlock Text="Explorer" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Explorer}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Command="{Binding ServicesCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconServices}" />
-                        <TextBlock Text="Services" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Services}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Command="{Binding HelpCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconHelp}" />
-                        <TextBlock Text="Help" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Main.Help}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Quit_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
                         <Path Classes="icon" Data="{StaticResource IconQuit}" />
-                        <TextBlock Text="Quit" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Common.Quit}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -241,10 +241,10 @@
                      Background="Transparent" Padding="0,6" SelectionMode="Multiple">
                 <ListBox.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Copy selected" Click="CopySelected_Click" />
-                        <MenuItem Header="Copy all" Click="CopyAll_Click" />
+                        <MenuItem Header="{DynamicResource Common.CopySelected}" Click="CopySelected_Click" />
+                        <MenuItem Header="{DynamicResource Main.CopyAll}" Click="CopyAll_Click" />
                         <Separator />
-                        <MenuItem Header="Clear" Command="{Binding ClearLogCommand}" />
+                        <MenuItem Header="{DynamicResource Main.Clear}" Command="{Binding ClearLogCommand}" />
                     </ContextMenu>
                 </ListBox.ContextMenu>
                 <ListBox.ItemTemplate>

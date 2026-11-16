@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using XamppControl.Core;
 
 namespace XamppControl.Updates;
 
@@ -95,7 +96,7 @@ public static class FileTools
                 }
 
                 string targetFileFolder = Path.GetDirectoryName(targetFile)
-                    ?? throw new InvalidOperationException($"\"{targetFile}\" has no parent folder.");
+                    ?? throw new InvalidOperationException(Loc.T("Updates.HasNoParentFolder", targetFile));
                 Directory.CreateDirectory(targetFileFolder);
                 CopyFile(file, targetFile);
                 added.Add(relativePath);

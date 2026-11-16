@@ -66,7 +66,7 @@ public sealed class TrayController : IDisposable
         StopWatchingModules();
 
         var menu = new NativeMenu();
-        var showItem = new NativeMenuItem("Show Control Panel");
+        var showItem = new NativeMenuItem(Loc.T("Tray.ShowControlPanel"));
         showItem.Click += (_, _) => ShowWindow();
         menu.Add(showItem);
         menu.Add(new NativeMenuItemSeparator());
@@ -86,7 +86,7 @@ public sealed class TrayController : IDisposable
         }
 
         menu.Add(new NativeMenuItemSeparator());
-        var quitItem = new NativeMenuItem("Quit");
+        var quitItem = new NativeMenuItem(Loc.T("Common.Quit"));
         quitItem.Click += (_, _) => _window.Close();
         menu.Add(quitItem);
 
@@ -150,7 +150,9 @@ public sealed class TrayController : IDisposable
             .Where(module => module.IsRunning)
             .Select(module => module.Name)
             .ToList();
-        string state = running.Count == 0 ? "nothing running" : string.Join(", ", running) + " running";
+        string state = running.Count == 0
+            ? Loc.T("Tray.NothingRunning")
+            : Loc.T("Tray.ModulesRunning", string.Join(", ", running));
         _trayIcon.ToolTipText = $"{BuildInfo.AppName}\n{state}";
     }
 
@@ -158,5 +160,7 @@ public sealed class TrayController : IDisposable
     /// <param name="module">The module the entry acts on.</param>
     /// <returns>The entry's text, following the module's action button.</returns>
     private static string ModuleItemHeader(ModuleViewModel module) =>
-        module.IsBusy ? $"{module.Name}: {module.ActionLabel}" : $"{module.ActionLabel} {module.Name}";
+        module.IsBusy
+            ? Loc.T("Tray.ModuleBusy", module.Name, module.ActionLabel)
+            : Loc.T("Tray.ActionModule", module.ActionLabel, module.Name);
 }

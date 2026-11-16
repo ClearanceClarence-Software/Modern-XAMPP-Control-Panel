@@ -16,8 +16,6 @@ public static partial class MariaDbUpdater
 {
     private const string Module = "MySQL";
 
-    private const string PasswordHint = "(check the root password under Config › Service and Port Settings)";
-
     /// <summary>Installs a MariaDB build from a zip as the active mysql folder, keeping the old one.</summary>
     /// <param name="ctx">The update dialog's context; status, progress and log lines go through it.</param>
     /// <param name="zipPath">Full path of a MariaDB winx64 zip; it may not be older than the installed version.</param>
@@ -36,19 +34,18 @@ public static partial class MariaDbUpdater
 
         if (ctx.Main.FindModule(Module) is not { } mysql)
         {
-            return UpdateResult.Fail("The MySQL module isn't available.");
+            return UpdateResult.Fail(Loc.T("Updates.MySqlModuleUnavailable"));
         }
         if (mysql.IsServiceInstalled)
         {
-            return UpdateResult.Fail("MySQL is installed as a Windows service. " +
-                "Remove the service (Service checkbox) before updating.");
+            return UpdateResult.Fail(Loc.T("Updates.MySqlIsServiceUpdate"));
         }
         if (!Directory.Exists(mysqlDir))
         {
-            return UpdateResult.Fail($"No mysql folder in \"{root}\".");
+            return UpdateResult.Fail(Loc.T("Updates.NoMysqlFolder", root));
         }
 
-        ctx.Status("Unpacking MariaDB…");
+        ctx.Status(Loc.T("Updates.UnpackingMariaDb"));
         ctx.Progress(null);
         string content;
         try
@@ -58,14 +55,14 @@ public static partial class MariaDbUpdater
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {
             FileTools.TryDelete(staging);
-            return UpdateResult.Fail("Couldn't unpack the zip: " + ex.Message);
+            return UpdateResult.Fail(Loc.T("Updates.CouldntUnpackZip", ex.Message));
         }
 
         string? newServer = FileTools.FirstExisting(Path.Combine(content, "bin"), "mariadbd.exe", "mysqld.exe");
         if (newServer is null)
         {
             FileTools.TryDelete(staging);
-            return UpdateResult.Fail("This zip has no bin\\mariadbd.exe, so it isn't a MariaDB Windows x64 build.");
+            return UpdateResult.Fail(Loc.T("Updates.ZipHasNoMariadbd"));
         }
 
         string oldBin = Path.Combine(mysqlDir, "bin");
@@ -78,15 +75,14 @@ public static partial class MariaDbUpdater
         {
             FileTools.TryDelete(staging);
             return UpdateResult.Fail(existing.IsActive
-                ? $"MariaDB {newVersion} is already the active version."
-                : $"MariaDB {newVersion} is already installed. Use Switch to make it active.");
+                ? Loc.T("Updates.MariaAlreadyActiveVersion", newVersion)
+                : Loc.T("Updates.MariaAlreadyInstalled", newVersion));
         }
 
         if (VersionUtil.Parse(newVersion) < VersionUtil.Parse(oldVersion))
         {
             FileTools.TryDelete(staging);
-            return UpdateResult.Fail($"MariaDB {newVersion} is older than the installed {oldVersion}. " +
-                "Downgrades aren't supported: an older server can't open newer data files.");
+            return UpdateResult.Fail(Loc.T("Updates.MariaOlderDowngrade", newVersion, oldVersion));
         }
 
         // The current server has to be running for the dump and the full clean shutdown.
@@ -94,8 +90,7 @@ public static partial class MariaDbUpdater
         if (!wasRunning && !await StartOldServerAsync(ctx, mysql, port, oldVersion))
         {
             FileTools.TryDelete(staging);
-            return UpdateResult.Fail($"The current MariaDB didn't start on port {port}, so it can't be shut down " +
-                "cleanly. Fix that first (the log shows why). Nothing was changed.");
+            return UpdateResult.Fail(Loc.T("Updates.CurrentMariaDidntStart", port));
         }
 
         if (makeDump && await MakeSqlDumpAsync(ctx, root, oldBin, oldVersion, environment) is { } dumpFailure)
@@ -109,7 +104,7 @@ public static partial class MariaDbUpdater
         }
 
         string backup = VersionStore.ParkPath(root, Component.MariaDb, oldVersion);
-        ctx.Status($"Keeping MariaDB {oldVersion} as an installed version…");
+        ctx.Status(Loc.T("Updates.KeepingMariaInstalled", oldVersion));
         string? swapFailure = SwapInNewBuild(mysqlDir, content, backup);
         FileTools.TryDelete(staging);
         if (swapFailure is not null)
@@ -123,7 +118,7 @@ public static partial class MariaDbUpdater
         // XAMPP folder setting changes before the user clicks it.
         async Task RollBackAsync()
         {
-            ctx.Status($"Rolling back to MariaDB {oldVersion}…");
+            ctx.Status(Loc.T("Updates.RollingBackToMaria", oldVersion));
             if (ctx.Main.FindModule(Module) is { IsRunning: true } running)
             {
                 if (!await running.StopForMaintenanceAsync())
@@ -142,7 +137,7 @@ public static partial class MariaDbUpdater
             await StartAgainAsync(ctx, wasRunning);
         }
 
-        string rollbackLabel = $"Switch back to MariaDB {oldVersion}";
+        string rollbackLabel = Loc.T("Updates.SwitchBackToMaria", oldVersion);
         UpdateResult FailWithRollback(string message) => new(false, message, RollBackAsync, rollbackLabel);
 
         try
@@ -152,14 +147,14 @@ public static partial class MariaDbUpdater
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             await ctx.Main.ReloadModulesAsync();
-            return FailWithRollback("Copying files into the new install failed: " + ex.Message);
+            return FailWithRollback(Loc.T("Updates.CopyingFilesFailed", ex.Message));
         }
 
         await ctx.Main.ReloadModulesAsync();
 
         if (!await StartNewServerAsync(ctx, port, newVersion))
         {
-            return FailWithRollback($"MariaDB {newVersion} didn't start. The log shows why; you can roll back.");
+            return FailWithRollback(Loc.T("Updates.MariaDidntStartRollBack", newVersion));
         }
 
         string? upgradeFailure = await UpgradeSystemTablesAsync(ctx, root, mysqlDir, newVersion, environment);
@@ -176,8 +171,7 @@ public static partial class MariaDbUpdater
 
         await ctx.Main.ReloadModulesAsync();
         return new UpdateResult(true,
-            $"MariaDB {newVersion} is installed and active, with a copy of your databases. " +
-            $"MariaDB {oldVersion} stays installed.",
+            Loc.T("Updates.MariaInstalledAndActive", newVersion, oldVersion),
             RollBackAsync,
             rollbackLabel);
     }
@@ -194,7 +188,7 @@ public static partial class MariaDbUpdater
         int port,
         string oldVersion)
     {
-        ctx.Status($"Starting MariaDB {oldVersion} so it can be shut down cleanly…");
+        ctx.Status(Loc.T("Updates.StartingMariaForShutdown", oldVersion));
         await mysql.StartAfterMaintenanceAsync();
         return await UpdateContext.WaitForPortAsync(port, TimeSpan.FromSeconds(30));
     }
@@ -236,8 +230,7 @@ public static partial class MariaDbUpdater
         string? dumpExe = FileTools.FirstExisting(oldBin, "mariadb-dump.exe", "mysqldump.exe");
         if (dumpExe is null)
         {
-            return "No mariadb-dump.exe or mysqldump.exe in the current install, " +
-                "so no dump could be made. Untick the dump option to continue without one.";
+            return Loc.T("Updates.NoDumpTool");
         }
 
         string dumpDir = Path.Combine(root, "mysql_dumps");
@@ -246,7 +239,7 @@ public static partial class MariaDbUpdater
             dumpDir,
             $"all-databases_{FileTools.Safe(oldVersion)}_{FileTools.Stamp()}.sql");
 
-        ctx.Status("Backing up all databases to an SQL dump…");
+        ctx.Status(Loc.T("Updates.BackingUpDatabases"));
         Shell.RunResult dump = await Shell.RunAsync(
             dumpExe,
             $"{ctx.MySqlConnectionArgs} --all-databases --routines --events --triggers --single-transaction " +
@@ -257,7 +250,7 @@ public static partial class MariaDbUpdater
         if (dump.ExitCode != 0)
         {
             ctx.LogOutput(dump, LogLevel.Error);
-            return $"The SQL dump failed {PasswordHint}. Nothing was changed.";
+            return Loc.T("Updates.SqlDumpFailed");
         }
 
         ctx.Log($"SQL dump: \"{dumpFile}\" ({FileTools.FormatSize(new FileInfo(dumpFile).Length)})", LogLevel.Ok);
@@ -281,13 +274,13 @@ public static partial class MariaDbUpdater
         int port,
         Dictionary<string, string> environment)
     {
-        const string notCleanMessage = "MariaDB didn't shut down cleanly. Nothing was changed.";
+        string notCleanMessage = Loc.T("Updates.MariaNotCleanShutdown");
 
-        ctx.Status("Shutting down MariaDB completely…");
+        ctx.Status(Loc.T("Updates.ShuttingDownMaria"));
         string? client = FileTools.FirstExisting(oldBin, "mariadb.exe", "mysql.exe");
         if (client is null)
         {
-            return "No mariadb.exe or mysql.exe client in the current install. Nothing was changed.";
+            return Loc.T("Updates.NoMariaClient");
         }
 
         Shell.RunResult slowShutdown = await Shell.RunAsync(
@@ -299,7 +292,7 @@ public static partial class MariaDbUpdater
         if (slowShutdown.ExitCode != 0)
         {
             ctx.LogOutput(slowShutdown, LogLevel.Error);
-            return $"Couldn't prepare a full shutdown {PasswordHint}. Nothing was changed.";
+            return Loc.T("Updates.CouldntPrepareShutdown");
         }
 
         // Make sure the panel sees the server as running, so the stop below really shuts it down.
@@ -310,7 +303,7 @@ public static partial class MariaDbUpdater
 
         // WaitForModuleAsync just found the module running, so it exists.
         ModuleViewModel server = ctx.Main.FindModule(Module)
-            ?? throw new InvalidOperationException("The MySQL module isn't available.");
+            ?? throw new InvalidOperationException(Loc.T("Updates.MySqlModuleUnavailable"));
         if (!await server.StopForMaintenanceAsync() || await UpdateContext.PortOpenAsync(port))
         {
             return notCleanMessage;
@@ -334,8 +327,7 @@ public static partial class MariaDbUpdater
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return $"Couldn't move the mysql folder ({ex.Message}). Close programs that use it " +
-                "(HeidiSQL, a terminal in that folder, …) and try again. Nothing was changed.";
+            return Loc.T("Updates.CouldntMoveMysqlFolder", ex.Message);
         }
 
         try
@@ -345,7 +337,7 @@ public static partial class MariaDbUpdater
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Directory.Move(backup, mysqlDir);
-            return $"Couldn't put the new MariaDB in place ({ex.Message}). The old one was restored.";
+            return Loc.T("Updates.CouldntPutNewMaria", ex.Message);
         }
 
         return null;
@@ -367,7 +359,7 @@ public static partial class MariaDbUpdater
         string oldData = Path.Combine(backup, "data");
         if (Directory.Exists(oldData))
         {
-            ctx.Status("Copying the data folder (this can take a while)…");
+            ctx.Status(Loc.T("Updates.CopyingDataFolder"));
             if (Directory.Exists(newData))
             {
                 Directory.Delete(newData, recursive: true);
@@ -400,9 +392,9 @@ public static partial class MariaDbUpdater
     /// <returns>False when the port isn't open within 60 seconds.</returns>
     private static async Task<bool> StartNewServerAsync(UpdateContext ctx, int port, string newVersion)
     {
-        ctx.Status($"Starting MariaDB {newVersion}…");
+        ctx.Status(Loc.T("Updates.StartingMaria", newVersion));
         ModuleViewModel server = ctx.Main.FindModule(Module)
-            ?? throw new InvalidOperationException("The MySQL module isn't available.");
+            ?? throw new InvalidOperationException(Loc.T("Updates.MySqlModuleUnavailable"));
         await server.StartAfterMaintenanceAsync();
         return await UpdateContext.WaitForPortAsync(port, TimeSpan.FromSeconds(60));
     }
@@ -425,10 +417,10 @@ public static partial class MariaDbUpdater
         string? upgradeExe = FileTools.FirstExisting(newBin, "mariadb-upgrade.exe", "mysql_upgrade.exe");
         if (upgradeExe is null)
         {
-            return "The new install has no mariadb-upgrade.exe.";
+            return Loc.T("Updates.NoMariaUpgradeTool");
         }
 
-        ctx.Status("Upgrading the system tables…");
+        ctx.Status(Loc.T("Updates.UpgradingSystemTables"));
         Shell.RunResult upgrade = await Shell.RunAsync(
             upgradeExe,
             ctx.MySqlConnectionArgs,
@@ -442,7 +434,7 @@ public static partial class MariaDbUpdater
             ctx.Log("System tables report Aria checksum errors; repairing them.", LogLevel.Warn);
             await RepairSystemTablesAsync(ctx, root, newBin, environment);
 
-            ctx.Status("Upgrading the system tables again…");
+            ctx.Status(Loc.T("Updates.UpgradingSystemTablesAgain"));
             upgrade = await Shell.RunAsync(
                 upgradeExe,
                 $"{ctx.MySqlConnectionArgs} --force",
@@ -454,8 +446,7 @@ public static partial class MariaDbUpdater
         if (upgrade.ExitCode != 0)
         {
             ctx.LogOutput(upgrade, LogLevel.Error);
-            return $"MariaDB {newVersion} is running, but mariadb-upgrade reported errors " +
-                "(see the log). You can run it again from a shell, or roll back.";
+            return Loc.T("Updates.MariaUpgradeErrors", newVersion);
         }
 
         ctx.Log("System tables upgraded.", LogLevel.Ok);
@@ -479,7 +470,7 @@ public static partial class MariaDbUpdater
             return;
         }
 
-        ctx.Status("Repairing the system tables…");
+        ctx.Status(Loc.T("Updates.RepairingSystemTables"));
         Shell.RunResult repair = await Shell.RunAsync(
             checkExe,
             $"{ctx.MySqlConnectionArgs} --repair --databases mysql",

@@ -3,7 +3,7 @@
         xmlns:vm="using:XamppControl.ViewModels"
         x:Class="XamppControl.Views.WhatsNewWindow"
         x:DataType="vm:MainViewModel"
-        Title="What's new"
+        Title="{DynamicResource WhatsNew.Title}"
         Width="640" Height="600" MinWidth="480" MinHeight="360"
         WindowStartupLocation="CenterOwner">
 
@@ -31,11 +31,11 @@
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto,8,Auto,8,Auto" Margin="0,14,0,0">
             <TextBlock Grid.Column="0" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
                        Margin="0,0,12,0" Text="{Binding AppUpdateHint}" />
-            <Button Grid.Column="1" Classes="accent" Content="Install and restart" Click="Install_Click"
+            <Button Grid.Column="1" Classes="accent" Content="{DynamicResource WhatsNew.InstallAndRestart}" Click="Install_Click"
                     IsEnabled="{Binding CanInstallAppUpdate}" />
-            <Button Grid.Column="3" Classes="tool" Content="Release page" Click="Download_Click"
+            <Button Grid.Column="3" Classes="tool" Content="{DynamicResource WhatsNew.ReleasePage}" Click="Download_Click"
                     IsEnabled="{Binding !IsInstallingAppUpdate}" />
-            <Button Grid.Column="5" Classes="tool" Content="Later" Width="80" Click="Close_Click"
+            <Button Grid.Column="5" Classes="tool" Content="{DynamicResource WhatsNew.Later}" Width="80" Click="Close_Click"
                     IsEnabled="{Binding !IsInstallingAppUpdate}" />
         </Grid>
     </Grid>

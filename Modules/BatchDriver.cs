@@ -170,7 +170,7 @@ public static class ModuleCatalog
         {
             Ports = services => services.ParsedMercuryPorts,
             Configs = [("MERCURY.INI", @"MercuryMail\MERCURY.INI")],
-            Logs = [("<Browse> MercuryMail\\LOGS", @"MercuryMail\LOGS")],
+            Logs = [(Loc.T("Module.BrowseFolder", @"MercuryMail\LOGS"), @"MercuryMail\LOGS")],
         },
         new TomcatDriver(root, settings)
         {
@@ -182,7 +182,7 @@ public static class ModuleCatalog
                 ("tomcat-users.xml", @"tomcat\conf\tomcat-users.xml"),
                 ("web.xml", @"tomcat\conf\web.xml"),
             ],
-            Logs = [("<Browse> tomcat\\logs", @"tomcat\logs")],
+            Logs = [(Loc.T("Module.BrowseFolder", @"tomcat\logs"), @"tomcat\logs")],
         },
         new MailpitDriver(root, settings),
     ];
@@ -207,7 +207,7 @@ public static class ModuleCatalog
             AdminTarget = @"FileZillaFTP\FileZilla Server Interface.exe",
             Ports = services => [services.FileZillaPort, services.FileZillaAdminPort],
             Configs = [("FileZilla Server.xml", @"FileZillaFTP\FileZilla Server.xml")],
-            Logs = [("<Browse> FileZillaFTP\\Logs", @"FileZillaFTP\Logs")],
+            Logs = [(Loc.T("Module.BrowseFolder", @"FileZillaFTP\Logs"), @"FileZillaFTP\Logs")],
         };
     }
 }

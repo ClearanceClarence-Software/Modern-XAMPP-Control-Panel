@@ -34,30 +34,29 @@ public static partial class SiteSetup
         {
             if (site.Host.Length == 0)
             {
-                return "Every site needs a host name, such as myproject.test.";
+                return Loc.T("Sites.EverySiteNeedsAHostName");
             }
             if (site.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
             {
-                return "localhost is already served from htdocs; give the site its own name, such as myproject.test.";
+                return Loc.T("Sites.LocalhostIsAlreadyServed");
             }
             if (!HostName().IsMatch(site.Host))
             {
-                return $"\"{site.Host}\" isn't a valid host name. Use letters, digits and hyphens with a dot, " +
-                    "such as myproject.test.";
+                return Loc.T("Sites.IsntAValidHostName", site.Host);
             }
             if (!seenHosts.Add(site.Host))
             {
-                return $"\"{site.Host}\" is in the list twice.";
+                return Loc.T("Sites.IsInTheListTwice", site.Host);
             }
             if (site.Folder.Length == 0 || !Path.IsPathFullyQualified(site.Folder))
             {
-                return $"Choose a full folder path for {site.Host}.";
+                return Loc.T("Sites.ChooseAFullFolderPath", site.Host);
             }
 
             string topLevelDomain = site.Host[(site.Host.LastIndexOf('.') + 1)..];
             if (!site.UseHttps && _httpsOnlyDomains.Contains(topLevelDomain, StringComparer.OrdinalIgnoreCase))
             {
-                return $"Browsers only open .{topLevelDomain} names over HTTPS, so {site.Host} needs HTTPS turned on.";
+                return Loc.T("Sites.BrowsersOnlyOpenNamesOverHTTPS", topLevelDomain, site.Host);
             }
         }
         return null;
@@ -84,7 +83,7 @@ public static partial class SiteSetup
         string httpdConfPath = VirtualHosts.HttpdConfPath(root);
         if (!File.Exists(httpdConfPath))
         {
-            return new SiteSetupResult(false, $"No Apache configuration in \"{apacheFolder}\".");
+            return new SiteSetupResult(false, Loc.T("Sites.NoApacheConfigurationIn", apacheFolder));
         }
 
         CreateMissingFolders(main, sites);
@@ -103,7 +102,7 @@ public static partial class SiteSetup
         bool includeHttps = httpsHosts.Count > 0;
         if (includeHttps)
         {
-            status("Creating the HTTPS certificate…");
+            status(Loc.T("Sites.CreatingTheHttpsCertificate"));
             if (await IssueCertificateAsync(main, httpsHosts, apacheFolder) is { } certificateFailure)
             {
                 await snapshot.RestoreAsync();
@@ -111,7 +110,7 @@ public static partial class SiteSetup
             }
         }
 
-        status("Writing the virtual hosts…");
+        status(Loc.T("Sites.WritingTheVirtualHosts"));
         if (await WriteAndTestConfigAsync(main, sites, includeHttps, ports, vhostsPath, httpdConfPath) is { } failure)
         {
             await snapshot.RestoreAsync();
@@ -121,7 +120,7 @@ public static partial class SiteSetup
         main.Settings.Sites = [.. sites];
         main.Settings.Save();
 
-        status("Updating the hosts file (Windows asks for admin rights)…");
+        status(Loc.T("Sites.UpdatingTheHostsFile"));
         await UpdateHostsAsync(main, sites);
 
         if (includeHttps)
@@ -131,13 +130,13 @@ public static partial class SiteSetup
 
         if (main.FindModule(ApacheModule) is { IsRunning: true } apache)
         {
-            status("Restarting Apache…");
+            status(Loc.T("Common.RestartingApache"));
             await apache.RestartForConfigChangeAsync();
         }
 
         string summary = sites.Count == 0
-            ? "The sites were removed."
-            : $"{sites.Count} site{(sites.Count == 1 ? "" : "s")} set up.";
+            ? Loc.T("Sites.TheSitesWereRemoved")
+            : Loc.Plural("Sites.SetUp", sites.Count);
         main.Write(LogTag, summary, LogLevel.Ok);
         return new SiteSetupResult(true, summary);
     }
@@ -175,7 +174,7 @@ public static partial class SiteSetup
         catch (Exception ex) when (ex is CryptographicException or IOException or UnauthorizedAccessException)
         {
             main.Write(LogTag, "Creating the certificate failed: " + ex.Message, LogLevel.Error);
-            return "The HTTPS certificate couldn't be created, so nothing was changed. The log shows why.";
+            return Loc.T("Sites.CertificateCouldntBeCreated");
         }
 
         main.Write(LogTag, $"Certificate issued for localhost and {string.Join(", ", httpsHosts)}.");
@@ -258,7 +257,7 @@ public static partial class SiteSetup
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             main.Write(LogTag, "Writing the Apache configuration failed: " + ex.Message, LogLevel.Error);
-            return "The Apache configuration couldn't be written, so nothing was changed.";
+            return Loc.T("Sites.ConfigurationCouldntBeWritten");
         }
 
         Shell.RunResult test = await ApacheDriver.TestConfigAsync(main.Root);
@@ -272,7 +271,7 @@ public static partial class SiteSetup
         {
             main.Write(LogTag, "  › " + line, LogLevel.Error);
         }
-        return "Apache rejected the configuration, so it was undone. The log shows why.";
+        return Loc.T("Sites.ApacheRejectedTheConfiguration");
     }
 
     /// <summary>Points the host names at this computer and logs what happened.</summary>

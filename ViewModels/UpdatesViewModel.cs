@@ -19,8 +19,8 @@ public sealed class UpdatesViewModel : ObservableObject
     private PhpBranch? _selectedPhp;
     private MariaDbMajor? _selectedMajor;
     private MariaDbRelease? _mariaLatest;
-    private string _phpAvailable = "Checking…";
-    private string _mariaAvailable = "Checking…";
+    private string _phpAvailable = Loc.T("Updates.Checking");
+    private string _mariaAvailable = Loc.T("Updates.Checking");
     private bool _isBusy;
     private string _status = "";
     private bool _showProgress;
@@ -32,13 +32,18 @@ public sealed class UpdatesViewModel : ObservableObject
     private string? _pendingRemove;
     private bool _importedLegacy;
     private string _fileZillaInstalled = "";
-    private string _fileZillaAvailable = "Checking…";
+    private string _fileZillaAvailable = Loc.T("Updates.Checking");
     private string? _fileZillaLatest;
     private string _mailpitInstalled = "";
-    private string _mailpitAvailable = "Checking…";
-    private string _mailpitAction = "Install";
+    private string _mailpitAvailable = Loc.T("Updates.Checking");
+    private string _mailpitAction = Loc.T("Updates.Install");
     private MailpitRelease? _mailpitLatest;
     private bool _isMailpitInstalled;
+
+    // The installed versions as numbers only; the *Installed properties are display text and may be translated.
+    private string? _phpVersion;
+    private string? _mariaVersion;
+    private string? _mailpitVersion;
 
     /// <summary>
     /// Creates the dialog's state and reads the installed versions; the feeds load in <see cref="CheckAsync"/>.
@@ -247,19 +252,22 @@ public sealed class UpdatesViewModel : ObservableObject
         Fill(PhpVersions, VersionStore.List(root, Component.Php));
         Fill(MariaVersions, VersionStore.List(root, Component.MariaDb));
         string? phpVersion = XamppPaths.FileVersion(Path.Combine(root, "php", "php.exe"));
-        PhpInstalled = phpVersion is null ? "Not found" : $"PHP {phpVersion}";
+        _phpVersion = phpVersion;
+        PhpInstalled = phpVersion is null ? Loc.T("Updates.NotFound") : $"PHP {phpVersion}";
 
         string? server = FileTools.FirstExisting(Path.Combine(root, "mysql", "bin"), "mariadbd.exe", "mysqld.exe");
         string? mariaVersion = XamppPaths.FileVersion(server);
-        MariaInstalled = mariaVersion is null ? "Not found" : $"MariaDB {mariaVersion}";
+        _mariaVersion = mariaVersion;
+        MariaInstalled = mariaVersion is null ? Loc.T("Updates.NotFound") : $"MariaDB {mariaVersion}";
 
         FileZillaInstalled = DescribeInstalledFileZilla(root);
         string? mailpitVersion = MailpitUpdater.InstalledVersion(root);
         _isMailpitInstalled = mailpitVersion is not null;
+        _mailpitVersion = mailpitVersion == "?" ? null : mailpitVersion;
         MailpitInstalled = mailpitVersion switch
         {
-            null => "Not installed",
-            "?" => "Mailpit (version unknown)",
+            null => Loc.T("Updates.NotInstalled"),
+            "?" => Loc.T("Updates.MailpitVersionUnknown"),
             _ => $"Mailpit {mailpitVersion}",
         };
 
@@ -278,19 +286,19 @@ public sealed class UpdatesViewModel : ObservableObject
         }
 
         // An exe without a version resource parses as 0.0 and counts as not current, so the button offers the update.
-        Version installed = VersionUtil.Parse(MailpitInstalled);
+        Version installed = VersionUtil.Parse(_mailpitVersion);
         bool isInstalled = _isMailpitInstalled;
         bool isCurrent = isInstalled && installed >= VersionUtil.Parse(latest.Version);
         MailpitAvailable = isCurrent
-            ? $"Mailpit {latest.Version} is the newest release; you have it."
-            : $"Mailpit {latest.Version} is available.";
+            ? Loc.T("Updates.MailpitNewestYouHaveIt", latest.Version)
+            : Loc.T("Updates.MailpitIsAvailable", latest.Version);
         if (!isInstalled)
         {
-            MailpitAction = "Install";
+            MailpitAction = Loc.T("Updates.Install");
         }
         else
         {
-            MailpitAction = isCurrent ? "Reinstall" : $"Update to {latest.Version}";
+            MailpitAction = isCurrent ? Loc.T("Updates.Reinstall") : Loc.T("Updates.UpdateTo", latest.Version);
         }
         OnPropertyChanged(nameof(CanInstallMailpit));
     }
@@ -302,15 +310,15 @@ public sealed class UpdatesViewModel : ObservableObject
     {
         if (FileZillaServer.FindInstallFolder() is { } installFolder)
         {
-            return $"FileZilla Server {FileZillaServer.VersionOf(installFolder) ?? "1.x"} (Windows service)";
+            return Loc.T("Updates.FileZillaWindowsService", FileZillaServer.VersionOf(installFolder) ?? "1.x");
         }
 
         string legacyExe = Path.Combine(root, "FileZillaFTP", "FileZillaServer.exe");
         if (XamppPaths.FileVersion(legacyExe) is { } legacyVersion)
         {
-            return $"FileZilla Server {legacyVersion} (bundled with XAMPP, from 2012)";
+            return Loc.T("Updates.FileZillaBundledFrom2012", legacyVersion);
         }
-        return File.Exists(legacyExe) ? "FileZilla Server 0.9 (bundled with XAMPP)" : "Not installed";
+        return File.Exists(legacyExe) ? Loc.T("Updates.FileZillaBundled") : Loc.T("Updates.NotInstalled");
     }
 
     /// <summary>Sets <see cref="FileZillaAvailable"/> from the version the website states.</summary>
@@ -324,8 +332,8 @@ public sealed class UpdatesViewModel : ObservableObject
         bool isCurrent = FileZillaServer.FindInstallFolder() is { } installFolder
             && VersionUtil.Parse(FileZillaServer.VersionOf(installFolder)) >= VersionUtil.Parse(latest);
         FileZillaAvailable = isCurrent
-            ? $"You're on the newest version ({latest})."
-            : $"FileZilla Server {latest} is available.";
+            ? Loc.T("Updates.OnNewestVersion", latest)
+            : Loc.T("Updates.FileZillaIsAvailable", latest);
     }
 
     /// <summary>
@@ -338,19 +346,19 @@ public sealed class UpdatesViewModel : ObservableObject
             return;
         }
 
-        Version installed = VersionUtil.Parse(PhpInstalled);
+        Version installed = VersionUtil.Parse(_phpVersion);
         Version latest = VersionUtil.Parse(branch.Version);
         if (installed == latest)
         {
-            PhpAvailable = "You're on the newest build of this branch.";
+            PhpAvailable = Loc.T("Updates.OnNewestBuildOfBranch");
         }
         else if (installed > latest)
         {
-            PhpAvailable = $"PHP {branch.Version} is older than the installed version.";
+            PhpAvailable = Loc.T("Updates.PhpOlderThanInstalled", branch.Version);
         }
         else
         {
-            PhpAvailable = $"PHP {branch.Version} is available.";
+            PhpAvailable = Loc.T("Updates.PhpIsAvailable", branch.Version);
         }
     }
 
@@ -364,20 +372,19 @@ public sealed class UpdatesViewModel : ObservableObject
             return;
         }
 
-        Version installed = VersionUtil.Parse(MariaInstalled);
+        Version installed = VersionUtil.Parse(_mariaVersion);
         Version latest = VersionUtil.Parse(release.Version);
         if (installed == latest)
         {
-            MariaAvailable = "You're on the newest release of this series.";
+            MariaAvailable = Loc.T("Updates.OnNewestReleaseOfSeries");
         }
         else if (installed > latest)
         {
-            MariaAvailable =
-                $"MariaDB {release.Version} is older than the installed version; downgrades aren't supported.";
+            MariaAvailable = Loc.T("Updates.MariaOlderThanInstalled", release.Version);
         }
         else
         {
-            MariaAvailable = $"MariaDB {release.Version} is available.";
+            MariaAvailable = Loc.T("Updates.MariaIsAvailable", release.Version);
         }
     }
 
@@ -419,8 +426,8 @@ public sealed class UpdatesViewModel : ObservableObject
         {
             _pendingRemove = version.Path;
             Status = version.Component == Component.MariaDb
-                ? $"Click Remove again to delete {version.Title} and the databases stored with it ({version.Detail})."
-                : $"Click Remove again to delete {version.Title} ({version.Detail}).";
+                ? Loc.T("Updates.ClickRemoveAgainMaria", version.Title, version.Detail)
+                : Loc.T("Updates.ClickRemoveAgain", version.Title, version.Detail);
             return;
         }
 
@@ -428,14 +435,14 @@ public sealed class UpdatesViewModel : ObservableObject
         try
         {
             VersionStore.Remove(version);
-            Status = $"{version.Title} was removed.";
+            Status = Loc.T("Updates.WasRemoved", version.Title);
             _main.Write(LogSource, $"Removed {version.Title} ({version.Path}).", LogLevel.Ok);
         }
         catch (Exception ex)
         {
             // Runs straight from a button click, so any failure (a locked file, a folder that vanished, a refusal
             // to remove the active version) must end up in the status line rather than crash the app.
-            Status = $"Couldn't remove {version.Title}: {ex.Message}";
+            Status = Loc.T("Updates.CouldntRemove", version.Title, ex.Message);
             _main.Write(LogSource, Status, LogLevel.Error);
         }
 
@@ -458,14 +465,14 @@ public sealed class UpdatesViewModel : ObservableObject
         {
             string version = VersionStore.Import(_main.Root, component, folder);
             string name = component == Component.Php ? "PHP" : "MariaDB";
-            Status = $"{name} {version} added. Use Switch to make it active.";
+            Status = Loc.T("Updates.AddedUseSwitch", name, version);
             _main.Write(LogSource, $"Added {name} {version} from \"{folder}\".", LogLevel.Ok);
         }
         catch (Exception ex)
         {
             // Runs straight from a button click, so any failure (not an install, already in the store, a locked
             // folder) must end up in the status line rather than crash the app.
-            Status = "Couldn't add that folder: " + ex.Message;
+            Status = Loc.T("Updates.CouldntAddFolder", ex.Message);
         }
 
         RefreshInstalled();
@@ -480,10 +487,10 @@ public sealed class UpdatesViewModel : ObservableObject
     public async Task CheckAsync()
     {
         RefreshInstalled();
-        PhpAvailable = "Checking…";
-        MariaAvailable = "Checking…";
-        FileZillaAvailable = "Checking…";
-        MailpitAvailable = "Checking…";
+        PhpAvailable = Loc.T("Updates.Checking");
+        MariaAvailable = Loc.T("Updates.Checking");
+        FileZillaAvailable = Loc.T("Updates.Checking");
+        MailpitAvailable = Loc.T("Updates.Checking");
         await Task.WhenAll(LoadPhpAsync(), LoadMariaMajorsAsync(), LoadFileZillaLatestAsync(), LoadMailpitLatestAsync());
     }
 
@@ -495,6 +502,7 @@ public sealed class UpdatesViewModel : ObservableObject
             // An install without a version note (made by hand or by an earlier panel) is asked once and remembered.
             if (await MailpitUpdater.RecordVersionAsync(_main.Root) is { } recorded)
             {
+                _mailpitVersion = recorded;
                 MailpitInstalled = $"Mailpit {recorded}";
             }
             _mailpitLatest = await MailpitUpdater.GetLatestAsync();
@@ -504,7 +512,7 @@ public sealed class UpdatesViewModel : ObservableObject
         {
             // An update check: whatever goes wrong with the network or the API is shown in the line and the
             // dialog stays usable.
-            MailpitAvailable = "Couldn't reach GitHub: " + ex.Message;
+            MailpitAvailable = Loc.T("Updates.CouldntReachGitHub", ex.Message);
         }
     }
 
@@ -516,7 +524,7 @@ public sealed class UpdatesViewModel : ObservableObject
             _fileZillaLatest = await ReleaseFeeds.GetFileZillaServerLatestAsync();
             if (_fileZillaLatest is null)
             {
-                FileZillaAvailable = "The download page didn't say which version is newest.";
+                FileZillaAvailable = Loc.T("Updates.DownloadPageNoNewest");
                 return;
             }
             UpdateFileZillaAvailable();
@@ -525,7 +533,7 @@ public sealed class UpdatesViewModel : ObservableObject
         {
             // An update check: whatever goes wrong with the network or the page is shown in the line and the
             // dialog stays usable (installing a downloaded installer still works).
-            FileZillaAvailable = "Couldn't reach filezilla-project.org: " + ex.Message;
+            FileZillaAvailable = Loc.T("Updates.CouldntReachFileZilla", ex.Message);
         }
     }
 
@@ -541,20 +549,20 @@ public sealed class UpdatesViewModel : ObservableObject
                 PhpBranches.Add(branch);
             }
 
-            string currentBranch = VersionUtil.MajorMinor(PhpInstalled);
+            string currentBranch = VersionUtil.MajorMinor(_phpVersion ?? "");
             SelectedPhp = branches.FirstOrDefault(branch => branch.Branch == currentBranch)
                           ?? branches.FirstOrDefault();
             UpdatePhpAvailable();
             if (branches.Count == 0)
             {
-                PhpAvailable = "No Thread Safe x64 builds found on windows.php.net.";
+                PhpAvailable = Loc.T("Updates.NoThreadSafeBuildsFound");
             }
         }
         catch (Exception ex)
         {
             // An update check: whatever goes wrong with the network or the feed is shown in the line and the
             // dialog stays usable (install from zip still works).
-            PhpAvailable = "Couldn't reach windows.php.net: " + ex.Message;
+            PhpAvailable = Loc.T("Updates.CouldntReachPhpNet", ex.Message);
         }
     }
 
@@ -572,20 +580,20 @@ public sealed class UpdatesViewModel : ObservableObject
                 MariaMajors.Add(major);
             }
 
-            string currentSeries = VersionUtil.MajorMinor(MariaInstalled);
+            string currentSeries = VersionUtil.MajorMinor(_mariaVersion ?? "");
             SelectedMajor = majors.FirstOrDefault(major => major.Id == currentSeries)
                             ?? majors.FirstOrDefault(major => major.IsLts)
                             ?? majors.FirstOrDefault();
             if (majors.Count == 0)
             {
-                MariaAvailable = "No stable releases found.";
+                MariaAvailable = Loc.T("Updates.NoStableReleasesFound");
             }
         }
         catch (Exception ex)
         {
             // An update check: whatever goes wrong with the network or the feed is shown in the line and the
             // dialog stays usable (install from zip still works).
-            MariaAvailable = "Couldn't reach downloads.mariadb.org: " + ex.Message;
+            MariaAvailable = Loc.T("Updates.CouldntReachMariaDb", ex.Message);
         }
     }
 
@@ -598,7 +606,7 @@ public sealed class UpdatesViewModel : ObservableObject
             return;
         }
 
-        MariaAvailable = "Checking…";
+        MariaAvailable = Loc.T("Updates.Checking");
         try
         {
             MariaDbRelease release = await ReleaseFeeds.GetMariaDbLatestAsync(major.Id);
@@ -615,7 +623,7 @@ public sealed class UpdatesViewModel : ObservableObject
         {
             // Runs fire-and-forget from the SelectedMajor setter, so nothing may escape; the error shows in
             // the line and the install button reports that no series is chosen.
-            MariaAvailable = "Couldn't read the release: " + ex.Message;
+            MariaAvailable = Loc.T("Updates.CouldntReadRelease", ex.Message);
         }
     }
 
@@ -629,7 +637,7 @@ public sealed class UpdatesViewModel : ObservableObject
     {
         if (SelectedPhp is not { } branch)
         {
-            return UpdateResult.Fail("Choose a PHP branch first.");
+            return UpdateResult.Fail(Loc.T("Updates.ChoosePhpBranchFirst"));
         }
 
         string fileName = Path.GetFileName(new Uri(branch.ZipUrl).LocalPath);
@@ -637,7 +645,7 @@ public sealed class UpdatesViewModel : ObservableObject
         string? zip = await DownloadAsync(ctx, $"PHP {branch.Version}", branch.ZipUrl, fileName, expectedSha256);
         if (zip is null)
         {
-            return UpdateResult.Fail("The download failed its checksum check, so it wasn't installed.");
+            return UpdateResult.Fail(Loc.T("Updates.DownloadFailedChecksum"));
         }
         return await PhpUpdater.InstallAsync(ctx, zip);
     });
@@ -657,7 +665,7 @@ public sealed class UpdatesViewModel : ObservableObject
     {
         if (_mariaLatest is not { } release)
         {
-            return UpdateResult.Fail("Choose a MariaDB series first.");
+            return UpdateResult.Fail(Loc.T("Updates.ChooseMariaSeriesFirst"));
         }
 
         string? zip = await DownloadAsync(
@@ -668,7 +676,7 @@ public sealed class UpdatesViewModel : ObservableObject
             release.Sha256);
         if (zip is null)
         {
-            return UpdateResult.Fail("The download failed its checksum check, so it wasn't installed.");
+            return UpdateResult.Fail(Loc.T("Updates.DownloadFailedChecksum"));
         }
         return await MariaDbUpdater.InstallAsync(ctx, zip, MakeSqlDump);
     });
@@ -720,14 +728,14 @@ public sealed class UpdatesViewModel : ObservableObject
         try
         {
             await rollback();
-            Status = "Rolled back.";
+            Status = Loc.T("Updates.RolledBack");
             SetRollback(null, "");
         }
         catch (Exception ex)
         {
             // A rollback moves folders and drives servers, so anything may fail; the dialog reports it and stays
             // open with the rollback still offered.
-            Status = "Rollback failed: " + ex.Message;
+            Status = Loc.T("Updates.RollbackFailed", ex.Message);
             _main.Write(LogSource, Status, LogLevel.Error);
         }
         finally
@@ -758,7 +766,7 @@ public sealed class UpdatesViewModel : ObservableObject
     {
         string target = Path.Combine(Path.GetTempPath(), "XamppControl", fileName);
 
-        ctx.Status($"Downloading {displayName}…");
+        ctx.Status(Loc.T("Updates.Downloading", displayName));
         ctx.Log(url);
         await ReleaseFeeds.DownloadAsync(url, target, ctx.Progress);
 
@@ -768,7 +776,7 @@ public sealed class UpdatesViewModel : ObservableObject
             return target;
         }
 
-        ctx.Status("Verifying the download…");
+        ctx.Status(Loc.T("Updates.VerifyingDownload"));
         ctx.Progress(null);
         string actual = await ReleaseFeeds.Sha256Async(target);
         if (!actual.Equals(sha256, StringComparison.OrdinalIgnoreCase))
@@ -813,13 +821,13 @@ public sealed class UpdatesViewModel : ObservableObject
             UpdateResult result = await work(ctx);
             Status = result.Message;
             _main.Write(LogSource, result.Message, result.Success ? LogLevel.Ok : LogLevel.Error);
-            SetRollback(result.Rollback, result.RollbackLabel ?? "Roll back");
+            SetRollback(result.Rollback, result.RollbackLabel ?? Loc.T("Updates.RollBack"));
         }
         catch (Exception ex)
         {
             // The top-level handler for every update: downloads, file moves and server starts can fail in any way,
             // and the dialog must report it and become usable again rather than crash the panel.
-            Status = "Update failed: " + ex.Message;
+            Status = Loc.T("Updates.UpdateFailed", ex.Message);
             _main.Write(LogSource, Status, LogLevel.Error);
         }
         finally

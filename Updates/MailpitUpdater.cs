@@ -115,7 +115,7 @@ public static class MailpitUpdater
         response.EnsureSuccessStatusCode();
 
         string json = await response.Content.ReadAsStringAsync(timeout.Token);
-        return ReadRelease(json) ?? throw new InvalidOperationException("The newest Mailpit release has no Windows x64 zip.");
+        return ReadRelease(json) ?? throw new InvalidOperationException(Loc.T("Updates.MailpitNoWindowsZip"));
     }
 
     /// <summary>Reads the version and the Windows zip from GitHub's release object.</summary>
@@ -163,27 +163,27 @@ public static class MailpitUpdater
         bool wasRunning = module is { IsRunning: true };
         if (wasRunning && module is not null)
         {
-            ctx.Status("Stopping Mailpit…");
+            ctx.Status(Loc.T("Updates.StoppingMailpit"));
             if (!await module.StopForMaintenanceAsync())
             {
-                return UpdateResult.Fail("Mailpit didn't stop, so nothing was changed.");
+                return UpdateResult.Fail(Loc.T("Updates.MailpitDidntStop"));
             }
         }
 
         string folder = Path.Combine(ctx.Root, MailpitDriver.FolderName);
         Directory.CreateDirectory(folder);
         string zipPath = Path.Combine(Path.GetTempPath(), "XamppControl", $"mailpit-{release.Version}.zip");
-        ctx.Status($"Downloading Mailpit {release.Version}…");
+        ctx.Status(Loc.T("Updates.DownloadingMailpit", release.Version));
         await ReleaseFeeds.DownloadAsync(release.ZipUrl, zipPath, ctx.Progress);
 
-        ctx.Status("Unpacking…");
+        ctx.Status(Loc.T("Updates.Unpacking"));
         ctx.Progress(null);
         string exePath = Path.Combine(folder, MailpitDriver.ExeName);
         using (ZipArchive zip = ZipFile.OpenRead(zipPath))
         {
             ZipArchiveEntry exe = zip.Entries.FirstOrDefault(entry =>
                     string.Equals(entry.Name, MailpitDriver.ExeName, StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException("The downloaded zip holds no mailpit.exe.");
+                ?? throw new InvalidDataException(Loc.T("Updates.ZipHoldsNoMailpit"));
             exe.ExtractToFile(exePath, overwrite: true);
         }
         FileTools.TryDeleteFile(zipPath);
@@ -195,10 +195,10 @@ public static class MailpitUpdater
 
         if (wasRunning && ctx.Main.FindModule("Mailpit") is { } updated)
         {
-            ctx.Status("Starting Mailpit…");
+            ctx.Status(Loc.T("Updates.StartingMailpit"));
             await updated.StartAfterMaintenanceAsync();
         }
-        return new UpdateResult(true, $"Mailpit {release.Version} is installed. {phpNote}");
+        return new UpdateResult(true, Loc.T("Updates.MailpitIsInstalled", release.Version, phpNote));
     }
 
     /// <summary>Points php.ini's mail() at Mailpit and restarts Apache when it runs.</summary>
@@ -209,7 +209,7 @@ public static class MailpitUpdater
         string iniPath = Path.Combine(ctx.Root, "php", "php.ini");
         if (!File.Exists(iniPath))
         {
-            return "No php.ini was found, so mail() wasn't pointed at it.";
+            return Loc.T("Updates.NoPhpIniMailNotPointed");
         }
 
         int smtpPort = ctx.Settings.Services.MailpitSmtpPort;
@@ -219,7 +219,7 @@ public static class MailpitUpdater
             PhpIni ini = PhpIni.Load(iniPath);
             if (ini.GetValue("sendmail_path") == sendmail)
             {
-                return "PHP's mail() already delivers to it.";
+                return Loc.T("Updates.MailAlreadyDelivers");
             }
 
             ini.SetValue("sendmail_path", sendmail);
@@ -230,15 +230,15 @@ public static class MailpitUpdater
         {
             // Mailpit itself is installed; a locked php.ini only means the user sets sendmail_path by hand.
             ctx.Log("php.ini couldn't be updated: " + ex.Message, LogLevel.Warn);
-            return $"php.ini couldn't be updated; set sendmail_path to \"{sendmail}\" yourself.";
+            return Loc.T("Updates.PhpIniNotUpdatedSetSendmail", sendmail);
         }
 
         if (ctx.Main.FindModule("Apache") is { IsRunning: true } apache)
         {
-            ctx.Status("Restarting Apache so PHP reads the new php.ini…");
+            ctx.Status(Loc.T("Updates.RestartingApachePhpIni"));
             await apache.RestartForConfigChangeAsync();
-            return "PHP's mail() now delivers to it; Apache was restarted.";
+            return Loc.T("Updates.MailDeliversApacheRestarted");
         }
-        return "PHP's mail() now delivers to it.";
+        return Loc.T("Updates.MailNowDelivers");
     }
 }

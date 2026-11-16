@@ -51,7 +51,7 @@ public partial class LogOptionsWindow : Window
             && linesKept is >= MinLinesKept and <= MaxLinesKept;
         if (!isValidLineCount)
         {
-            ErrorText.Text = "Lines kept must be between 100 and 100000.";
+            ErrorText.Text = Loc.T("LogOptions.LinesKeptMustBeBetween", MinLinesKept, MaxLinesKept);
             ErrorText.IsVisible = true;
             return;
         }

@@ -66,16 +66,18 @@ public sealed class PhpSettingsViewModel : ObservableObject
 {
     private const string LogTag = "php";
 
-    private static readonly (string Key, string Label, string Hint)[] _commonSettings =
+    // The directive with the keys of its label and hint; the texts are looked up on each load, so they follow the
+    // language in use.
+    private static readonly (string Key, string LabelKey, string HintKey)[] _commonSettings =
     [
-        ("memory_limit", "Memory limit", "Per script, such as 512M; -1 means no limit."),
-        ("upload_max_filesize", "Largest upload", "Per file, such as 64M."),
-        ("post_max_size", "Largest form post", "All of one request's uploads together; at least the largest upload."),
-        ("max_execution_time", "Max execution time", "Seconds a script may run; 0 means no limit."),
-        ("max_input_time", "Max input time", "Seconds to read a request; -1 uses the execution time."),
-        ("max_input_vars", "Max input variables", "Form fields per request; raise it for large WordPress menus."),
-        ("display_errors", "Display errors", "On shows errors in the page, Off only logs them."),
-        ("date.timezone", "Time zone", "Such as Europe/Oslo or UTC."),
+        ("memory_limit", "PhpSettings.MemoryLimit", "PhpSettings.MemoryLimitHint"),
+        ("upload_max_filesize", "PhpSettings.LargestUpload", "PhpSettings.LargestUploadHint"),
+        ("post_max_size", "PhpSettings.LargestFormPost", "PhpSettings.LargestFormPostHint"),
+        ("max_execution_time", "PhpSettings.MaxExecutionTime", "PhpSettings.MaxExecutionTimeHint"),
+        ("max_input_time", "PhpSettings.MaxInputTime", "PhpSettings.MaxInputTimeHint"),
+        ("max_input_vars", "PhpSettings.MaxInputVariables", "PhpSettings.MaxInputVariablesHint"),
+        ("display_errors", "PhpSettings.DisplayErrors", "PhpSettings.DisplayErrorsHint"),
+        ("date.timezone", "PhpSettings.TimeZone", "PhpSettings.TimeZoneHint"),
     ];
 
     private readonly MainViewModel _main;
@@ -163,9 +165,13 @@ public sealed class PhpSettingsViewModel : ObservableObject
             if (SetField(ref _xdebugUpdate, value))
             {
                 OnPropertyChanged(nameof(HasXdebugUpdate));
+                OnPropertyChanged(nameof(XdebugUpdateLabel));
             }
         }
     }
+
+    /// <summary>The update button's text, such as "Update to 3.5.3"; empty when there is no update.</summary>
+    public string XdebugUpdateLabel => XdebugUpdate is { } version ? Loc.T("PhpSettings.UpdateTo", version) : "";
 
     /// <summary>True when the update button should show.</summary>
     public bool HasXdebugUpdate => XdebugUpdate is not null;
@@ -178,7 +184,7 @@ public sealed class PhpSettingsViewModel : ObservableObject
         LoadXdebugState(null);
         if (!HasIni)
         {
-            Status = $"No php.ini in \"{Path.GetDirectoryName(IniPath)}\".";
+            Status = Loc.T("PhpSettings.NoPhpIniIn", Path.GetDirectoryName(IniPath));
             return;
         }
 
@@ -192,13 +198,13 @@ public sealed class PhpSettingsViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // An unreadable php.ini or ext folder: the window opens empty with the reason in the status line.
-            Status = "php.ini or the ext folder can't be read: " + ex.Message;
+            Status = Loc.T("PhpSettings.PhpIniOrExtCantBeRead", ex.Message);
             return;
         }
 
-        foreach ((string key, string label, string hint) in _commonSettings)
+        foreach ((string key, string labelKey, string hintKey) in _commonSettings)
         {
-            Settings.Add(new PhpSettingRow(key, label, hint, ini.GetValue(key) ?? ""));
+            Settings.Add(new PhpSettingRow(key, Loc.T(labelKey), Loc.T(hintKey), ini.GetValue(key) ?? ""));
         }
 
         foreach (PhpExtension extension in extensions)
@@ -217,15 +223,21 @@ public sealed class PhpSettingsViewModel : ObservableObject
         _isXdebugEnabled = ini is not null && _isXdebugInstalled && XdebugInstaller.IsEnabled(ini);
         if (!_isXdebugInstalled)
         {
-            XdebugStatus = "Not installed. Install downloads the build that matches this PHP from PECL.";
-            XdebugAction = "Install Xdebug";
+            XdebugStatus = Loc.T("PhpSettings.XdebugNotInstalled");
+            XdebugAction = Loc.T("PhpSettings.InstallXdebug");
+        }
+        else if (installed == "?")
+        {
+            // A DLL without a file version: the line names Xdebug alone.
+            XdebugStatus = Loc.T(_isXdebugEnabled ? "PhpSettings.XdebugInstalledOn" : "PhpSettings.XdebugInstalledOff");
+            XdebugAction = Loc.T(_isXdebugEnabled ? "PhpSettings.TurnOff" : "PhpSettings.TurnOn");
         }
         else
         {
-            string state = _isXdebugEnabled ? "on: step debugging on port 9003" : "off";
-            string name = installed == "?" ? "Xdebug" : $"Xdebug {installed}";
-            XdebugStatus = $"{name} installed, {state}.";
-            XdebugAction = _isXdebugEnabled ? "Turn off" : "Turn on";
+            XdebugStatus = Loc.T(
+                _isXdebugEnabled ? "PhpSettings.XdebugVersionInstalledOn" : "PhpSettings.XdebugVersionInstalledOff",
+                installed);
+            XdebugAction = Loc.T(_isXdebugEnabled ? "PhpSettings.TurnOff" : "PhpSettings.TurnOn");
         }
         if (XdebugUpdate is { } update && VersionUtil.Parse(update) <= VersionUtil.Parse(installed))
         {
@@ -277,31 +289,33 @@ public sealed class PhpSettingsViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            Status = "Reading the PHP build…";
+            Status = Loc.T("PhpSettings.ReadingThePhpBuild");
             PhpBuildInfo php = await XdebugInstaller.ReadPhpBuildAsync(PhpDir)
-                ?? throw new InvalidOperationException("php.exe didn't report a version and compiler PECL builds for.");
+                ?? throw new InvalidOperationException(Loc.T("PhpSettings.PhpExeDidntReportVersion"));
 
-            Status = "Looking for the newest Xdebug build for this PHP…";
+            Status = Loc.T("PhpSettings.LookingForNewestXdebugBuild");
             IEnumerable<string> candidates = version is null ? await XdebugInstaller.ListVersionsAsync() : [version];
             version = await XdebugInstaller.FindBuildAsync(candidates, php)
-                ?? throw new InvalidOperationException(
-                    $"PECL has no Windows build of Xdebug for PHP {php.Branch} ({php.Compiler}, " +
-                    $"{(php.IsThreadSafe ? "TS" : "NTS")}) yet.");
+                ?? throw new InvalidOperationException(Loc.T(
+                    "PhpSettings.PeclHasNoWindowsBuild",
+                    php.Branch,
+                    php.Compiler,
+                    php.IsThreadSafe ? "TS" : "NTS"));
 
             string file = await XdebugInstaller.InstallAsync(PhpDir, php, version, fraction =>
                 Status = fraction is { } done
-                    ? $"Downloading Xdebug {version} for PHP {php.Branch}… {done:P0}"
-                    : $"Downloading Xdebug {version} for PHP {php.Branch}…");
+                    ? Loc.T("PhpSettings.DownloadingXdebugProgress", version, php.Branch, done)
+                    : Loc.T("PhpSettings.DownloadingXdebug", version, php.Branch));
             _main.Write(LogTag, $"Installed Xdebug {version} to \"{file}\".", LogLevel.Ok);
 
             await WriteXdebugAsync(true);
-            Status = $"Xdebug {version} installed and on. Set your editor to listen on port 9003.";
+            Status = Loc.T("PhpSettings.XdebugInstalledAndOn", version);
         }
         catch (Exception ex)
         {
             // Downloads, zips and php.ini can all fail; the window reports it and stays usable.
             _main.Write(LogTag, "Installing Xdebug failed: " + ex.Message, LogLevel.Error);
-            Status = "Xdebug couldn't be installed: " + ex.Message;
+            Status = Loc.T("PhpSettings.XdebugCouldntBeInstalled", ex.Message);
         }
         finally
         {
@@ -321,16 +335,13 @@ public sealed class PhpSettingsViewModel : ObservableObject
         try
         {
             await WriteXdebugAsync(isEnabled);
-            Status = isEnabled
-                ? "Xdebug is on. Set your editor to listen on port 9003; it starts on request when a debug cookie or " +
-                  "XDEBUG_TRIGGER is present."
-                : "Xdebug is off. The DLL stays in php\\ext for next time.";
+            Status = Loc.T(isEnabled ? "PhpSettings.XdebugIsOn" : "PhpSettings.XdebugIsOff");
         }
         catch (Exception ex)
         {
             // Writes php.ini and restarts Apache; report rather than crash.
             _main.Write(LogTag, "Changing Xdebug failed: " + ex.Message, LogLevel.Error);
-            Status = "Xdebug couldn't be changed: " + ex.Message;
+            Status = Loc.T("PhpSettings.XdebugCouldntBeChanged", ex.Message);
         }
         finally
         {
@@ -351,7 +362,7 @@ public sealed class PhpSettingsViewModel : ObservableObject
 
         if (_main.FindModule("Apache") is { IsRunning: true } apache)
         {
-            Status = "Restarting Apache…";
+            Status = Loc.T("Common.RestartingApache");
             await apache.RestartForConfigChangeAsync();
         }
     }
@@ -366,7 +377,7 @@ public sealed class PhpSettingsViewModel : ObservableObject
         List<PhpExtensionRow> changedExtensions = Extensions.Where(extension => extension.IsChanged).ToList();
         if (changedSettings.Count == 0 && changedExtensions.Count == 0)
         {
-            Status = "Nothing changed.";
+            Status = Loc.T("PhpSettings.NothingChanged");
             return;
         }
 
@@ -378,18 +389,18 @@ public sealed class PhpSettingsViewModel : ObservableObject
 
             if (_main.FindModule("Apache") is { IsRunning: true } apache)
             {
-                Status = "Restarting Apache…";
+                Status = Loc.T("Common.RestartingApache");
                 await apache.RestartForConfigChangeAsync();
             }
 
-            Status = "Saved. The previous php.ini is kept as php.ini.bak.";
+            Status = Loc.T("PhpSettings.SavedPreviousKeptAsBak");
         }
         catch (Exception ex)
         {
             // Saving writes php.ini and restarts Apache, so anything may fail; the window reports it and stays
             // usable instead of crashing the panel.
             _main.Write(LogTag, "Saving php.ini failed: " + ex.Message, LogLevel.Error);
-            Status = "php.ini couldn't be saved: " + ex.Message;
+            Status = Loc.T("PhpSettings.PhpIniCouldntBeSaved", ex.Message);
         }
         finally
         {

@@ -4,7 +4,7 @@
         xmlns:up="using:XamppControl.Updates"
         x:Class="XamppControl.Views.UpdatesWindow"
         x:DataType="vm:UpdatesViewModel"
-        Title="Versions"
+        Title="{DynamicResource Common.Versions}"
         Width="680" Height="820" MinHeight="500"
         WindowStartupLocation="CenterOwner">
 
@@ -41,7 +41,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
                             <Border IsVisible="{Binding IsActive}" Background="{DynamicResource ActivePillBrush}" CornerRadius="4" Padding="6,0">
-                                <TextBlock Text="active" FontSize="11" Foreground="{DynamicResource ActivePillTextBrush}"
+                                <TextBlock Text="{DynamicResource Updates.Active}" FontSize="11" Foreground="{DynamicResource ActivePillTextBrush}"
                                            FontWeight="SemiBold" />
                             </Border>
                         </StackPanel>
@@ -49,8 +49,8 @@
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
                                 IsVisible="{Binding CanSwitch}">
-                        <Button Classes="tool" Content="Switch to" Click="Switch_Click" />
-                        <Button Classes="tool" Content="Remove" Click="Remove_Click" />
+                        <Button Classes="tool" Content="{DynamicResource Updates.SwitchTo}" Click="Switch_Click" />
+                        <Button Classes="tool" Content="{DynamicResource Common.Remove}" Click="Remove_Click" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -65,22 +65,22 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="8">
                         <TextBlock Text="PHP" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Classes="section" Text="INSTALLED" />
+                        <TextBlock Classes="section" Text="{DynamicResource Updates.INSTALLED}" />
                         <ItemsControl ItemsSource="{Binding PhpVersions}" ItemTemplate="{StaticResource VersionRow}"
                                       IsEnabled="{Binding IsIdle}" />
-                        <Button Classes="tool" Content="Add existing folder…" Click="PhpImport_Click"
+                        <Button Classes="tool" Content="{DynamicResource Updates.AddExistingFolder}" Click="PhpImport_Click"
                                 IsEnabled="{Binding IsIdle}" HorizontalAlignment="Left" />
 
-                        <TextBlock Classes="section" Text="INSTALL ANOTHER VERSION" Margin="0,10,0,0" />
+                        <TextBlock Classes="section" Text="{DynamicResource Updates.INSTALLANOTHERVERSION}" Margin="0,10,0,0" />
                         <ComboBox ItemsSource="{Binding PhpBranches}" SelectedItem="{Binding SelectedPhp}"
-                                  HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" PlaceholderText="Loading branches…" />
+                                  HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" PlaceholderText="{DynamicResource Updates.LoadingBranchesPlaceholder}" />
                         <TextBlock Text="{Binding PhpAvailable}" FontSize="13" TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Classes="accent" Content="Download and install" Click="PhpLatest_Click" IsEnabled="{Binding IsIdle}" />
-                            <Button Classes="tool" Content="Install from zip…" Click="PhpZip_Click" IsEnabled="{Binding IsIdle}" />
+                            <Button Classes="accent" Content="{DynamicResource Updates.DownloadAndInstall}" Click="PhpLatest_Click" IsEnabled="{Binding IsIdle}" />
+                            <Button Classes="tool" Content="{DynamicResource Updates.InstallFromZip}" Click="PhpZip_Click" IsEnabled="{Binding IsIdle}" />
                         </StackPanel>
                         <TextBlock Classes="note"
-                                   Text="PHP 8 Thread Safe x64 builds. The new version becomes active and the current one stays installed. php.ini, PEAR and XAMPP's extras are carried over; each version keeps its own php.ini afterwards. Switching restarts Apache and syncs its shared DLLs." />
+                                   Text="{DynamicResource Updates.PHP8ThreadSafeX64}" />
                     </StackPanel>
                 </Border>
 
@@ -88,61 +88,61 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="8">
                         <TextBlock Text="MariaDB" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Classes="section" Text="INSTALLED" />
+                        <TextBlock Classes="section" Text="{DynamicResource Updates.INSTALLED}" />
                         <ItemsControl ItemsSource="{Binding MariaVersions}" ItemTemplate="{StaticResource VersionRow}"
                                       IsEnabled="{Binding IsIdle}" />
-                        <Button Classes="tool" Content="Add existing folder…" Click="MariaImport_Click"
+                        <Button Classes="tool" Content="{DynamicResource Updates.AddExistingFolder}" Click="MariaImport_Click"
                                 IsEnabled="{Binding IsIdle}" HorizontalAlignment="Left" />
                         <TextBlock Classes="note"
-                                   Text="Each MariaDB version keeps its own databases in its own data folder. Sharing one would break: a newer server converts data files so older ones can't open them. Switching shows that version's databases." />
+                                   Text="{DynamicResource Updates.EachMariaDBVersionKeepsIts}" />
 
-                        <TextBlock Classes="section" Text="INSTALL ANOTHER VERSION" Margin="0,10,0,0" />
+                        <TextBlock Classes="section" Text="{DynamicResource Updates.INSTALLANOTHERVERSION}" Margin="0,10,0,0" />
                         <ComboBox ItemsSource="{Binding MariaMajors}" SelectedItem="{Binding SelectedMajor}"
-                                  HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" PlaceholderText="Loading releases…" />
+                                  HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" PlaceholderText="{DynamicResource Updates.LoadingReleasesPlaceholder}" />
                         <TextBlock Text="{Binding MariaAvailable}" FontSize="13" TextWrapping="Wrap" />
-                        <CheckBox Content="Back up all databases to an SQL dump first (recommended)"
+                        <CheckBox Content="{DynamicResource Updates.BackUpAllDatabasesTo}"
                                   IsChecked="{Binding MakeSqlDump}" IsEnabled="{Binding IsIdle}" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Classes="accent" Content="Download and install" Click="MariaLatest_Click" IsEnabled="{Binding IsIdle}" />
-                            <Button Classes="tool" Content="Install from zip…" Click="MariaZip_Click" IsEnabled="{Binding IsIdle}" />
+                            <Button Classes="accent" Content="{DynamicResource Updates.DownloadAndInstall}" Click="MariaLatest_Click" IsEnabled="{Binding IsIdle}" />
+                            <Button Classes="tool" Content="{DynamicResource Updates.InstallFromZip}" Click="MariaZip_Click" IsEnabled="{Binding IsIdle}" />
                         </StackPanel>
                         <TextBlock Classes="note"
-                                   Text="The new version starts with a copy of the active version's databases (full clean shutdown, copy, mariadb-upgrade). The current version stays installed with its own copy. Only newer versions can take over data; LTS series are supported for years, rolling ones for months." />
+                                   Text="{DynamicResource Updates.TheNewVersionStartsWith}" />
                     </StackPanel>
                 </Border>
 
                 <!-- FileZilla Server -->
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="FileZilla Server" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Classes="section" Text="INSTALLED" />
+                        <TextBlock Text="{DynamicResource Updates.FileZillaServer}" FontSize="16" FontWeight="Bold" />
+                        <TextBlock Classes="section" Text="{DynamicResource Updates.INSTALLED}" />
                         <TextBlock Text="{Binding FileZillaInstalled}" FontSize="13" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding FileZillaAvailable}" FontSize="13" TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Classes="accent" Content="Open download page" Click="FileZillaDownload_Click"
+                            <Button Classes="accent" Content="{DynamicResource Updates.OpenDownloadPage}" Click="FileZillaDownload_Click"
                                     IsEnabled="{Binding IsIdle}" />
-                            <Button Classes="tool" Content="Run downloaded installer…" Click="FileZillaInstall_Click"
+                            <Button Classes="tool" Content="{DynamicResource Updates.RunDownloadedInstaller}" Click="FileZillaInstall_Click"
                                     IsEnabled="{Binding IsIdle}" />
                         </StackPanel>
                         <TextBlock Classes="note"
-                                   Text="FileZilla's download links expire, so download the Windows installer yourself and run it from here. The first upgrade stops XAMPP's FileZilla 0.9.41 and installs FileZilla Server 1.x as a Windows service, which the FileZilla row then controls. 1.x can't read the old settings: set up your FTP users again with Admin. The old FileZillaFTP folder is left as it was." />
+                                   Text="{DynamicResource Updates.FileZillaSDownloadLinksExpire}" />
                     </StackPanel>
                 </Border>
 
                 <!-- Mailpit -->
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Mailpit (mail catcher)" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Classes="section" Text="INSTALLED" />
+                        <TextBlock Text="{DynamicResource Updates.MailpitMailCatcher}" FontSize="16" FontWeight="Bold" />
+                        <TextBlock Classes="section" Text="{DynamicResource Updates.INSTALLED}" />
                         <TextBlock Text="{Binding MailpitInstalled}" FontSize="13" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding MailpitAvailable}" FontSize="13" TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button Classes="accent" Content="{Binding MailpitAction}" Click="MailpitInstall_Click"
                                     IsEnabled="{Binding CanInstallMailpit}" />
-                            <Button Classes="tool" Content="Project page" Click="MailpitPage_Click" IsEnabled="{Binding IsIdle}" />
+                            <Button Classes="tool" Content="{DynamicResource Updates.ProjectPage}" Click="MailpitPage_Click" IsEnabled="{Binding IsIdle}" />
                         </StackPanel>
                         <TextBlock Classes="note"
-                                   Text="Catches every email your PHP code sends with mail() and shows it at http://localhost:8025 instead of delivering it. Install downloads the Windows build from GitHub into xampp\mailpit and sets sendmail_path in php.ini; the Mailpit row in the panel then starts and stops it, and Admin opens the inbox. Ports are under Config › Service and Port Settings." />
+                                   Text="{DynamicResource Updates.CatchesEveryEmailYourPHP}" />
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -158,9 +158,9 @@
         </StackPanel>
 
         <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="0,12,0,0">
-            <Button Grid.Column="0" Classes="tool" Content="Check again" Click="Check_Click" IsEnabled="{Binding IsIdle}" />
-            <TextBlock Grid.Column="1" Classes="note" Text="Details are written to the panel's log." VerticalAlignment="Center" Margin="12,0" />
-            <Button Grid.Column="2" Classes="tool" Content="Close" Width="90" Click="Close_Click" IsEnabled="{Binding IsIdle}" />
+            <Button Grid.Column="0" Classes="tool" Content="{DynamicResource Updates.CheckAgain}" Click="Check_Click" IsEnabled="{Binding IsIdle}" />
+            <TextBlock Grid.Column="1" Classes="note" Text="{DynamicResource Updates.DetailsAreWrittenToThe}" VerticalAlignment="Center" Margin="12,0" />
+            <Button Grid.Column="2" Classes="tool" Content="{DynamicResource Common.Close}" Width="90" Click="Close_Click" IsEnabled="{Binding IsIdle}" />
         </Grid>
     </Grid>
 </Window>

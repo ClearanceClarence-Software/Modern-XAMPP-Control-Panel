@@ -13,6 +13,9 @@ public partial class SettingsWindow : Window
     // The theme box's items in order, as AppSettings.Theme stores them.
     private static readonly string[] _themeNames = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
 
+    // The language box's items in order, as AppSettings.Language stores them.
+    private List<string> _languageCodes = [Loc.FollowWindows];
+
     private readonly AppSettings _settings;
 
     /// <summary>Opens the window on default settings and the default XAMPP folder, for the XAML previewer.</summary>
@@ -76,9 +79,21 @@ public partial class SettingsWindow : Window
     private void FillOptions(AppSettings settings)
     {
         ThemeBox.SelectedIndex = Math.Max(Array.IndexOf(_themeNames, settings.Theme), 0);
+
+        // First entry follows Windows; the rest are the language files, shown by their own names.
+        List<Language> languages = Loc.Languages();
+        _languageCodes = [Loc.FollowWindows, .. languages.Select(language => language.Code)];
+        List<string> languageNames = [Loc.T("Settings.SameAsWindows"), .. languages.Select(language => language.Name)];
+        LanguageBox.ItemsSource = languageNames;
+        LanguageBox.SelectedIndex = Math.Max(
+            _languageCodes.FindIndex(code => string.Equals(code, settings.Language, StringComparison.OrdinalIgnoreCase)),
+            0);
         StartMinimizedBox.IsChecked = settings.StartMinimized;
         MinimizeToTrayBox.IsChecked = settings.MinimizeToTray;
         CheckUpdatesBox.IsChecked = settings.CheckForAppUpdates;
+
+        // The file is the truth: a shortcut the user deleted by hand shows as off.
+        StartMenuBox.IsChecked = StartMenu.Exists;
         TomcatWindowBox.IsChecked = settings.TomcatOutputWindow;
         CheckPortsBox.IsChecked = settings.CheckPortsOnStartup;
         DebugBox.IsChecked = settings.ShowDebug;
@@ -93,15 +108,15 @@ public partial class SettingsWindow : Window
 
         if (isEmpty)
         {
-            RootHint.Text = "Empty: looks next to this program, then in C:\\xampp.";
+            RootHint.Text = Loc.T("Settings.EmptyLooksNextToProgram");
         }
         else if (isRootAccepted)
         {
-            RootHint.Text = "XAMPP installation found.";
+            RootHint.Text = Loc.T("Settings.XamppInstallationFound");
         }
         else
         {
-            RootHint.Text = "No apache or mysql folder here.";
+            RootHint.Text = Loc.T("Settings.NoApacheOrMysqlFolder");
         }
 
         RootHint.Classes.Set("error", !isRootAccepted);
@@ -111,7 +126,7 @@ public partial class SettingsWindow : Window
 
     private async void BrowseEditor_Click(object? sender, RoutedEventArgs e)
     {
-        if (await PickExeAsync("Choose an editor") is { } path)
+        if (await PickExeAsync(Loc.T("Settings.ChooseAnEditor")) is { } path)
         {
             EditorBox.Text = path;
         }
@@ -119,7 +134,7 @@ public partial class SettingsWindow : Window
 
     private async void BrowseBrowser_Click(object? sender, RoutedEventArgs e)
     {
-        if (await PickExeAsync("Choose a browser") is { } path)
+        if (await PickExeAsync(Loc.T("Settings.ChooseABrowser")) is { } path)
         {
             BrowserBox.Text = path;
         }
@@ -129,7 +144,7 @@ public partial class SettingsWindow : Window
     {
         IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "Choose your XAMPP folder",
+            Title = Loc.T("Settings.ChooseYourXamppFolder"),
             AllowMultiple = false,
         });
         if (folders.Count > 0 && folders[0].TryGetLocalPath() is { } path)
@@ -147,7 +162,7 @@ public partial class SettingsWindow : Window
         {
             Title = title,
             AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("Programs") { Patterns = ["*.exe"] }],
+            FileTypeFilter = [new FilePickerFileType(Loc.T("Settings.Programs")) { Patterns = ["*.exe"] }],
         });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
@@ -208,9 +223,11 @@ public partial class SettingsWindow : Window
     private void SaveOptions()
     {
         _settings.Theme = _themeNames[Math.Clamp(ThemeBox.SelectedIndex, 0, _themeNames.Length - 1)];
+        _settings.Language = _languageCodes[Math.Clamp(LanguageBox.SelectedIndex, 0, _languageCodes.Count - 1)];
         _settings.StartMinimized = StartMinimizedBox.IsChecked == true;
         _settings.MinimizeToTray = MinimizeToTrayBox.IsChecked == true;
         _settings.CheckForAppUpdates = CheckUpdatesBox.IsChecked == true;
+        _settings.StartMenuShortcut = StartMenuBox.IsChecked == true;
         _settings.TomcatOutputWindow = TomcatWindowBox.IsChecked == true;
         _settings.CheckPortsOnStartup = CheckPortsBox.IsChecked == true;
         _settings.ShowDebug = DebugBox.IsChecked == true;

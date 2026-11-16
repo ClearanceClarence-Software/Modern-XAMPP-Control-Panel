@@ -68,3 +68,20 @@ covers what they can't: processes, services, Windows prompts and the UI. Fifteen
       and the swap still happens.
 - [ ] Start the panel with no XAMPP (rename `C:\xampp` temporarily): the "XAMPP wasn't found" window lists the
       checked folders; Continue shows the banner over the module rows; Choose folder… works from both.
+
+## Languages
+
+- [ ] Config › Language › Norsk bokmål, Save: the main window, side buttons, module rows and tray menu switch at
+      once; windows opened afterwards (Sites, PHP, Versions, Netstat, Databases) are in Norwegian.
+- [ ] Back to "Same as Windows": the panel follows the Windows display language (English on an English Windows).
+- [ ] A copy of `en.json` saved as `lang\xx.json` next to the exe with `"$name": "Test"` shows up in the Language
+      box; a broken JSON file there is ignored and the panel still starts.
+- [ ] The log lines stay English in every language.
+
+## Start menu
+
+- [ ] Config › Show in the Start menu, Save: typing "XAMPP" in Windows search lists Modern XAMPP Control Panel
+      with the rack icon, and it starts the panel.
+- [ ] Untick and Save: the shortcut is gone. Delete the shortcut by hand instead: the box shows unticked and the
+      panel doesn't recreate it on the next start.
+- [ ] Move the exe to another folder with the box ticked and start it: the shortcut now starts the moved exe.
