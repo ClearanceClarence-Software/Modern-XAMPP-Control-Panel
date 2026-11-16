@@ -125,7 +125,7 @@ $signedBy = $null
 if ($Sign) {
     Write-Step 'Signing'
     $certificate = Find-Certificate $CertificateThumbprint
-    Write-Host "Certificate: $($certificate.Subject) (valid until $($certificate.NotAfter.ToString('yyyy-MM-dd')))"
+    Write-Host "Certificate $($certificate.Thumbprint) (valid until $($certificate.NotAfter.ToString('yyyy-MM-dd')))"
     & (Find-SignTool) sign /sha1 $certificate.Thumbprint /fd SHA256 /tr $timestampServer /td SHA256 `
         /d 'Modern XAMPP Control Panel' /du "https://github.com/$repository" $exe
     if ($LASTEXITCODE -ne 0) { throw 'signtool failed. Is SimplySign Desktop running and logged in?' }
@@ -135,7 +135,7 @@ if ($Sign) {
         throw "The signature isn't valid: $($signature.StatusMessage)"
     }
     $signedBy = $signature.SignerCertificate.GetNameInfo('SimpleName', $false)
-    Write-Host "Signed by $signedBy" -ForegroundColor Green
+    Write-Host "Signed and verified." -ForegroundColor Green
 }
 
 Write-Step 'Packaging'
@@ -152,7 +152,8 @@ Write-Host "SHA-256 $hash"
 
 $notes = $changelog
 if ($signedBy) {
-    $notes += "`n`n> XamppControl.exe is code-signed by **$signedBy**."
+    # The signer's name is deliberately left out of the public release notes.
+    $notes += "`n`n> XamppControl.exe is code-signed with a Certum Open Source Developer certificate."
 }
 else {
     $notes += "`n`n> This build is not code-signed, so Windows SmartScreen may warn the first time you run it."

@@ -76,9 +76,8 @@ control panel keeps working; the two can be used side by side.
 
 > [!TIP]
 > Windows SmartScreen may warn about an unrecognized app the first time. Choose
-> **More info › Run anyway**. Releases are signed with a Certum code-signing certificate; each
-> release's notes name the signer, and [docs/code-signing.md](docs/code-signing.md) shows how to
-> check the signature.
+> **More info › Run anyway**. Releases are signed with a Certum code-signing certificate;
+> [docs/code-signing.md](docs/code-signing.md) shows how to check the signature.
 
 ## Features
 
