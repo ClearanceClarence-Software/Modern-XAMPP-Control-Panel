@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to change the PHP version in XAMPP on Windows · Modern XAMPP Control Panel</title>
+<meta name="description" content="XAMPP comes with one PHP version, and sooner or later a project wants another:">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/change-php-version/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="How to change the PHP version in XAMPP on Windows · Modern XAMPP Control Panel">
+<meta property="og:description" content="XAMPP comes with one PHP version, and sooner or later a project wants another:">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/change-php-version/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../../features/">Features</a>
+      <a href="../../guides/" aria-current="page">Guides</a>
+      <a href="../../docs/">Docs</a>
+      <a href="../../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[guide]</span><span>change-php-version.md</span></p>
+  <h1>How to change the PHP version in XAMPP on Windows</h1>
+</div></div>
+<div class="wrap cols">
+  <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+<a href="#what-you-need-to-know-first">What you need to know first</a>
+<a href="#step-1-download-the-new-php">Step 1: download the new PHP</a>
+<a href="#step-2-swap-the-folder">Step 2: swap the folder</a>
+<a href="#step-3-bring-your-settings-over">Step 3: bring your settings over</a>
+<a href="#step-4-fix-the-shared-dlls">Step 4: fix the shared DLLs</a>
+<a href="#step-5-start-and-check">Step 5: start and check</a>
+<a class="sub" href="#if-apache-does-not-start">If Apache does not start</a>
+<a class="sub" href="#moving-between-php-7-and-php-8">Moving between PHP 7 and PHP 8</a>
+<a href="#with-modern-xampp-control-panel">With Modern XAMPP Control Panel</a>
+  </nav>
+  <article class="prose"><p>XAMPP comes with one PHP version, and sooner or later a project wants another:</p>
+<pre><code>Your Composer dependencies require a PHP version &quot;&gt;= 8.4.0&quot;. You are running 8.2.12.
+</code></pre>
+<p>You do not have to reinstall XAMPP. PHP is a folder, and Apache loads it from there; replacing the folder
+changes the version. This guide covers moving between PHP 8 versions (8.1, 8.2, 8.3, 8.4, …), which is the
+common case and needs no change to Apache's configuration.</p>
+<h2 id="what-you-need-to-know-first">What you need to know first</h2>
+<ul>
+<li><strong>Thread Safe, x64.</strong> XAMPP runs PHP inside Apache, and that only works with the <strong>Thread Safe</strong> build. The
+  Non Thread Safe build will not load.</li>
+<li><strong>Your databases are not involved.</strong> They live in <code>C:\xampp\mysql</code>, which this does not touch.</li>
+<li><strong>Keep the old folder.</strong> It is your way back, and the source of your settings.</li>
+</ul>
+<h2 id="step-1-download-the-new-php">Step 1: download the new PHP</h2>
+<p>Go to <a href="https://windows.php.net/download/">windows.php.net/download</a> and download the <strong>Zip</strong> of the version you
+want, from the block labeled <strong>VS17 x64 Thread Safe</strong> (or VS16 for PHP 8.0 to 8.3 builds that offer it).</p>
+<h2 id="step-2-swap-the-folder">Step 2: swap the folder</h2>
+<ol>
+<li><strong>Stop Apache</strong> in the XAMPP Control Panel.</li>
+<li>Rename <code>C:\xampp\php</code> to <code>C:\xampp\php-old</code>.</li>
+<li>Create a new, empty <code>C:\xampp\php</code> and unzip the download into it. <code>php.exe</code> must end up directly in
+   <code>C:\xampp\php</code>, not in a subfolder.</li>
+</ol>
+<h2 id="step-3-bring-your-settings-over">Step 3: bring your settings over</h2>
+<p>The new folder has no <code>php.ini</code> yet, and without one PHP runs with almost every extension off.</p>
+<ol>
+<li>Copy <code>C:\xampp\php-old\php.ini</code> to <code>C:\xampp\php\php.ini</code>.</li>
+<li>Open it and check that this line points at the new folder:</li>
+</ol>
+<p><code>extension_dir="C:\xampp\php\ext"</code></p>
+<ol start="3">
+<li>Extensions come and go between versions. If the old <code>php.ini</code> loads one that the new build does not have,
+   PHP prints a warning on every request. Compare the <code>extension=</code> lines against the files in
+   <code>C:\xampp\php\ext</code> and put a <code>;</code> in front of any that have no <code>php_&lt;name&gt;.dll</code> there.</li>
+</ol>
+<p>XAMPP also keeps a few of its own things in the PHP folder. Copy these from <code>php-old</code> if you use them: the
+<code>pear</code> folder, <code>browscap.ini</code> in <code>extras</code>, and any extension DLL you installed yourself (Xdebug, for one, but
+see the note below).</p>
+<div class="note warning"><b>warning</b><p>Extension DLLs are built for one PHP version. An Xdebug or ImageMagick DLL from PHP 8.2 will not load in
+PHP 8.4; download the build for the new version instead of copying the old file.</p></div>
+<h2 id="step-4-fix-the-shared-dlls">Step 4: fix the shared DLLs</h2>
+<p>This is the step that is easy to miss. Apache and PHP both use OpenSSL and a few other libraries, and Apache
+loads its own copies first, from <code>C:\xampp\apache\bin</code>. When the new PHP was built against newer ones, <code>curl</code>
+and <code>openssl</code> fail to load, with errors like:</p>
+<pre><code>PHP Warning:  PHP Startup: Unable to load dynamic library 'curl'
+</code></pre>
+<p>Copy these files from <code>C:\xampp\php</code> to <code>C:\xampp\apache\bin</code>, replacing the ones there <strong>when the PHP copy is
+newer</strong> (compare the file versions under Properties › Details):</p>
+<ul>
+<li><code>libcrypto-3-x64.dll</code> and <code>libssl-3-x64.dll</code></li>
+<li><code>libssh2.dll</code></li>
+<li><code>nghttp2.dll</code></li>
+</ul>
+<h2 id="step-5-start-and-check">Step 5: start and check</h2>
+<p>Start Apache. If it starts, create <code>C:\xampp\htdocs\info.php</code> with:</p>
+<pre><code class="language-php">&lt;?php phpinfo();
+</code></pre>
+<p>Open <code>http://localhost/info.php</code>. The top line shows the new version, and "Loaded Configuration File" should
+be <code>C:\xampp\php\php.ini</code>. Delete <code>info.php</code> afterward.</p>
+<h3 id="if-apache-does-not-start">If Apache does not start</h3>
+<ul>
+<li>Open <code>C:\xampp\apache\logs\error.log</code> and read the last lines.</li>
+<li><strong>"Cannot load php8apache2_4.dll"</strong> or <strong>"The specified module could not be found"</strong>: the zip was the Non
+  Thread Safe build, or it was unzipped into a subfolder. Check that <code>C:\xampp\php\php8apache2_4.dll</code> exists.</li>
+<li><strong>Going back:</strong> stop Apache, rename <code>php</code> to <code>php-new</code> and <code>php-old</code> back to <code>php</code>, and start Apache. You are
+  where you began.</li>
+</ul>
+<h3 id="moving-between-php-7-and-php-8">Moving between PHP 7 and PHP 8</h3>
+<p>The file names changed with PHP 8, so Apache's configuration has to follow. In
+<code>C:\xampp\apache\conf\extra\httpd-xampp.conf</code>, a PHP 7 setup has lines like:</p>
+<pre><code>LoadFile &quot;C:/xampp/php/php7ts.dll&quot;
+LoadModule php7_module &quot;C:/xampp/php/php7apache2_4.dll&quot;
+</code></pre>
+<p>For PHP 8 they must read <code>php8ts.dll</code>, <code>php_module</code> and <code>php8apache2_4.dll</code>, and every <code>&lt;IfModule php7_module&gt;</code>
+in that file becomes <code>&lt;IfModule php_module&gt;</code>.</p>
+<h2 id="with-modern-xampp-control-panel">With Modern XAMPP Control Panel</h2>
+<p>I wrote <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">Modern XAMPP Control Panel</a>,
+a free and open-source replacement for XAMPP's control panel, and this job is one of the reasons. Its
+<strong>Versions</strong> window does the steps above:</p>
+<ul>
+<li><strong>Download and install.</strong> Pick a PHP 8 branch; the Thread Safe x64 build is downloaded from windows.php.net
+  and its checksum verified.</li>
+<li><strong>Settings carried over.</strong> <code>php.ini</code>, PEAR and XAMPP's extras come along, extensions the new build lacks are
+  commented out and listed, and the shared DLLs are synced with Apache.</li>
+<li><strong>Versions side by side.</strong> The version you leave stays installed. Switching between installed versions takes
+  seconds, and a Switch back button undoes the last change.</li>
+<li><strong>Updates announced.</strong> When your PHP branch gets a new patch release, the panel says so and installs it with
+  one button.</li>
+</ul>
+<p>It handles PHP 8 only; for a move between PHP 7 and 8, the manual steps above are still the way.</p><div class="pitch"><div><b>Skip the manual steps next time.</b><span>Modern XAMPP Control Panel is free and open source.</span></div><a class="btn go" href="../../download/">Download for Windows</a></div></article>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../../features/">Features</a>
+      <a href="../../download/">Download</a>
+      <a href="../../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../../assets/js/site.js" defer></script>
+</body>
+</html>

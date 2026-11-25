@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The control panel XAMPP should have shipped with · Modern XAMPP Control Panel</title>
+<meta name="description" content="A free, open-source replacement for the XAMPP Control Panel on Windows: clean MySQL shutdowns, readable errors, PHP and MariaDB versions side by side, HTTPS local sites, Xdebug and Mailpit.">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The control panel XAMPP should have shipped with · Modern XAMPP Control Panel">
+<meta property="og:description" content="A free, open-source replacement for the XAMPP Control Panel on Windows: clean MySQL shutdowns, readable errors, PHP and MariaDB versions side by side, HTTPS local sites, Xdebug and Mailpit.">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href=""><img src="assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="features/">Features</a>
+      <a href="guides/">Guides</a>
+      <a href="docs/">Docs</a>
+      <a href="changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="download/">Download</a>
+  </div>
+</header>
+<main id="main">
+<!-- title: The control panel XAMPP should have shipped with -->
+<!-- description: A free, open-source replacement for the XAMPP Control Panel on Windows: clean MySQL shutdowns, readable errors, PHP and MariaDB versions side by side, HTTPS local sites, Xdebug and Mailpit. -->
+<!-- nav: home -->
+<section class="hero">
+  <div class="field" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="copy">
+      <p class="logline"><span class="t">for XAMPP on Windows</span><span class="s">[main]</span><span class="ok">Control Panel Ready</span></p>
+      <h1>The control panel XAMPP should have <em>shipped with.</em></h1>
+      <p class="lede">The layout you already know, with the parts that hurt fixed: databases that survive a Stop, errors that say what is wrong, and PHP versions you can change.</p>
+      <div class="cta">
+        <a class="btn go" href="download/">Download for Windows <small data-latest="label"></small></a>
+        <a class="btn line" href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">Source on GitHub</a>
+      </div>
+      <p class="under">Free · open source (MIT) · one signed .exe · no installer</p>
+      <div class="boot" aria-hidden="true">
+        <div><span class="t">09:17:49</span><span class="s">[Apache]</span>Attempting to start Apache app...</div>
+        <div><span class="t">09:17:50</span><span class="s">[Apache]</span><span class="ok">Status change detected: running (PID: 21704)</span></div>
+        <div><span class="t">09:17:53</span><span class="s">[mysql]</span><span class="ok">Status change detected: running (PID: 30140)</span></div>
+        <div><span class="t">09:18:12</span><span class="s">[update]</span><span class="ok">An update for PHP 8.5 is available: 8.5.13</span></div>
+      </div>
+    </div>
+    <div class="shot"><img src="assets/screenshots/main-light.png" alt="The main window: Apache, MySQL and Mailpit running, with the log underneath" width="1560" height="1338"></div>
+  </div>
+</section>
+
+<div class="facts">
+  <div><b>1 file</b><span>a signed .exe next to your XAMPP</span></div>
+  <div><b>0 hard kills</b><span>MySQL is shut down, not ended</span></div>
+  <div><b>PHP 8.x</b><span>versions side by side, one click apart</span></div>
+  <div><b>https://*.test</b><span>local sites with a real padlock</span></div>
+</div>
+
+<section id="why">
+  <div class="wrap">
+    <div class="head rise">
+      <p class="logline"><span class="s">[diff]</span><span>xampp-control.exe → XamppControl.exe</span></p>
+      <h2>Same rows. Different answers.</h2>
+      <p class="lede">Nothing to relearn. The buttons are where they were; what changes is what happens when you press them.</p>
+    </div>
+    <div class="diff rise">
+      <div class="row"><p class="what">When you…</p><p class="old">The stock panel</p><p class="new">This panel</p></div>
+      <div class="row"><p class="what">Stop MySQL</p><p class="old">ends the process</p><p class="new">asks MariaDB to shut down and waits, so InnoDB finishes writing</p></div>
+      <div class="row"><p class="what">Start a server that won't</p><p class="old">"shutdown unexpectedly"</p><p class="new">tests Apache's config first and names the broken line; otherwise shows the end of the error log</p></div>
+      <div class="row"><p class="what">Hit a taken port</p><p class="old">a generic warning</p><p class="new">names the program and PID, then offers to end it, stop IIS, or move the module</p></div>
+      <div class="row"><p class="what">Need another PHP</p><p class="old">reinstall XAMPP</p><p class="new">install, update, switch and roll back from the official builds</p></div>
+      <div class="row"><p class="what">Want https://myproject.test</p><p class="old">edit vhosts and hosts by hand</p><p class="new">one Apply: virtual host, hosts entry, and a certificate Windows trusts</p></div>
+      <div class="row"><p class="what">Send mail from PHP</p><p class="old">goes nowhere, or everywhere</p><p class="new">Mailpit catches every message at localhost:8025</p></div>
+      <div class="row"><p class="what">Do anything as admin</p><p class="old">a prompt per action</p><p class="new">one prompt per session</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="tour">
+  <div class="wrap">
+    <div class="head rise">
+      <p class="logline"><span class="s">[tour]</span><span>8 stops, every picture is the app itself</span></p>
+      <h2>What a day with it looks like.</h2>
+    </div>
+    <div class="tour">
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">09:18:12</span><span class="s">[update]</span><span class="ok">8.5.13 is available</span></p>
+          <h3>It tells you when there is an update</h3>
+          <p>At startup, and once a day, the panel looks for newer builds of the PHP, MariaDB, Mailpit and Xdebug you have installed. The whole notice is a count on Versions and an arrow on the row.</p>
+          <ul><li>Only your branch: PHP 8.5 hears about 8.5.x</li><li>A new branch is news, said once</li><li>Silent when you are offline</li></ul>
+        </div>
+        <div class="frame" data-scene="new-versions"><img loading="lazy" src="assets/screenshots/new-versions-light.png" alt="The main window with a count on the Versions button and an arrow next to Apache's version"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">09:21:40</span><span class="s">[update]</span><span class="ok">PHP 8.5.13 is installed and active</span></p>
+          <h3>Several PHP versions, side by side</h3>
+          <p>Install another PHP from the official builds with its checksum verified, switch between installed versions in seconds, and update the active one with a single button.</p>
+          <ul><li>Your php.ini and extensions carry over</li><li>Switch back after any install</li><li>MariaDB works the same way, each version with its own copy of your data</li></ul>
+        </div>
+        <div class="frame tall" data-scene="versions"><img loading="lazy" src="assets/screenshots/versions-light.png" alt="The Versions window listing the active PHP and four more installed versions"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">09:30:02</span><span class="s">[Apache]</span><span class="er">Port 80 in use by System (PID 4)</span></p>
+          <h3>Port conflicts, solved</h3>
+          <p>When something else holds port 80 or 443, the panel says what it is and offers the fix instead of a riddle.</p>
+          <ul><li>End the program that holds the port</li><li>Stop IIS when Windows itself is the one</li><li>Or move Apache to a free port, config updated for you</li></ul>
+        </div>
+        <div class="frame" data-scene="port-conflict"><img loading="lazy" src="assets/screenshots/port-conflict-light.png" alt="A dialog naming what holds ports 80 and 443 and offering to stop it or move Apache"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">09:41:17</span><span class="s">[Apache]</span><span class="er">Syntax error on line 14 of httpd-vhosts.conf</span></p>
+          <h3>Errors you can read</h3>
+          <p>Apache's config is tested before it starts. A typo shows up as the file and the line, in the panel, and Apache is not started into a crash.</p>
+        </div>
+        <div class="frame" data-scene="config-error"><img loading="lazy" src="assets/screenshots/config-error-light.png" alt="The log naming a syntax error with its file and line number"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">10:02:55</span><span class="s">[sites]</span><span class="ok">https://shop.test is ready</span></p>
+          <h3>Local sites with HTTPS</h3>
+          <p>Give a folder a name like <code>shop.test</code> and press Apply. The panel writes the virtual host, the hosts entry and a certificate from a local authority Windows trusts.</p>
+          <ul><li>The browser shows the padlock</li><li><code>localhost</code> keeps serving htdocs</li><li>Editor and Terminal buttons per site</li></ul>
+        </div>
+        <div class="frame" data-scene="sites"><img loading="lazy" src="assets/screenshots/sites-light.png" alt="The Sites window with four local sites and their folders"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">10:15:31</span><span class="s">[php]</span><span class="ok">Xdebug 3.5.3 installed, debug mode on</span></p>
+          <h3>PHP settings and Xdebug</h3>
+          <p>The settings everyone changes, every extension as a checkbox, and Xdebug installed with one click in the build that matches your PHP: version, thread safety and compiler.</p>
+        </div>
+        <div class="frame" data-scene="php"><img loading="lazy" src="assets/screenshots/php-light.png" alt="The PHP window with common settings, extensions and Xdebug"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">10:40:08</span><span class="s">[mysql]</span><span class="ok">Exported shop to shop_20261125-104008.sql</span></p>
+          <h3>Databases at a glance</h3>
+          <p>Every database with its size, and the chosen one beside the list: tables, collation and its last export. Export to a timestamped <code>.sql</code> file, import, or drop one without opening a browser.</p>
+          <ul><li>Drop says what it deletes before it does</li><li>phpMyAdmin is one click away, and Apache is started for you</li></ul>
+        </div>
+        <div class="frame" data-scene="databases"><img loading="lazy" src="assets/screenshots/databases-light.png" alt="The Databases window: five databases with size bars, and the chosen one with its details and actions"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">10:52:19</span><span class="s">[apache]</span><span class="ok">error.log: 3 errors since yesterday</span></p>
+          <h3>Logs in one place</h3>
+          <p>Every server log in one window, each with a count of its recent errors, so you know which one to open. Lines are split into time, level and message instead of one long string.</p>
+          <ul><li>A timeline shows when things went wrong; click to jump there</li><li>"Problems" hides everything but warnings and errors</li><li>Follows the file live, like <code>tail -f</code></li></ul>
+        </div>
+        <div class="frame" data-scene="logs"><img loading="lazy" src="assets/screenshots/logs-light.png" alt="The Logs window: the log files with error counts, a timeline, and Apache's error log split into time, level and message"></div>
+      </div>
+
+      <div class="stop rise">
+        <div class="words">
+          <p class="logline"><span class="t">11:03:44</span><span class="s">[netstat]</span><span>22 listening sockets</span></p>
+          <h3>See what listens where</h3>
+          <p>Every listening port with the program behind it and what the port is for. XAMPP's own are marked, and anything standing in the way of Apache or MySQL is called out.</p>
+        </div>
+        <div class="frame" data-scene="netstat"><img loading="lazy" src="assets/screenshots/netstat-light.png" alt="The Netstat window: a list of programs with their ports, and the selected one's details"></div>
+      </div>
+
+    </div>
+    <p style="margin:72px 0 0"><a class="btn line" href="features/">Every feature, in plain words →</a></p>
+  </div>
+</section>
+
+<section id="start">
+  <div class="wrap">
+    <div class="head rise">
+      <p class="logline"><span class="s">[main]</span><span>Initializing Control Panel</span></p>
+      <h2>Running in a minute.</h2>
+      <p class="lede">Needs Windows 10 or 11 (x64) and a XAMPP for Windows of any recent version. The original panel keeps working; use them side by side for as long as you like.</p>
+    </div>
+    <ol class="steps rise">
+      <li><b>Download the zip</b><p>One file, <code>XamppControl.exe</code>, signed and self-contained. No installer and no runtime to install.</p></li>
+      <li><b>Put it anywhere</b><p>Next to <code>xampp-control.exe</code> in <code>C:\xampp</code> is the obvious place, but any folder works.</p></li>
+      <li><b>Run it</b><p>It finds XAMPP in its own folder, the folder above, or <code>C:\xampp</code>, and asks if it is somewhere else.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section id="guides">
+  <div class="wrap">
+    <div class="head rise">
+      <p class="logline"><span class="s">[guides]</span><span class="er">the errors everyone searches for</span></p>
+      <h2>Stuck on one of these right now?</h2>
+      <p class="lede">These guides give the manual fix for the XAMPP you have today. No download needed.</p>
+    </div>
+    <div class="errors">
+      <a class="error rise" href="guides/mysql-shutdown-unexpectedly/"><code>Error: MySQL shutdown unexpectedly.<br>This may be due to a blocked port, missing dependencies…</code><b>MySQL shutdown unexpectedly</b><span>Read the real error, then repair the data files without losing your databases.</span></a>
+      <a class="error rise" href="guides/port-80-in-use/"><code>Port 80 in use by "Unable to open process" with PID 4!<br>Apache WILL NOT start without the configured ports free!</code><b>Port 80 in use by PID 4</b><span>Find what holds the port, stop it, or move Apache somewhere else.</span></a>
+      <a class="error rise" href="guides/change-php-version/"><code>Your Composer dependencies require a PHP version "&gt;= 8.4.0".<br>You are running 8.2.12.</code><b>Change the PHP version in XAMPP</b><span>Swap the PHP folder by hand without breaking Apache, php.ini or curl.</span></a>
+      <a class="error rise" href="guides/https-on-localhost/"><code>NET::ERR_CERT_AUTHORITY_INVALID<br>Your connection is not private</code><b>HTTPS for local sites</b><span>A real padlock on myproject.test: a local authority, a certificate, a virtual host.</span></a>
+    </div>
+  </div>
+</section>
+
+<section id="questions">
+  <div class="wrap">
+    <div class="head rise">
+      <p class="logline"><span class="s">[help]</span><span>asked before downloading</span></p>
+      <h2>Fair questions.</h2>
+    </div>
+    <div class="faq rise">
+      <details><summary>Does it replace XAMPP?</summary><p>No. It replaces only the control panel, the window with the Start and Stop buttons. Apache, MariaDB, PHP and your projects stay exactly where they are, and the original <code>xampp-control.exe</code> keeps working next to it.</p></details>
+      <details><summary>Does it change anything in my XAMPP folder?</summary><p>Not until you ask. Starting and stopping changes nothing. Installing a PHP or MariaDB version, adding a site or moving a port edits the files that job needs, keeps a backup where that makes sense, and says in the log what it did.</p></details>
+      <details><summary>Is it official?</summary><p>No. It is an unofficial, community project by CC Software, not affiliated with or endorsed by Apache Friends. The source is on GitHub under the MIT license.</p></details>
+      <details><summary>Windows says "unrecognized app". Is that normal?</summary><p>For a small project, yes: SmartScreen warns about any program it has not seen many times yet. Releases are code-signed, and the reference shows how to check the signature. Choose <b>More info › Run anyway</b>.</p></details>
+      <details><summary>Will my databases be safe during a MariaDB update?</summary><p>The new version starts with a copy of your databases, made after a full clean shutdown. The previous version keeps its own untouched copy, so switching back gives you the exact state from before the update.</p></details>
+      <details><summary>Which languages does it speak?</summary><p>English and Norwegian Bokmål are built in. A language is a single JSON file, so adding yours is a small pull request.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="close on-night">
+  <div class="wrap">
+    <p class="logline"><span class="s">[main]</span><span class="ok">Control Panel Ready</span></p>
+    <h2>Keep XAMPP. Change the panel.</h2>
+    <p>One file next to the XAMPP you already have. If you don't like it, delete the file; nothing else was touched.</p>
+    <div class="cta"><a class="btn go" href="download/">Download for Windows <small data-latest="label"></small></a><a class="btn line" href="features/">See every feature</a></div>
+  </div>
+</section>
+
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href=""><img src="assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="features/">Features</a>
+      <a href="download/">Download</a>
+      <a href="changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="guides/">Guides</a>
+      <a href="docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="assets/js/site.js" defer></script>
+</body>
+</html>

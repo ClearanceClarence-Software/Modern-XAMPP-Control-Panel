@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · Modern XAMPP Control Panel</title>
+<meta name="description" content="How Modern XAMPP Control Panel keeps PHP and MariaDB versions side by side, the files it writes, troubleshooting and building from source.">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/docs/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Reference · Modern XAMPP Control Panel">
+<meta property="og:description" content="How Modern XAMPP Control Panel keeps PHP and MariaDB versions side by side, the files it writes, troubleshooting and building from source.">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/docs/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../features/">Features</a>
+      <a href="../guides/">Guides</a>
+      <a href="../docs/" aria-current="page">Docs</a>
+      <a href="../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[docs]</span><span>how it works and where things are</span></p>
+  <h1>Reference</h1>
+  <p class="lede">How versions are kept side by side, which files the panel writes, and what to do when something refuses.</p>
+</div></div>
+<div class="wrap cols">
+  <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+<a href="#how-versions-work">How versions work</a>
+<a href="#settings-and-files">Settings and files</a>
+<a href="#troubleshooting">Troubleshooting</a>
+<a href="#building-from-source">Building from source</a>
+<a href="#more">More</a>
+  </nav>
+  <article class="prose"><h2 id="how-versions-work">How versions work</h2>
+<p>The active build always lives where XAMPP expects it (<code>C:\xampp\php</code> and <code>C:\xampp\mysql</code>), so
+Apache's config and <code>my.ini</code> keep working. Other builds are kept in <code>C:\xampp\versions\php\&lt;version&gt;</code>
+and <code>C:\xampp\versions\mariadb\&lt;version&gt;</code>, and switching swaps the folders.</p>
+<p><strong>PHP.</strong> Only PHP 8 Thread Safe x64 builds are supported, because XAMPP runs PHP as an Apache
+module. A new version carries over your <code>php.ini</code>, PEAR and XAMPP's extras. Extensions the new build
+doesn't include are commented out in <code>php.ini</code> and listed in the log. On every install or switch,
+the DLLs PHP shares with Apache (OpenSSL, libssh2, nghttp2, …) are synced, using the newer copy of
+each, so <code>php_curl</code> and <code>mod_ssl</code> both load.</p>
+<p><strong>MariaDB.</strong> Each version keeps <strong>its own databases</strong>. They can't share one data folder: a newer
+server converts the data files so older servers can't open them. Installing a newer version:</p>
+<ol>
+<li>optionally saves an SQL dump of all databases to <code>C:\xampp\mysql_dumps</code>,</li>
+<li>does a full clean shutdown (<code>innodb_fast_shutdown=0</code>),</li>
+<li>copies the data folder, <code>my.ini</code>, scripts and batch files into the new version,</li>
+<li>starts it and runs <code>mariadb-upgrade</code>, repairing Aria system tables if needed.</li>
+</ol>
+<p>The previous version stays installed with its own untouched copy, so switching back gives you the
+exact state from before the update. Downgrades are refused.</p>
+<h2 id="settings-and-files">Settings and files</h2>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Settings</td>
+<td><code>%AppData%\XamppControl\settings.json</code></td>
+</tr>
+<tr>
+<td>Optional log file</td>
+<td><code>%AppData%\XamppControl\xampp-control.log</code></td>
+</tr>
+<tr>
+<td>Crash reports</td>
+<td><code>%AppData%\XamppControl\crash.log</code></td>
+</tr>
+<tr>
+<td>Local certificate authority</td>
+<td><code>%AppData%\XamppControl\local-ca.pfx</code> (private) and <code>local-ca.crt</code> (public)</td>
+</tr>
+<tr>
+<td>Site certificate</td>
+<td><code>C:\xampp\apache\conf\ssl.crt\modern-xampp-local.crt</code> and <code>ssl.key\modern-xampp-local.key</code></td>
+</tr>
+<tr>
+<td>Downloads</td>
+<td><code>%TEMP%\XamppControl</code></td>
+</tr>
+<tr>
+<td>Installed versions</td>
+<td><code>C:\xampp\versions\</code></td>
+</tr>
+<tr>
+<td>SQL dumps</td>
+<td><code>C:\xampp\mysql_dumps\</code></td>
+</tr>
+<tr>
+<td>Mailpit</td>
+<td><code>C:\xampp\mailpit\</code> (exe, <code>mailpit.db</code>, <code>mailpit.log</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The local certificate authority's private key (<code>local-ca.pfx</code>) can sign certificates your browser
+trusts, the same way mkcert works. It never leaves your computer, but keep it private, and remove
+"Modern XAMPP Control Panel Local CA" from Windows' certificate manager (<code>certmgr.msc</code>, Trusted Root
+Certification Authorities) if you stop using the panel.</p>
+<p>The MySQL root password (Config › Service and Port Settings) is only used for clean shutdowns,
+dumps, the Databases window and upgrades. It is stored in plain text in <code>settings.json</code>, which is
+fine for a local development machine but worth knowing.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p>Coming from the stock panel with a database that won't start? See
+<a href="../guides/mysql-shutdown-unexpectedly/">XAMPP: "Error: MySQL shutdown unexpectedly"</a> for the fix, step by step.</p>
+<details>
+<summary><b>MySQL won't stop cleanly</b></summary>
+Set the root password under Config › Service and Port Settings. If the server really is stuck, use <b>Force stop</b>.
+</details>
+
+<details>
+<summary><b>A module runs as a Windows service</b></summary>
+Updates and version switches need the module to run normally. Untick its Service checkbox first (this asks for admin rights).
+</details>
+
+<details>
+<summary><b>A site shows "Not secure"</b></summary>
+Click <b>Trust</b> in the Sites window and answer Yes to Windows' warning. Firefox keeps its own certificate list: import <code>local-ca.crt</code> there, or set <code>security.enterprise_roots.enabled</code> to <code>true</code> in <code>about:config</code>.
+</details>
+
+<details>
+<summary><b>A site name doesn't resolve</b></summary>
+The hosts file is only changed after the admin prompt. If you canceled it, or an antivirus blocked the change, click <b>Apply</b> again.
+</details>
+
+<details>
+<summary><b>Apache won't start after a PHP change</b></summary>
+The panel shows the reason from <code>error.log</code>. Use <b>Switch back</b> in the Versions window to return to the previous PHP.
+</details>
+
+<details>
+<summary><b>Xdebug install says PECL has no build</b></summary>
+PECL builds each Xdebug release per PHP branch and compiler; a brand-new PHP may have to wait a release. Try again after the next Xdebug version, or install an older PHP branch from the Versions window.
+</details>
+
+<details>
+<summary><b>Mail from PHP still doesn't show in Mailpit</b></summary>
+Check that the Mailpit row is running and that <code>php.ini</code> has <code>sendmail_path</code> pointing at <code>mailpit.exe sendmail</code> (the install sets it; Apache must restart afterwards). Code that uses its own SMTP settings (PHPMailer, Laravel) should point at <code>127.0.0.1:1025</code>.
+</details>
+
+<h2 id="building-from-source">Building from source</h2>
+<p>Requirements: the <a href="https://dotnet.microsoft.com/download/dotnet/10.0">.NET 10 SDK</a>.</p>
+<pre><code class="language-powershell">git clone https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel.git
+cd Modern-XAMPP-Control-Panel
+dotnet run --project XamppControl.csproj
+</code></pre>
+<p>Self-contained single-file build, as published in releases:</p>
+<pre><code class="language-powershell">dotnet publish XamppControl.csproj -p:PublishProfile=win-x64
+# bin\publish\win-x64\XamppControl.exe
+</code></pre>
+<p>Releases are built, signed with a Certum code-signing certificate and uploaded as a draft on the
+maintainer's PC with <code>tools/release.ps1</code>; GitHub Actions checks that each push formats, builds and
+passes the tests. See <a href="../docs/code-signing/">docs/code-signing.md</a> and <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/docs/testing.md">docs/testing.md</a>.</p>
+<h2 id="more">More</h2>
+<ul>
+<li><a href="../docs/translating/">Translating the panel</a></li>
+<li><a href="../docs/code-signing/">Checking the code signature</a></li>
+<li><a href="../changelog/">Changelog</a></li>
+</ul></article>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../"><img src="../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../features/">Features</a>
+      <a href="../download/">Download</a>
+      <a href="../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../guides/">Guides</a>
+      <a href="../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js" defer></script>
+</body>
+</html>

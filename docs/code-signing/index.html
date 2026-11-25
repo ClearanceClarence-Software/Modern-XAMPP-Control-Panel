@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Releasing and code signing · Modern XAMPP Control Panel</title>
+<meta name="description" content="Releases are built, signed and uploaded on the maintainer&#x27;s PC, not by GitHub Actions. GitHub Actions only checks that every push builds . This keeps the signing key off GitHub: the certificate is a Certum Open Source Code Signing certificate whose key lives in Certum&#x27;s cloud, reached through Simply">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/docs/code-signing/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Releasing and code signing · Modern XAMPP Control Panel">
+<meta property="og:description" content="Releases are built, signed and uploaded on the maintainer&#x27;s PC, not by GitHub Actions. GitHub Actions only checks that every push builds . This keeps the signing key off GitHub: the certificate is a Certum Open Source Code Signing certificate whose key lives in Certum&#x27;s cloud, reached through Simply">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/docs/code-signing/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../../features/">Features</a>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/" aria-current="page">Docs</a>
+      <a href="../../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[docs]</span><span>code-signing.md</span></p>
+  <h1>Releasing and code signing</h1>
+</div></div>
+<div class="wrap cols">
+  <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+<a href="#making-a-release">Making a release</a>
+<a href="#checking-a-signature">Checking a signature</a>
+<a href="#requirements-on-the-release-pc">Requirements on the release PC</a>
+  </nav>
+  <article class="prose"><p>Releases are built, signed and uploaded on the maintainer's PC, not by GitHub Actions. GitHub Actions only checks
+that every push builds (<code>.github/workflows/ci.yml</code>). This keeps the signing key off GitHub: the certificate is a
+Certum Open Source Code Signing certificate whose key lives in Certum's cloud, reached through SimplySign Desktop.</p>
+<h2 id="making-a-release">Making a release</h2>
+<ol>
+<li>Set <code>&lt;Version&gt;</code> in <code>XamppControl.csproj</code> and add the version's section to <code>CHANGELOG.md</code>:</li>
+</ol>
+<p><code>markdown
+   ## [0.2.2] - 2026-11-02</code></p>
+<ol start="2">
+<li>Commit and push.</li>
+<li>Start <strong>SimplySign Desktop</strong> and log in, so the certificate shows up in your certificate store.</li>
+<li>From the repository folder, in PowerShell 7:</li>
+</ol>
+<p><code>powershell
+   $env:GITHUB_TOKEN = gh auth token
+   .\tools\release.ps1 -Sign -Upload</code></p>
+<p>The script checks formatting, publishes the single-file exe, signs it with SHA-256 and a Certum timestamp,
+   verifies the signature, zips it into <code>artifacts\</code> with a <code>.sha256</code> file, and creates a <strong>draft</strong> release for the
+   tag with the changelog section as its notes. Running it again replaces the files in the same draft.
+5. Open the draft on GitHub, check it, and click <strong>Publish release</strong>. Publishing creates the tag.</p>
+<p>Without <code>-Sign</code> the build is unsigned and its notes say so; without <code>-Upload</code> the zip stays in <code>artifacts\</code> for a
+manual upload. <code>-CertificateThumbprint</code> picks a certificate when the store has more than one.</p>
+<h2 id="checking-a-signature">Checking a signature</h2>
+<pre><code class="language-powershell">Get-AuthenticodeSignature .\XamppControl.exe | Format-List Status, SignerCertificate
+</code></pre>
+<p>The publisher shows as "Open Source Developer" followed by the maintainer's name: Certum's fixed naming for its
+open source certificate. Windows SmartScreen still builds reputation for a new signature as people download and
+run it, so the first releases may show a warning that names the publisher instead of "Unknown publisher".</p>
+<h2 id="requirements-on-the-release-pc">Requirements on the release PC</h2>
+<ul>
+<li>PowerShell 7, the .NET 10 SDK and the GitHub CLI (<code>winget install GitHub.cli</code>)</li>
+<li><code>signtool.exe</code> from the Windows SDK (the "Signing Tools for Desktop Apps" feature is enough)</li>
+<li>SimplySign Desktop with the Certum certificate</li>
+</ul></article>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../../features/">Features</a>
+      <a href="../../download/">Download</a>
+      <a href="../../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../../assets/js/site.js" defer></script>
+</body>
+</html>

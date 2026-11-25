@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XAMPP: &quot;Error: MySQL shutdown unexpectedly&quot; · Modern XAMPP Control Panel</title>
+<meta name="description" content="You click Start next to MySQL, and a few seconds later the XAMPP log turns red:">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/mysql-shutdown-unexpectedly/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="XAMPP: &quot;Error: MySQL shutdown unexpectedly&quot; · Modern XAMPP Control Panel">
+<meta property="og:description" content="You click Start next to MySQL, and a few seconds later the XAMPP log turns red:">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/mysql-shutdown-unexpectedly/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../../features/">Features</a>
+      <a href="../../guides/" aria-current="page">Guides</a>
+      <a href="../../docs/">Docs</a>
+      <a href="../../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[guide]</span><span>mysql-shutdown-unexpectedly.md</span></p>
+  <h1>XAMPP: &quot;Error: MySQL shutdown unexpectedly&quot;</h1>
+</div></div>
+<div class="wrap cols">
+  <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+<a href="#step-1-read-the-real-error">Step 1: read the real error</a>
+<a href="#port-3306-is-taken">Port 3306 is taken</a>
+<a href="#the-data-files-are-damaged">The data files are damaged</a>
+<a class="sub" href="#if-it-still-does-not-start">If it still does not start</a>
+<a href="#how-to-stop-it-happening-again">How to stop it happening again</a>
+<a href="#with-modern-xampp-control-panel">With Modern XAMPP Control Panel</a>
+  </nav>
+  <article class="prose"><p>You click Start next to MySQL, and a few seconds later the XAMPP log turns red:</p>
+<pre><code>Error: MySQL shutdown unexpectedly.
+This may be due to a blocked port, missing dependencies,
+improper privileges, a crash, or a shutdown by another method.
+</code></pre>
+<p>That message lists every possibility and tells you nothing. In practice it is almost always one of two things,
+and you can tell which in a minute.</p>
+<h2 id="step-1-read-the-real-error">Step 1: read the real error</h2>
+<p>The actual reason is in MariaDB's own log, not in the control panel:</p>
+<pre><code>C:\xampp\mysql\data\mysql_error.log
+</code></pre>
+<p>Open it and scroll to the end. (In the XAMPP Control Panel: the <strong>Logs</strong> button on the MySQL row.) What you find
+there decides what to do next.</p>
+<table>
+<thead>
+<tr>
+<th>The last lines mention</th>
+<th>It means</th>
+<th>Go to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Can't start server: Bind on TCP/IP port</code> or <code>Do you already have another mysqld server running on port: 3306</code></td>
+<td>Something else is using port 3306</td>
+<td><a href="#port-3306-is-taken">Port 3306 is taken</a></td>
+</tr>
+<tr>
+<td><code>InnoDB: ... corrupt</code>, <code>Plugin 'InnoDB' init function returned error</code>, <code>Aria recovery failed</code>, <code>Unknown/unsupported storage engine: InnoDB</code></td>
+<td>The data files were damaged, usually by a hard stop</td>
+<td><a href="#the-data-files-are-damaged">The data files are damaged</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="port-3306-is-taken">Port 3306 is taken</h2>
+<p>Another MySQL or MariaDB is already running: often a second XAMPP, a MySQL installed as a Windows service, or a
+<code>mysqld.exe</code> left over from a previous session.</p>
+<ol>
+<li>Open Task Manager, go to <strong>Details</strong>, and look for <code>mysqld.exe</code> or <code>mariadbd.exe</code>. If one is running and it is
+   not the one you just tried to start, end it and start MySQL again.</li>
+<li>If it comes back by itself, it is a Windows service. Press <kbd>Win</kbd>+<kbd>R</kbd>, run <code>services.msc</code>,
+   find <strong>MySQL</strong> (or <strong>MySQL80</strong>, <strong>MariaDB</strong>), stop it, and set its startup type to <strong>Manual</strong>.</li>
+<li>If you need both servers, give XAMPP's another port instead: in <code>C:\xampp\mysql\bin\my.ini</code>, change both
+   <code>port=3306</code> lines (under <code>[client]</code> and <code>[mysqld]</code>) to <code>3307</code>, and use that port in your application's
+   database settings.</li>
+</ol>
+<h2 id="the-data-files-are-damaged">The data files are damaged</h2>
+<p>This is the common one. It happens when MySQL is ended instead of shut down: Windows restarted for updates, the
+PC lost power, or the process was killed (from Task Manager, or by a stop script that kills it) while it was
+still writing.</p>
+<p>The fix below restores MariaDB's own system tables from the copy XAMPP ships with and keeps your databases.</p>
+<div class="note warning"><b>warning</b><p>Do step 2 before anything else. With the copy of the <code>data</code> folder, every other step can be undone.</p></div>
+<ol>
+<li><strong>Stop MySQL</strong> and close the XAMPP Control Panel.</li>
+<li><strong>Copy</strong> <code>C:\xampp\mysql\data</code> to somewhere safe, for example <code>C:\xampp\mysql\data-broken</code>. This is your
+   backup of everything, damaged or not.</li>
+<li><strong>Rename</strong> <code>C:\xampp\mysql\data</code> to <code>data-old</code>.</li>
+<li><strong>Copy</strong> <code>C:\xampp\mysql\backup</code> and name the copy <code>data</code>. This is a clean, empty set of data files.</li>
+<li>From <code>data-old</code> into the new <code>data</code>, <strong>copy your own database folders</strong>: every folder that is one of your
+   databases. Do <strong>not</strong> copy <code>mysql</code>, <code>performance_schema</code>, <code>phpmyadmin</code> or <code>test</code>; those are the system
+   folders that step 4 just replaced.</li>
+<li>From <code>data-old</code> into the new <code>data</code>, <strong>copy the file <code>ibdata1</code></strong>, replacing the one that is there. Your
+   InnoDB tables do not work without it. Leave the <code>ib_logfile</code> and <code>aria_log</code> files alone.</li>
+<li>Start XAMPP and start MySQL.</li>
+</ol>
+<p>If it starts, check your databases in phpMyAdmin, then export each one (<strong>Export</strong> tab) so you have a real
+backup. Two things are different afterward:</p>
+<ul>
+<li><strong>Database users are reset.</strong> The users and passwords lived in the <code>mysql</code> folder you replaced. <code>root</code> has
+  no password again, as on a fresh XAMPP; recreate any other users your projects log in with.</li>
+<li><strong><code>data-old</code> and <code>data-broken</code> are still there.</strong> Delete them once you are sure everything is back.</li>
+</ul>
+<h3 id="if-it-still-does-not-start">If it still does not start</h3>
+<p>Read the end of <code>mysql_error.log</code> again; it will name what it could not read.</p>
+<ul>
+<li><strong>It names one table or database.</strong> Move that database's folder out of <code>data</code> and start again. If the server
+  starts, the damage is in that one database, and the rest are safe to export.</li>
+<li><strong>InnoDB itself will not start.</strong> Add <code>innodb_force_recovery = 1</code> under <code>[mysqld]</code> in
+  <code>C:\xampp\mysql\bin\my.ini</code> and start again. If it starts, export every database right away, then remove the
+  line; a server in recovery mode is for getting data out, not for working in. Raise the number one step at a
+  time (up to 6) only if the lower one fails, and expect more to be missing each step.</li>
+</ul>
+<h2 id="how-to-stop-it-happening-again">How to stop it happening again</h2>
+<ul>
+<li><strong>Stop MySQL before you shut down Windows</strong>, and wait for it to finish.</li>
+<li><strong>Do not use Task Manager</strong> to end <code>mysqld.exe</code> unless it is truly stuck.</li>
+<li><strong>Keep SQL exports</strong> of anything you care about. The <code>data</code> folder is not a backup of itself.</li>
+</ul>
+<h2 id="with-modern-xampp-control-panel">With Modern XAMPP Control Panel</h2>
+<p>I wrote <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">Modern XAMPP Control Panel</a>
+because of this error, so this is where it differs. It is free and open source, and it is a replacement for the
+control panel only; your XAMPP stays as it is.</p>
+<ul>
+<li><strong>Stop is a real shutdown.</strong> The Stop button asks MariaDB to shut down (<code>mariadb-admin shutdown</code>) and waits
+  for it. A hard kill is only offered if that fails, and it says what a hard kill risks.</li>
+<li><strong>The reason is in front of you.</strong> When MySQL does die, the last lines of <code>mysql_error.log</code> are shown in the
+  panel, so step 1 above is already done.</li>
+<li><strong>A taken port is named.</strong> If something holds 3306, the panel says which program it is and offers to stop it
+  or move MySQL to a free port.</li>
+</ul>
+<p>It does not repair damaged data files for you; the steps above are still the fix for a database that is already
+broken.</p><div class="pitch"><div><b>Skip the manual steps next time.</b><span>Modern XAMPP Control Panel is free and open source.</span></div><a class="btn go" href="../../download/">Download for Windows</a></div></article>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../../features/">Features</a>
+      <a href="../../download/">Download</a>
+      <a href="../../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../../assets/js/site.js" defer></script>
+</body>
+</html>

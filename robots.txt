@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/sitemap.xml

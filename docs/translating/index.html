@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Translating Modern XAMPP Control Panel · Modern XAMPP Control Panel</title>
+<meta name="description" content="Every piece of text the panel shows lives in one JSON file per language in Lang/. Lang/en.json is the source of truth; a translation is a copy of it with the right-hand sides translated.">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/docs/translating/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Translating Modern XAMPP Control Panel · Modern XAMPP Control Panel">
+<meta property="og:description" content="Every piece of text the panel shows lives in one JSON file per language in Lang/. Lang/en.json is the source of truth; a translation is a copy of it with the right-hand sides translated.">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/docs/translating/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../../features/">Features</a>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/" aria-current="page">Docs</a>
+      <a href="../../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[docs]</span><span>translating.md</span></p>
+  <h1>Translating Modern XAMPP Control Panel</h1>
+</div></div>
+<div class="wrap cols">
+  <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+<a href="#add-or-improve-a-language">Add or improve a language</a>
+<a href="#rules-for-the-values">Rules for the values</a>
+<a href="#what-is-not-translated">What is not translated</a>
+<a href="#for-developers">For developers</a>
+  </nav>
+  <article class="prose"><p>Every piece of text the panel shows lives in one JSON file per language in <code>Lang/</code>. <code>Lang/en.json</code> is the source
+of truth; a translation is a copy of it with the right-hand sides translated.</p>
+<h2 id="add-or-improve-a-language">Add or improve a language</h2>
+<ol>
+<li>Copy <code>Lang/en.json</code> to <code>Lang/&lt;code&gt;.json</code>, where <code>&lt;code&gt;</code> is the language code Windows uses: <code>de</code>, <code>fr</code>, <code>es</code>,
+   <code>pt-BR</code>, <code>nb</code>... A plain language code (<code>de</code>) serves every region (<code>de-AT</code>, <code>de-CH</code>) unless a more specific file
+   exists.</li>
+<li>Set <code>"$name"</code> to the language's own name, as it should appear in Config (<code>"Deutsch"</code>, <code>"Norsk bokmål"</code>).</li>
+<li>Translate the values. Leave the keys alone.</li>
+<li>Try it without building: put the file in a <code>lang</code> folder next to <code>XamppControl.exe</code> (or in
+   <code>%AppData%\XamppControl\lang</code>), start the panel, and choose the language under <strong>Config › Language</strong>. Open
+   windows switch at once.</li>
+<li>Send a pull request with the file in <code>Lang/</code>. <code>dotnet test XamppControl.slnx</code> checks it (see below).</li>
+</ol>
+<p>You don't have to translate everything. A key you leave out, or delete, shows in English.</p>
+<h2 id="rules-for-the-values">Rules for the values</h2>
+<ul>
+<li><strong>Placeholders</strong> such as <code>{0}</code> and <code>{1}</code> stand for a value the panel fills in (a version, a file name, a count).
+  Keep every placeholder the English text has; you may move them around. <code>{0:P0}</code> and similar keep their format
+  part. To show a literal brace, write <code>{{</code> or <code>}}</code>.</li>
+<li><strong>Plurals</strong> come as two keys, <code>Something.One</code> and <code>Something.Other</code>. <code>.One</code> is used for exactly 1, <code>.Other</code> for
+  everything else, and <code>{0}</code> is the count in both.</li>
+<li><strong>Don't translate</strong> product and program names (Apache, MySQL, MariaDB, PHP, Xdebug, Mailpit, FileZilla, XAMPP,
+  IIS), file names and paths (<code>php.ini</code>, <code>httpd-vhosts.conf</code>, <code>xampp\mysql_dumps</code>), settings names
+  (<code>sendmail_path</code>), commands, and addresses (<code>https://myproject.test</code>, <code>localhost:8025</code>).</li>
+<li>Column headers are upper-case in English (<code>MODULE</code>, <code>ACTIONS</code>); follow what looks natural in your language.</li>
+<li>Keep <code>…</code> (one character) where English has it; it marks buttons that open a dialog and running actions.</li>
+<li>Buttons are short. If a translation is much longer than the English, look for a shorter word before the layout
+  has to stretch.</li>
+<li>JSON needs <code>\"</code> for a quote inside a value and <code>\\</code> for a backslash, exactly as in <code>en.json</code>.</li>
+</ul>
+<h2 id="what-is-not-translated">What is not translated</h2>
+<p>The log (the panel at the bottom of the main window, the Logs window and <code>xampp-control.log</code>) stays in English in
+every language. Those lines are what people paste into bug reports and search for, and several of them are XAMPP's
+own wording.</p>
+<h2 id="for-developers">For developers</h2>
+<ul>
+<li>XAML: <code>Text="{DynamicResource Area.Key}"</code>. Code: <code>Loc.T("Area.Key")</code>, <code>Loc.T("Area.Key", value)</code>,
+  <code>Loc.Plural("Area.Key", count)</code>. Add the English text to <code>Lang/en.json</code> in the same change.</li>
+<li>Keys are <code>Area.PascalCaseWords</code>, where the area is the window or feature (<code>Main</code>, <code>Sites</code>, <code>Updates</code>,
+  <code>Common</code> for text shared by several windows).</li>
+<li>Never build a sentence from translated fragments; give it one key with placeholders, so translators can reorder.</li>
+<li><code>Loc.Apply</code> publishes the strings as application resources, which is why <code>DynamicResource</code> text changes live.
+  Text a view model computed earlier is refreshed the next time it is rebuilt; subscribe to <code>Loc.Changed</code> if a
+  property must follow at once.</li>
+<li><code>tests/XamppControl.Tests/LocalizationTests.cs</code> fails the build when a key used in XAML or code is missing from
+  <code>en.json</code>, when a translation has a key English doesn't, or when its placeholders differ.</li>
+</ul></article>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../../features/">Features</a>
+      <a href="../../download/">Download</a>
+      <a href="../../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../../assets/js/site.js" defer></script>
+</body>
+</html>

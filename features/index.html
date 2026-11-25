@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Features · Modern XAMPP Control Panel</title>
+<meta name="description" content="Everything Modern XAMPP Control Panel does: clean shutdowns, PHP and MariaDB versions, HTTPS local sites, Xdebug, Mailpit, databases, logs and port conflict fixes.">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/features/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Features · Modern XAMPP Control Panel">
+<meta property="og:description" content="Everything Modern XAMPP Control Panel does: clean shutdowns, PHP and MariaDB versions, HTTPS local sites, Xdebug, Mailpit, databases, logs and port conflict fixes.">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/features/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../features/" aria-current="page">Features</a>
+      <a href="../guides/">Guides</a>
+      <a href="../docs/">Docs</a>
+      <a href="../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[features]</span><span>everything the panel does</span></p>
+  <h1>Every feature, in plain words.</h1>
+  <p class="lede">Nothing here needs a config file opened by hand. Each one is a button in the panel.</p>
+</div></div>
+<div class="wrap groups">
+<div class="group" id="the-panel">
+  <header><p class="logline"><span class="s">[the panel]</span><span>9 features</span></p>
+    <h2>The panel</h2><p>The window you already know how to use, with the rough edges taken off.</p></header>
+  <div class="cards"><div class="card rise"><b>Familiar layout</b><p>Module rows for Apache, MySQL, FileZilla, Mercury, Tomcat and Mailpit with Service, PID(s), Port(s), Start/Stop, Admin, Config and Logs, plus Config, Netstat, Versions, Databases, Logs, Sites, PHP, Shell, Explorer, Services, Help and About buttons.</p></div><div class="card rise"><b>Your language</b><p>English and Norwegian Bokmål are built in; Config › Language switches at once. Adding a language is one JSON file, see <a href="../docs/translating/">docs/translating.md</a>.</p></div><div class="card rise"><b>Light and dark themes</b><p>Follows Windows by default; the sun/moon button in the header switches.</p></div><div class="card rise"><b>Tray icon</b><p>Shows what runs, starts and stops modules from its menu, keeps the panel out of the taskbar when minimized.</p></div><div class="card rise"><b>One admin prompt per session</b><p>Service actions and the hosts file reuse a single elevation.</p></div><div class="card rise"><b>Start all and Stop all</b><p>In the header of the module list and in the tray menu. Start all starts the modules ticked as Autostart, or Apache and MySQL when none is.</p></div><div class="card rise"><b>Quit asks</b><p>Closing with Apache or MySQL running offers a clean stop or leaving them running.</p></div><div class="card rise"><b>Updates itself</b><p>The header shows when a newer version exists; What's new lists every release since yours and installs the newest with one click (signed zip, checksum verified, the exe swapped on restart).</p></div><div class="card rise"><b>Crash reports</b><p>An unrecoverable error shows a window with the details and a button to open an issue; the report is also saved to <code>crash.log</code>.</p></div></div>
+</div>
+<div class="group" id="safe-servers">
+  <header><p class="logline"><span class="s">[safe servers]</span><span>5 features</span></p>
+    <h2>Safe servers</h2><p>Starting and stopping without damage, and a reason whenever something refuses.</p></header>
+  <div class="cards"><div class="card rise"><b>Clean MySQL/MariaDB shutdown</b><p>Stop always tries <code>mariadb-admin shutdown</code> first. A hard kill is only offered as <strong>Force stop</strong> when that fails, and it tells you InnoDB will run crash recovery.</p></div><div class="card rise"><b>Startup failures explained</b><p><code>httpd -t</code> runs before Apache starts and names the broken line. If Apache or MySQL exits right after starting, the last lines of <code>error.log</code> or <code>mysql_error.log</code> appear in the panel.</p></div><div class="card rise"><b>Port conflicts found and fixed</b><p>Before a module starts, the panel names the program and PID holding each port. A dialog offers to end that program, stop IIS when Windows itself holds the port, or move Apache to 8080/4433 (MySQL to 3307) with the config files and settings updated.</p></div><div class="card rise"><b>Netstat</b><p>Every program that listens on a port, one entry each, with what its ports are for (Apache, MySQL, HTTP, Remote Desktop…), who can reach it, and a warning when a foreign program blocks a stopped module. Select one for its details and to open it in the browser, show its folder, copy, or end it. Search, or narrow to XAMPP's programs or the blocking ones.</p></div><div class="card rise"><b>Logs window</b><p>Every server log in one side list, each with a count of its recent errors. The chosen log is followed live, like <code>tail -f</code>, with each line split into time, level and message, a filter, a "Problems" switch, and a timeline that shows when things went wrong and jumps there.</p></div></div>
+</div>
+<div class="group" id="development-tools">
+  <header><p class="logline"><span class="s">[development tools]</span><span>5 features</span></p>
+    <h2>Development tools</h2><p>The jobs that used to mean editing config files by hand.</p></header>
+  <div class="cards"><div class="card rise"><b>Sites with HTTPS</b><p>Give each project its own address, such as <code>https://myproject.test</code>. Apply writes the virtual hosts to a marked block in <code>httpd-vhosts.conf</code>, tests the config, adds the names to the hosts file, issues a certificate from a local authority Windows trusts, and restarts Apache. <code>localhost</code> keeps serving <code>htdocs</code>. Each site has Editor and Terminal buttons.</p></div><div class="card rise"><b>PHP settings</b><p>The values everyone changes (memory limit, upload size, time limits, display errors, time zone) and every extension in <code>php\ext</code> with a check box. The previous file is kept as <code>php.ini.bak</code>.</p></div><div class="card rise"><b>Xdebug with one button</b><p>Installs the build that matches your PHP (version, thread safety, compiler) from PECL, turns it on in debug mode on port 9003, and off again when you want speed.</p></div><div class="card rise"><b>Mail catcher</b><p>Installs <a href="https://github.com/axllent/mailpit">Mailpit</a> and points <code>mail()</code> at it. Every message shows at <code>http://localhost:8025</code> instead of leaving your computer.</p></div><div class="card rise"><b>Databases</b><p>A searchable list with sizes, and the chosen database beside it: tables, collation and its last export. Export to a timestamped <code>.sql</code> (routines, events and triggers included), import into a new or existing database, open it in phpMyAdmin, drop.</p></div></div>
+</div>
+<div class="group" id="versions">
+  <header><p class="logline"><span class="s">[versions]</span><span>4 features</span></p>
+    <h2>Versions</h2><p>Newer PHP and MariaDB than XAMPP ships, kept side by side.</p></header>
+  <div class="cards"><div class="card rise"><b>PHP and MariaDB</b><p>Install a new version straight from windows.php.net or downloads.mariadb.org (SHA-256 verified) or from a zip, switch between installed versions in seconds, switch back after any install or switch, remove what you no longer need.</p></div><div class="card rise"><b>Updates are announced</b><p>At startup and once a day the panel looks for newer builds of the PHP, MariaDB, Mailpit and Xdebug you have installed. A count on the Versions button and an arrow on the module's row say so; "Update to 8.5.13" on the active row installs it, and the panel then asks whether to remove the build it replaced. A whole new PHP branch is mentioned once, not nagged about.</p></div><div class="card rise"><b>FileZilla Server</b><p>XAMPP still ships FileZilla Server 0.9.41 from 2012. The Versions window runs the official 1.x installer you downloaded and the FileZilla row then controls the new server. (1.x can't read 0.9's settings, so FTP users are set up again in its Admin program.)</p></div><div class="card rise"><b>XAMPP-style configuration</b><p>Editor, browser, XAMPP folder, autostart per module, start minimized, minimize to tray, update check, port check on startup, debug output, two-tone or plain icons, Service and Port Settings, User Defined Files and Log Options.</p></div></div>
+</div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../"><img src="../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../features/">Features</a>
+      <a href="../download/">Download</a>
+      <a href="../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../guides/">Guides</a>
+      <a href="../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js" defer></script>
+</body>
+</html>

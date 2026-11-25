@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTTPS for local sites in XAMPP · Modern XAMPP Control Panel</title>
+<meta name="description" content="You open your local project over https:// and the browser stops you:">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/https-on-localhost/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="HTTPS for local sites in XAMPP · Modern XAMPP Control Panel">
+<meta property="og:description" content="You open your local project over https:// and the browser stops you:">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/https-on-localhost/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../../features/">Features</a>
+      <a href="../../guides/" aria-current="page">Guides</a>
+      <a href="../../docs/">Docs</a>
+      <a href="../../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[guide]</span><span>https-on-localhost.md</span></p>
+  <h1>HTTPS for local sites in XAMPP</h1>
+</div></div>
+<div class="wrap cols">
+  <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+<a href="#pick-a-good-name">Pick a good name</a>
+<a href="#step-1-make-a-certificate-authority-your-computer-trusts">Step 1: make a certificate authority your computer trusts</a>
+<a href="#step-2-make-a-certificate-for-your-site">Step 2: make a certificate for your site</a>
+<a href="#step-3-point-the-name-at-your-computer">Step 3: point the name at your computer</a>
+<a href="#step-4-add-the-virtual-host">Step 4: add the virtual host</a>
+<a href="#step-5-test-and-restart">Step 5: test and restart</a>
+<a class="sub" href="#if-it-does-not-work">If it does not work</a>
+<a href="#with-modern-xampp-control-panel">With Modern XAMPP Control Panel</a>
+  </nav>
+  <article class="prose"><p>You open your local project over <code>https://</code> and the browser stops you:</p>
+<pre><code>Your connection is not private
+NET::ERR_CERT_AUTHORITY_INVALID
+</code></pre>
+<p>XAMPP's Apache does speak HTTPS, but with a certificate that nobody trusts and that is issued for <code>localhost</code>
+only. For a padlock on a name like <code>https://myproject.test</code>, three things have to exist: a certificate
+authority your computer trusts, a certificate from it for your site's name, and an Apache virtual host that
+uses that certificate. This guide sets up all three.</p>
+<h2 id="pick-a-good-name">Pick a good name</h2>
+<p>Use a name ending in <strong><code>.test</code></strong>, such as <code>myproject.test</code>. That ending is reserved for testing and will never
+be a real website.</p>
+<ul>
+<li>Avoid <code>.dev</code> and <code>.app</code>: browsers force HTTPS on them and they are real domains.</li>
+<li>Avoid <code>.local</code>: it is used by network discovery (Bonjour) and resolves slowly or wrongly on some networks.</li>
+</ul>
+<h2 id="step-1-make-a-certificate-authority-your-computer-trusts">Step 1: make a certificate authority your computer trusts</h2>
+<p>The simplest tool for this is <a href="https://github.com/FiloSottile/mkcert">mkcert</a>. Download <code>mkcert-v*-windows-amd64.exe</code>
+from its releases page, rename it to <code>mkcert.exe</code>, and in a Command Prompt in that folder run:</p>
+<pre><code>mkcert -install
+</code></pre>
+<p>Windows asks whether to trust a new certificate authority; answer <strong>Yes</strong>. From now on, certificates that mkcert
+makes on this computer are trusted by Chrome and Edge. Firefox keeps its own list: either install <code>certutil</code> as
+mkcert's page describes, or set <code>security.enterprise_roots.enabled</code> to <code>true</code> in <code>about:config</code>.</p>
+<div class="note warning"><b>warning</b><p>The authority's private key can sign a certificate for any website, and your browser will trust it. Never
+share the files in the folder that <code>mkcert -CAROOT</code> prints.</p></div>
+<h2 id="step-2-make-a-certificate-for-your-site">Step 2: make a certificate for your site</h2>
+<pre><code>mkcert myproject.test
+</code></pre>
+<p>This writes <code>myproject.test.pem</code> (the certificate) and <code>myproject.test-key.pem</code> (its key). Move both to a
+folder Apache can read, for example <code>C:\xampp\apache\conf\ssl.crt\</code>.</p>
+<h2 id="step-3-point-the-name-at-your-computer">Step 3: point the name at your computer</h2>
+<p>Open Notepad with <em>Run as administrator</em>, open <code>C:\Windows\System32\drivers\etc\hosts</code> (choose "All files" in
+the dialog), and add:</p>
+<pre><code>127.0.0.1    myproject.test
+</code></pre>
+<h2 id="step-4-add-the-virtual-host">Step 4: add the virtual host</h2>
+<p>Open <code>C:\xampp\apache\conf\extra\httpd-vhosts.conf</code> and add at the end:</p>
+<pre><code class="language-apache">&lt;VirtualHost *:80&gt;
+    ServerName myproject.test
+    DocumentRoot &quot;C:/xampp/htdocs/myproject&quot;
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:443&gt;
+    ServerName myproject.test
+    DocumentRoot &quot;C:/xampp/htdocs/myproject&quot;
+    SSLEngine on
+    SSLCertificateFile &quot;conf/ssl.crt/myproject.test.pem&quot;
+    SSLCertificateKeyFile &quot;conf/ssl.crt/myproject.test-key.pem&quot;
+    &lt;Directory &quot;C:/xampp/htdocs/myproject&quot;&gt;
+        AllowOverride All
+        Require all granted
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+</code></pre>
+<p>Use forward slashes in the paths. If the project is outside <code>htdocs</code>, the <code>&lt;Directory&gt;</code> block is what allows
+Apache to serve it.</p>
+<p>One more thing, or <code>http://localhost</code> stops showing your <code>htdocs</code> folder: the first virtual host in the file
+becomes the default for every name. Put this one above the others:</p>
+<pre><code class="language-apache">&lt;VirtualHost *:80&gt;
+    ServerName localhost
+    DocumentRoot &quot;C:/xampp/htdocs&quot;
+&lt;/VirtualHost&gt;
+</code></pre>
+<h2 id="step-5-test-and-restart">Step 5: test and restart</h2>
+<p>Before restarting, let Apache check the file. In the XAMPP Control Panel click <strong>Shell</strong>, then run:</p>
+<pre><code>httpd -t
+</code></pre>
+<p><code>Syntax OK</code> means it is safe to restart Apache. Anything else names the file and the line to fix. Then open
+<code>https://myproject.test</code>.</p>
+<h3 id="if-it-does-not-work">If it does not work</h3>
+<ul>
+<li><strong>Still "not private".</strong> The browser was open while you ran <code>mkcert -install</code>; close every window of it and
+  try again. In Firefox, see step 1.</li>
+<li><strong>"This site can't be reached".</strong> The hosts line is missing or was not saved (Notepad must run as
+  administrator), or Apache is not listening on 443. Check that <code>Include conf/extra/httpd-ssl.conf</code> is not
+  commented out in <code>httpd.conf</code>.</li>
+<li><strong>The wrong site shows.</strong> The <code>ServerName</code> does not match the address, so Apache fell back to the first
+  virtual host.</li>
+</ul>
+<h2 id="with-modern-xampp-control-panel">With Modern XAMPP Control Panel</h2>
+<p>I wrote <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">Modern XAMPP Control Panel</a>,
+a free and open-source replacement for XAMPP's control panel. Its <strong>Sites</strong> window does all five steps:</p>
+<ul>
+<li><strong>A name and a folder.</strong> Type <code>myproject.test</code>, pick the folder, tick HTTPS, press Apply.</li>
+<li><strong>Everything written for you.</strong> The virtual hosts go into a marked block in <code>httpd-vhosts.conf</code>, the name
+  into the hosts file, and a certificate comes from a local authority that the panel creates and Windows
+  trusts, the same way mkcert works.</li>
+<li><strong>Tested before the restart.</strong> <code>httpd -t</code> runs first; a mistake is shown instead of a server that will not
+  start. <code>localhost</code> keeps serving <code>htdocs</code>.</li>
+</ul><div class="pitch"><div><b>Skip the manual steps next time.</b><span>Modern XAMPP Control Panel is free and open source.</span></div><a class="btn go" href="../../download/">Download for Windows</a></div></article>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../../features/">Features</a>
+      <a href="../../download/">Download</a>
+      <a href="../../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../../assets/js/site.js" defer></script>
+</body>
+</html>

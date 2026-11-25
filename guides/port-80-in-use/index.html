@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XAMPP: &quot;Port 80 in use by &#x27;Unable to open process&#x27; with PID 4&quot; · Modern XAMPP Control Panel</title>
+<meta name="description" content="Apache refuses to start, and the XAMPP log says something like:">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/port-80-in-use/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="XAMPP: &quot;Port 80 in use by &#x27;Unable to open process&#x27; with PID 4&quot; · Modern XAMPP Control Panel">
+<meta property="og:description" content="Apache refuses to start, and the XAMPP log says something like:">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/guides/port-80-in-use/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../../features/">Features</a>
+      <a href="../../guides/" aria-current="page">Guides</a>
+      <a href="../../docs/">Docs</a>
+      <a href="../../changelog/">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[guide]</span><span>port-80-in-use.md</span></p>
+  <h1>XAMPP: &quot;Port 80 in use by &#x27;Unable to open process&#x27; with PID 4&quot;</h1>
+</div></div>
+<div class="wrap cols">
+  <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+<a href="#step-1-find-out-who-has-the-port">Step 1: find out who has the port</a>
+<a href="#pid-4-windows-holds-the-port">PID 4: Windows holds the port</a>
+<a href="#move-apache-to-another-port">Move Apache to another port</a>
+<a href="#with-modern-xampp-control-panel">With Modern XAMPP Control Panel</a>
+  </nav>
+  <article class="prose"><p>Apache refuses to start, and the XAMPP log says something like:</p>
+<pre><code>Problem detected!
+Port 80 in use by &quot;Unable to open process&quot; with PID 4!
+Apache WILL NOT start without the configured ports free!
+You need to uninstall/disable/reconfigure the blocking application
+or reconfigure Apache and the Control Panel to listen on a different port
+</code></pre>
+<p>Apache needs port 80 (and 443 for HTTPS), and another program got there first. There are two ways out: free the
+port, or move Apache to another one. Both are below.</p>
+<h2 id="step-1-find-out-who-has-the-port">Step 1: find out who has the port</h2>
+<p>Open a Command Prompt and run:</p>
+<pre><code>netstat -ano | findstr &quot;:80 &quot;
+</code></pre>
+<p>The last column of the <code>LISTENING</code> line is the process ID (PID). Then look the PID up:</p>
+<pre><code>tasklist /fi &quot;pid eq 1234&quot;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>What you find</th>
+<th>It is</th>
+<th>Go to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PID <code>4</code>, named <code>System</code></td>
+<td>Windows itself, serving the port for IIS or another Windows feature</td>
+<td><a href="#pid-4-windows-holds-the-port">PID 4: Windows holds the port</a></td>
+</tr>
+<tr>
+<td><code>httpd.exe</code></td>
+<td>An Apache that is already running, often from an earlier session</td>
+<td>End it in Task Manager, then start Apache again</td>
+</tr>
+<tr>
+<td><code>Skype.exe</code>, <code>nginx.exe</code>, <code>vmware-hostd.exe</code>, a game launcher, …</td>
+<td>That program</td>
+<td>Close it or change its port in its own settings, or <a href="#move-apache-to-another-port">move Apache</a></td>
+</tr>
+</tbody>
+</table>
+<p>Run the same two commands with <code>":443 "</code> if the message names port 443.</p>
+<h2 id="pid-4-windows-holds-the-port">PID 4: Windows holds the port</h2>
+<p>PID 4 is the Windows kernel's HTTP service. It listens on port 80 on behalf of something else, which is why
+XAMPP cannot name the program. Almost always that something is <strong>IIS</strong>, Windows' own web server.</p>
+<p><strong>Stop IIS for now.</strong> In a Command Prompt opened with <em>Run as administrator</em>:</p>
+<pre><code>iisreset /stop
+</code></pre>
+<p>Start Apache again. If it starts, IIS was the one.</p>
+<p><strong>Keep IIS from coming back.</strong> IIS starts with Windows, so the error returns after a restart unless you do one
+of these:</p>
+<ol>
+<li>Press <kbd>Win</kbd>+<kbd>R</kbd>, run <code>services.msc</code>, find <strong>World Wide Web Publishing Service</strong>, stop it,
+   and set its startup type to <strong>Manual</strong> (or <strong>Disabled</strong>).</li>
+<li>Or remove IIS completely: <strong>Control Panel › Programs › Turn Windows features on or off</strong>, and untick
+   <strong>Internet Information Services</strong>.</li>
+</ol>
+<p><strong>If it is not IIS.</strong> Other Windows components use the same HTTP service: SQL Server Reporting Services, Web
+Deployment Agent Service, and BranchCache are the usual ones. This command lists what is registered on port 80:</p>
+<pre><code>netsh http show servicestate
+</code></pre>
+<p>Look for <code>:80/</code> in the output; the URL group names the component. Stop that service in <code>services.msc</code>.</p>
+<h2 id="move-apache-to-another-port">Move Apache to another port</h2>
+<p>If the other program has to keep port 80, give Apache a different one. Port 8080 is the usual choice.</p>
+<ol>
+<li>Open <code>C:\xampp\apache\conf\httpd.conf</code> (in the XAMPP Control Panel: <strong>Config</strong> on the Apache row).</li>
+<li>Change <code>Listen 80</code> to <code>Listen 8080</code>.</li>
+<li>Change <code>ServerName localhost:80</code> to <code>ServerName localhost:8080</code>.</li>
+<li>Save, and start Apache.</li>
+</ol>
+<p>Your sites are now at <code>http://localhost:8080/</code>. The port is part of the address from now on, including for
+phpMyAdmin: <code>http://localhost:8080/phpmyadmin/</code>.</p>
+<p>For port 443, the file is <code>C:\xampp\apache\conf\extra\httpd-ssl.conf</code>: change <code>Listen 443</code> to <code>Listen 4433</code>,
+<code>&lt;VirtualHost _default_:443&gt;</code> to <code>&lt;VirtualHost _default_:4433&gt;</code>, and <code>ServerName www.example.com:443</code> to use
+<code>:4433</code> as well.</p>
+<div class="note note"><b>note</b><p>The stock XAMPP Control Panel keeps checking ports 80 and 443 and keeps warning about them after you move
+Apache. Tell it the new ports under <strong>Config › Service and Port Settings</strong>.</p></div>
+<h2 id="with-modern-xampp-control-panel">With Modern XAMPP Control Panel</h2>
+<p>I wrote <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">Modern XAMPP Control Panel</a>,
+a free and open-source replacement for XAMPP's control panel. This is what it does about this error:</p>
+<ul>
+<li><strong>It names the program.</strong> Before Apache starts, the panel finds what holds each port, PID 4 included, and
+  says whether Windows is holding it for IIS.</li>
+<li><strong>It offers the fix.</strong> A dialog offers to end the program, to stop IIS, or to move Apache to 8080 and 4433.
+  If you choose to move, the two config files and the panel's own port settings are changed together.</li>
+<li><strong>Netstat shows the rest.</strong> Every listening port with the program behind it, and a mark on anything that
+  blocks a stopped module.</li>
+</ul><div class="pitch"><div><b>Skip the manual steps next time.</b><span>Modern XAMPP Control Panel is free and open source.</span></div><a class="btn go" href="../../download/">Download for Windows</a></div></article>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../../"><img src="../../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../../features/">Features</a>
+      <a href="../../download/">Download</a>
+      <a href="../../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../../guides/">Guides</a>
+      <a href="../../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../../assets/js/site.js" defer></script>
+</body>
+</html>

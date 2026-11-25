@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changelog · Modern XAMPP Control Panel</title>
+<meta name="description" content="What changed in each version of Modern XAMPP Control Panel.">
+<link rel="canonical" href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/changelog/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Changelog · Modern XAMPP Control Panel">
+<meta property="og:description" content="What changed in each version of Modern XAMPP Control Panel.">
+<meta property="og:url" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/changelog/">
+<meta property="og:image" content="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/assets/img/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FB7A24">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="../features/">Features</a>
+      <a href="../guides/">Guides</a>
+      <a href="../docs/">Docs</a>
+      <a href="../changelog/" aria-current="page">Changelog</a>
+    </nav>
+    <a class="btn go small" href="../download/">Download</a>
+  </div>
+</header>
+<main id="main">
+
+<div class="top"><div class="wrap">
+  <p class="logline"><span class="s">[update]</span><span class="ok">8 releases</span></p>
+  <h1>Changelog</h1>
+  <p class="lede">What changed in each version. The panel shows the same notes before it updates itself.</p>
+</div></div>
+<div class="wrap" style="padding:24px 0 104px"><div class="release" id="v0.5.0"><div class="v"><b>0.5.0</b><span>2026-11-25</span></div><div class="prose"><h3 id="added">Added</h3>
+<ul>
+<li><strong>Updates for the installed PHP, MariaDB, Mailpit and Xdebug are announced.</strong> At startup, and once a day
+  while the panel stays open, it asks the release feeds for newer builds of what is installed ("An update for
+  PHP 8.5 is available: 8.5.13"). What it finds shows as a count on the Versions button, as a clickable
+  "↑ 8.5.13" next to the version on the module's row, in the tray icon's tooltip and menu, and as one line in
+  the log; installing it clears the notice. A newer Xdebug is marked on the PHP button, where it is installed.
+  A whole new PHP branch (8.6, 9.0) is news, not an update: the log says it once per branch, after that it
+  only stays in the Versions tooltip. All of it follows the existing "Check for new versions" setting and
+  stays silent when offline.</li>
+<li><strong>"Update to 8.5.13" on the active row.</strong> In Versions, the active PHP and MariaDB rows get an update button
+  when their own branch or series has a newer build; one click downloads, verifies and installs it, and the
+  build it replaces stays installed to switch back to.</li>
+<li><strong>"Remove the previous one?" after an update.</strong> When an update stays within the branch (8.5.12 to 8.5.13),
+  Versions asks whether to remove the build it replaced, since the new one likely fixes bugs or security
+  issues in it. For MariaDB the question says that the old build's copy of the databases goes with it.</li>
+<li><strong>Old builds are easier to clean up.</strong> In Versions, a parked build shows the disk space its folder takes,
+  and one that has a newer build of its own branch installed is marked "replaced by 8.5.13".</li>
+<li><strong>Start all and Stop all</strong>, in the header of the module list and in the tray menu. Start all starts the
+  modules ticked as Autostart in Config, or Apache and MySQL when none is ticked.</li>
+<li><strong>Pretend PC and screenshot tool</strong>, built like SpaceSharp's. <code>XamppControl.exe --mock</code> runs the panel against
+  a made-up XAMPP in the temp folder; nothing on the PC is started, stopped, downloaded or saved.
+  <code>--scene &lt;name&gt; --shot &lt;file.png&gt;</code> poses one of 42 scenes on it (the main window in every state, several
+  PHP and MariaDB versions installed side by side, a download in progress, the options windows, the dialogs),
+  captures the window off the screen with its title bar, and exits; <code>tools\screenshots.ps1</code> takes them, and
+  accepts wildcards such as <code>versions*</code>. See <code>docs/screenshots.md</code>.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li><strong>Netstat, redesigned.</strong> One entry per program instead of one row per socket, with its ports as labels and
+  a detail pane beside the list: path, ports, addresses, who can reach it, and the actions (open in the
+  browser, show in folder, copy, end process). XAMPP's programs come first, Windows' own stay folded away
+  until asked for, and the list only redraws when something changed. MariaDB's entry has "Open phpMyAdmin".</li>
+<li><strong>Logs, redesigned.</strong> All log files sit in a side list, each with a badge counting its errors (or warnings)
+  from the last 24 hours, so you see which log to open. Lines are split into time, a colored level and the
+  message instead of one raw string; errors are tinted, routine notices grayed. A "Problems" switch hides
+  everything but warnings and errors. A timeline above the lines shows when they were written, red where
+  there were errors, and a click on a bar jumps there. "Follow" keeps the newest line in view and can be
+  switched off to read in peace.</li>
+<li><strong>Databases, redesigned.</strong> The same shape as Netstat: a searchable list with a size bar per database, and
+  the chosen one beside it with its table count, size, collation and last export. Export, import, "Open in
+  phpMyAdmin" and Drop live in that pane instead of three buttons on every row. Drop still takes two clicks,
+  and now says what it deletes right above the button. XAMPP's own <code>phpmyadmin</code> database and empty ones are
+  labeled and grayed, so yours stand out.</li>
+<li><strong>phpMyAdmin with Apache stopped.</strong> "Open in phpMyAdmin" in Databases and Netstat offers to start Apache
+  first when it isn't running, then opens the page.</li>
+<li><strong>A new icon.</strong> Three floating slabs with a green status light: the stack (Apache, MariaDB, PHP), running.
+  It no longer looks like XAMPP's own orange square, so the two can sit side by side on the taskbar. Sizes of
+  32 px and below use a simplified drawing.</li>
+<li><strong>A website.</strong> <code>site/</code> holds a multi-page site for GitHub Pages: the tour, every feature, the download with
+  the newest release, the changelog, the reference, and step-by-step guides for the XAMPP errors people search
+  for (MySQL shutdown unexpectedly, port 80 in use, changing the PHP version, HTTPS on localhost). It is built
+  from the README, <code>docs/guides</code> and this changelog by <code>site/build.py</code>, so nothing is written twice, and
+  published by the Website workflow on every push to main.</li>
+<li><strong>New README and brand images.</strong> The README walks through the features with real screenshots;
+  <code>tools\screenshots.ps1</code> takes that showcase set by default, in the light theme (<code>-Set all</code> for every
+  scene). The header and the social preview are built around the main window's screenshot by
+  <code>tools\brand.ps1</code>, from the pages in <code>docs\brand</code>.</li>
+<li><strong>New icons, drawn for the panel.</strong> A two-tone set of its own: line work in the text color over a soft wash
+  of the panel's orange, with its own pictures (a hex nut for Config, linked nodes for Netstat, a lifebuoy
+  for Help, a power button for Quit). Config has a "Two-tone icons" box; unticked, they are plain line icons.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li><strong>Main buttons are the panel's orange everywhere.</strong> The main button of a dialog or pane could show in the
+  Windows accent color (blue) until the mouse was over it.</li>
+</ul></div></div><div class="release" id="v0.4.0"><div class="v"><b>0.4.0</b><span>2026-11-16</span></div><div class="prose"><h3 id="added">Added</h3>
+<ul>
+<li><strong>Start menu shortcut.</strong> Config has a "Show in the Start menu" box. It adds a shortcut for the current user, so
+  typing "XAMPP" in Windows search finds the panel, and removes it again when unticked. If the exe is moved, the
+  shortcut is pointed at the new place the next time the panel starts.</li>
+<li><strong>Languages.</strong> The panel can be translated. Every text lives in one JSON file per language in <code>Lang/</code>; English
+  and Norwegian Bokmål ship with it, and Config has a Language box (it follows Windows by default and switches
+  open windows at once). A translation can be tried by dropping a <code>&lt;code&gt;.json</code> into a <code>lang</code> folder next to the
+  exe, without building. <code>docs/translating.md</code> explains how to add a language. The log stays in English in every
+  language, so bug reports read the same.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li>Texts with counts ("1 table", "3 tables") and sentences with values are single translatable entries instead of
+  glued fragments; tests fail when a text used in the app is missing from <code>Lang/en.json</code> or a translation's
+  placeholders differ from English.</li>
+</ul></div></div><div class="release" id="v0.3.2"><div class="v"><b>0.3.2</b><span>2026-11-04</span></div><div class="prose"><h3 id="fixed">Fixed</h3>
+<ul>
+<li>Xdebug install failed with "PECL lists no stable Xdebug release": the version list now comes from the
+  downloads.php.net folder the zips live in, and the newest version that has a build for your PHP branch is
+  picked (a brand-new PHP branch gets the previous Xdebug instead of a download error).</li>
+</ul></div></div><div class="release" id="v0.3.1"><div class="v"><b>0.3.1</b><span>2026-11-03</span></div><div class="prose"><h3 id="added">Added</h3>
+<ul>
+<li><strong>Update from the panel.</strong> The What's new window has an "Install and restart" button: it downloads the
+  release's signed zip, checks its SHA-256 against the published checksum, swaps <code>XamppControl.exe</code> after the
+  panel closes and starts the new version. Settings and XAMPP are untouched. Running modules keep running.</li>
+<li><strong>About window.</strong> Version, build date, runtime, exe location, a "Check for updates" button, links to GitHub,
+  releases, the issue form and the license, and "Copy build details" for bug reports. Opens from the ⓘ button in
+  the header.</li>
+<li><strong>Clear message without XAMPP.</strong> When no XAMPP is found, a window lists the folders that were checked and offers
+  to download XAMPP, choose its folder, or continue; the panel also shows a banner with the same choices until a
+  folder is set.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li><strong>New icon.</strong> The panel has its own server-rack icon (exe, window, tray and header) instead of borrowing
+  XAMPP's; <code>tools\Get-XamppIcon.ps1</code> is gone.</li>
+<li>Built on Avalonia 12 (was 11.3). No visible change; text boxes use the new <code>PlaceholderText</code> property and the
+  clipboard calls the new extension methods.</li>
+</ul></div></div><div class="release" id="v0.3.0"><div class="v"><b>0.3.0</b><span>2026-11-02</span></div><div class="prose"><h3 id="added">Added</h3>
+<ul>
+<li><strong>Logs window.</strong> Follows Apache, PHP and MariaDB log files live, like <code>tail -f</code>, with a filter box and errors and
+  warnings colored. Rotated or cleared files are picked up again.</li>
+<li><strong>One admin prompt per session.</strong> The first action that needs admin rights (starting or stopping a Windows
+  service, the hosts file) starts a small elevated helper that serves the rest of the session, so you answer the
+  UAC prompt once instead of every time. If you decline, that action is canceled and later ones ask one by one,
+  as before.</li>
+<li><strong>Crash reports.</strong> An error the panel can't recover from now shows a window with the details, buttons to copy
+  them and open an issue, and the choice to keep running or quit. The report is also saved to <code>crash.log</code> in the
+  settings folder.</li>
+<li><strong>Quit asks about running modules.</strong> Closing the panel with Apache or MySQL running offers to stop them cleanly
+  first or leave them running.</li>
+<li><strong>Databases window.</strong> Lists the databases on the running server with table counts and sizes, exports any of
+  them to a timestamped <code>.sql</code> dump in <code>xampp\mysql_dumps</code> (routines, events and triggers included), imports a
+  <code>.sql</code> file into a new or existing database, and drops databases after a second click.</li>
+<li><strong>Xdebug button.</strong> The PHP window installs the Xdebug build that matches the active PHP from PECL, turns it on
+  (debug mode, start on request, port 9003) or off, and offers newer builds when PECL has one.</li>
+<li><strong>Mailpit mail catcher.</strong> The Versions window installs Mailpit into <code>xampp\mailpit</code> and sets <code>sendmail_path</code>
+  in <code>php.ini</code>, so <code>mail()</code> delivers to it. A Mailpit module row starts and stops it; Admin opens the inbox at
+  <code>http://localhost:8025</code>. Its ports are in Service and Port Settings.</li>
+<li><strong>Port conflict fixes.</strong> When a module can't start because another program holds its port, a dialog offers to
+  end that program, stop IIS when Windows holds the port, or move Apache to 8080/4433 (or MySQL to 3307) with the
+  config files and the panel's settings updated.</li>
+<li><strong>Editor and Terminal per site.</strong> The Sites window opens a site's folder in the configured editor or in a
+  command prompt with <code>php</code> and <code>mysql</code> on PATH.</li>
+<li><strong>Netstat redesigned.</strong> A filter box (port, address, PID, program or service), "XAMPP only" and IPv6 toggles,
+  Pause, sortable columns, and tiles for the socket count, XAMPP's sockets and blocked XAMPP ports. Each row names
+  what the port is for (Apache, MySQL, HTTP, Remote Desktop...), who can reach it, and warns when a foreign program
+  blocks a stopped module; Open, Folder, Copy and End buttons act on the row.</li>
+<li><strong>Tests.</strong> An xUnit project (<code>tests/XamppControl.Tests</code>) covers the release-feed parsing, <code>php.ini</code> editing,
+  the virtual host and hosts-file blocks, port rewriting and the version parsing; CI and the release script run it.</li>
+</ul></div></div><div class="release" id="v0.2.1"><div class="v"><b>0.2.1</b><span>2026-10-28</span></div><div class="prose"><h3 id="added">Added</h3>
+<ul>
+<li><strong>What's new window.</strong> The update link in the header opens the release notes of every version since the one
+  you have, newest first, with a button to the download page.</li>
+<li><code>SECURITY.md</code>: how to report a vulnerability privately, and what counts.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li>Releases are code-signed with a Certum certificate. They are built, signed and uploaded as drafts on the
+  maintainer's PC (<code>tools/release.ps1</code>); GitHub Actions now only checks that each push builds.</li>
+<li>The README covers signing, security reports and the update notice, and has a new social preview image.</li>
+</ul></div></div><div class="release" id="v0.2.0"><div class="v"><b>0.2.0</b><span>2026-10-28</span></div><div class="prose"><h3 id="added">Added</h3>
+<ul>
+<li><strong>Sites window.</strong> Gives each project its own address, such as <code>https://myproject.test</code>. Apply writes the
+  virtual hosts to a marked block in <code>httpd-vhosts.conf</code>, tests the config with <code>httpd -t</code> (and puts every file
+  back if Apache rejects it), adds the names to the Windows hosts file, and restarts Apache.</li>
+<li><strong>Trusted HTTPS for local sites.</strong> A certificate authority that exists only on your computer issues a
+  certificate for localhost and every site, and Windows is asked to trust it, so Chrome and Edge show the
+  padlock.</li>
+<li><strong>PHP window.</strong> Edits the common <code>php.ini</code> values (memory limit, upload and post size, time limits, input
+  vars, display errors, time zone) and turns extensions on and off. The previous file is kept as <code>php.ini.bak</code>.</li>
+<li><strong>FileZilla Server upgrade.</strong> The Versions window runs the official FileZilla Server 1.x installer you
+  downloaded, replacing XAMPP's FileZilla 0.9.41 from 2012. The FileZilla row then starts, stops and
+  administers the new server.</li>
+<li><strong>Light and dark theme.</strong> Follows Windows by default; choose Light or Dark in Config, or use the sun/moon
+  button in the header.</li>
+<li><strong>Tray icon.</strong> Shows which modules run and starts or stops them from its menu. Minimizing hides the panel to
+  the tray (can be turned off in Config).</li>
+<li><strong>Update notice.</strong> Checks GitHub for a newer release on startup and shows a link in the header.</li>
+<li><strong>Config check before Apache starts.</strong> <code>httpd -t</code> runs first, so a broken configuration is named in the log
+  instead of Apache stopping right after it starts.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li>The Config window is more compact, with the options in two columns, and scrolls on short screens.</li>
+<li>The side buttons are evenly spaced and the module rows share the card's height.</li>
+<li>The Versions window is now called "Versions".</li>
+<li>Code follows the project's coding standards (<code>CODING_STANDARDS.md</code>) throughout.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li>Autostart no longer tries to start modules that aren't installed.</li>
+<li>Versions written with commas (FileZilla Server's <code>1, 12, 6, 0</code>) are read correctly.</li>
+<li>Edits to <code>httpd.conf</code> and <code>php.ini</code> keep files saved in the Windows code page intact.</li>
+</ul></div></div><div class="release" id="v0.1.0"><div class="v"><b>0.1.0</b><span>2026-10-27</span></div><div class="prose"><p>First release: the XAMPP-style panel with clean MySQL/MariaDB shutdown, explained startup failures, a port
+conflict finder, Netstat, XAMPP-style configuration, and installing, switching and rolling back PHP and
+MariaDB versions.</p></div></div></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="../"><img src="../assets/img/app.svg" alt="" width="30" height="30">Modern XAMPP Control Panel</a>
+      <p>An unofficial, community project by CC Software. Not affiliated with or endorsed by Apache Friends. XAMPP is a trademark of Apache Friends.</p>
+    </div>
+    <div>
+      <h4>The panel</h4>
+      <a href="../features/">Features</a>
+      <a href="../download/">Download</a>
+      <a href="../changelog/">Changelog</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="../guides/">Guides</a>
+      <a href="../docs/">Reference</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/issues">Report a problem</a>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel">GitHub</a>
+      <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/blob/main/LICENSE">MIT license</a>
+      <a href="../docs/translating/">Translate it</a>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/site.js" defer></script>
+</body>
+</html>
