@@ -8,6 +8,12 @@ public static class WindowsServices
     /// <returns>True when sc.exe finds the service; false off Windows, when it is missing or sc.exe fails.</returns>
     public static async Task<bool> IsInstalledAsync(string name)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return MockMachine.IsServiceInstalled(name);
+        }
+
         if (!OperatingSystem.IsWindows())
         {
             return false;
@@ -27,6 +33,13 @@ public static class WindowsServices
     /// <returns>True when sc.exe reports the RUNNING state; false otherwise or off Windows.</returns>
     public static async Task<bool> IsRunningAsync(string name)
     {
+        if (MockMachine.IsActive)
+        {
+            // On the mock machine IIS is what holds the web ports during the port conflict shots.
+            await Task.Yield();
+            return MockMachine.HasPortConflict && name == PortConflicts.IisService;
+        }
+
         if (!OperatingSystem.IsWindows())
         {
             return false;

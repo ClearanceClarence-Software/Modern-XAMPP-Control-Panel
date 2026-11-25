@@ -153,7 +153,7 @@ Write-Host "SHA-256 $hash"
 $notes = $changelog
 if ($signedBy) {
     # The signer's name is deliberately left out of the public release notes.
-    $notes += "`n`n> XamppControl.exe is code-signed with a Certum Open Source Developer certificate."
+    $notes += "`n`n> XamppControl.exe is code-signed."
 }
 else {
     $notes += "`n`n> This build is not code-signed, so Windows SmartScreen may warn the first time you run it."

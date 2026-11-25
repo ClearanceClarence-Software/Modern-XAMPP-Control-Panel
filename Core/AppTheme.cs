@@ -15,6 +15,21 @@ public static class AppTheme
     /// <summary>Always dark.</summary>
     public const string Dark = "Dark";
 
+    /// <summary>
+    /// The application resource the icons read: true draws them two-tone, false as plain line icons.
+    /// </summary>
+    public const string DuotoneIconsKey = "IconsDuotone";
+
+    /// <summary>Switches every icon between two-tone and plain; open windows repaint at once.</summary>
+    /// <param name="isDuotone">True adds the soft accent wash under the lines; false draws the lines only.</param>
+    public static void ApplyIcons(bool isDuotone)
+    {
+        if (Application.Current is { } application)
+        {
+            application.Resources[DuotoneIconsKey] = isDuotone;
+        }
+    }
+
     /// <summary>A stored theme name made safe to use.</summary>
     /// <param name="theme">The value from settings.json; null, empty or unknown values mean System.</param>
     /// <returns><see cref="Light"/>, <see cref="Dark"/> or <see cref="System"/>.</returns>

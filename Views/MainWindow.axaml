@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:XamppControl.ViewModels"
+        xmlns:v="using:XamppControl.Views"
         x:Class="XamppControl.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="{DynamicResource Main.Title}"
@@ -26,9 +27,9 @@
                 <Image x:Name="HeaderLogo" Width="44" Height="44" IsVisible="False"
                        RenderOptions.BitmapInterpolationMode="HighQuality" />
                 <Border x:Name="HeaderFallback" Width="42" Height="42" CornerRadius="10" Background="{DynamicResource AccentBrush}">
-                    <Path Data="{StaticResource IconStack}" Width="22" Height="22" Stretch="Uniform"
-                          Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round" StrokeJoin="Round"
-                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <v:Glyph Data="{StaticResource IconStack}" Tint="{StaticResource IconStackTint}"
+                             Width="24" Height="24" Foreground="White" Accent="White"
+                             HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -55,10 +56,10 @@
             <!-- About and the light/dark switch: the moon shows in the light theme, the sun in the dark one -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                 <Button Classes="ghost" Width="36" Height="36" Click="About_Click" ToolTip.Tip="{DynamicResource Main.AboutThisPanelTip}">
-                    <Path Classes="icon" Width="18" Height="18" Data="{StaticResource IconInfo}" />
+                    <v:Glyph Width="18" Height="18" Data="{StaticResource IconInfo}" Tint="{StaticResource IconInfoTint}" />
                 </Button>
                 <Button x:Name="ThemeToggle" Classes="ghost" Width="36" Height="36" Click="ThemeToggle_Click">
-                    <Path x:Name="ThemeIcon" Classes="icon" Width="18" Height="18" Data="{StaticResource IconMoon}" />
+                    <v:Glyph x:Name="ThemeIcon" Width="18" Height="18" Data="{StaticResource IconMoon}" Tint="{StaticResource IconMoonTint}" />
                 </Button>
             </StackPanel>
         </Grid>
@@ -72,12 +73,20 @@
                     <!-- Column headers -->
                     <Border DockPanel.Dock="Top" Height="34" Padding="14,0" Background="{DynamicResource HeaderBrush}"
                             CornerRadius="8,8,0,0" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
-                        <Grid ColumnDefinitions="58,150,64,92,*">
+                        <Grid ColumnDefinitions="58,176,64,92,*">
                             <TextBlock Grid.Column="0" Classes="colhead" Text="{DynamicResource Main.SERVICE}" />
                             <TextBlock Grid.Column="1" Classes="colhead" Text="{DynamicResource Main.MODULE}" />
                             <TextBlock Grid.Column="2" Classes="colhead" Text="{DynamicResource Main.PIDS}" />
                             <TextBlock Grid.Column="3" Classes="colhead" Text="{DynamicResource Main.PORTS}" />
                             <TextBlock Grid.Column="4" Classes="colhead" Text="{DynamicResource Common.ACTIONS}" />
+                            <!-- Start all: the Autostart modules, or Apache and MySQL. Stop all: everything that runs. -->
+                            <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="14" HorizontalAlignment="Right"
+                                        VerticalAlignment="Center" IsVisible="{Binding HasXampp}">
+                                <Button Classes="textlink" Content="{DynamicResource Main.StartAll}" Click="StartAll_Click"
+                                        ToolTip.Tip="{DynamicResource Main.StartAllTip}" />
+                                <Button Classes="textlink" Content="{DynamicResource Main.StopAll}" Click="StopAll_Click"
+                                        ToolTip.Tip="{DynamicResource Main.StopAllTip}" />
+                            </StackPanel>
                         </Grid>
                     </Border>
 
@@ -106,7 +115,7 @@
                             <DataTemplate x:DataType="vm:ModuleViewModel">
                                 <Border MinHeight="52" Padding="14,0" Opacity="{Binding RowOpacity}"
                                         BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
-                                    <Grid ColumnDefinitions="58,150,64,92,*">
+                                    <Grid ColumnDefinitions="58,176,64,92,*">
 
                                         <CheckBox Grid.Column="0" VerticalAlignment="Center"
                                                   IsChecked="{Binding IsServiceInstalled, Mode=OneWay}"
@@ -120,8 +129,14 @@
                                                      Classes.busy="{Binding IsBusy}" />
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding Subtitle}" FontSize="11"
-                                                           Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Subtitle}" FontSize="11"
+                                                               Foreground="{DynamicResource MutedBrush}" />
+                                                    <!-- A newer build of the row's component, found by the startup check -->
+                                                    <Button Classes="textlink" Content="{Binding UpdateHint}"
+                                                            IsVisible="{Binding HasUpdateHint}" Click="UpdateHint_Click"
+                                                            ToolTip.Tip="{Binding UpdateTip}" />
+                                                </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
 
@@ -162,73 +177,85 @@
             <StackPanel Grid.Column="2" Spacing="6">
                 <Button Classes="side" Click="Settings_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconGear}" />
+                        <v:Glyph Data="{StaticResource IconGear}" Tint="{StaticResource IconGearTint}" />
                         <TextBlock Text="{DynamicResource Main.Config}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Netstat_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconGlobe}" />
+                        <v:Glyph Data="{StaticResource IconGlobe}" Tint="{StaticResource IconGlobeTint}" />
                         <TextBlock Text="{DynamicResource Main.Netstat}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
-                <Button Classes="side" Click="Updates_Click">
+                <Button Classes="side" Click="Updates_Click" ToolTip.Tip="{Binding ComponentUpdateTip}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconUpdate}" />
+                        <v:Glyph Data="{StaticResource IconUpdate}" Tint="{StaticResource IconUpdateTint}" />
                         <TextBlock Text="{DynamicResource Common.Versions}" VerticalAlignment="Center" />
+                        <!-- How many of PHP, MariaDB and Mailpit have a newer build -->
+                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="9" MinWidth="18" Height="18"
+                                Padding="5,0" VerticalAlignment="Center" IsVisible="{Binding HasVersionUpdates}">
+                            <TextBlock Text="{Binding ComponentUpdateCount}" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Databases_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconDatabase}" />
+                        <v:Glyph Data="{StaticResource IconDatabase}" Tint="{StaticResource IconDatabaseTint}" />
                         <TextBlock Text="{DynamicResource Common.Databases}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Logs_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconLogs}" />
+                        <v:Glyph Data="{StaticResource IconLogs}" Tint="{StaticResource IconLogsTint}" />
                         <TextBlock Text="{DynamicResource Main.Logs}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Sites_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconSites}" />
+                        <v:Glyph Data="{StaticResource IconSites}" Tint="{StaticResource IconSitesTint}" />
                         <TextBlock Text="{DynamicResource Main.Sites}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
-                <Button Classes="side" Click="PhpSettings_Click">
+                <Button Classes="side" Click="PhpSettings_Click" ToolTip.Tip="{Binding XdebugUpdateTip}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconCode}" />
+                        <v:Glyph Data="{StaticResource IconCode}" />
                         <TextBlock Text="PHP" VerticalAlignment="Center" />
+                        <!-- A newer Xdebug for the active PHP; it is installed in the PHP window -->
+                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="9" MinWidth="18" Height="18"
+                                Padding="5,0" VerticalAlignment="Center" IsVisible="{Binding HasXdebugUpdate}">
+                            <TextBlock Text="1" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="#FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Command="{Binding ShellCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconShell}" />
+                        <v:Glyph Data="{StaticResource IconShell}" Tint="{StaticResource IconShellTint}" />
                         <TextBlock Text="{DynamicResource Main.Shell}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Command="{Binding ExplorerCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconFolder}" />
+                        <v:Glyph Data="{StaticResource IconFolder}" Tint="{StaticResource IconFolderTint}" />
                         <TextBlock Text="{DynamicResource Main.Explorer}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Command="{Binding ServicesCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconServices}" />
+                        <v:Glyph Data="{StaticResource IconServices}" Tint="{StaticResource IconServicesTint}" />
                         <TextBlock Text="{DynamicResource Main.Services}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Command="{Binding HelpCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconHelp}" />
+                        <v:Glyph Data="{StaticResource IconHelp}" Tint="{StaticResource IconHelpTint}" />
                         <TextBlock Text="{DynamicResource Main.Help}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
                 <Button Classes="side" Click="Quit_Click">
                     <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Path Classes="icon" Data="{StaticResource IconQuit}" />
+                        <v:Glyph Data="{StaticResource IconQuit}" Tint="{StaticResource IconQuitTint}" />
                         <TextBlock Text="{DynamicResource Common.Quit}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>

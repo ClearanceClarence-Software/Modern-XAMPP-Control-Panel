@@ -86,6 +86,13 @@ public static class HostsFile
     /// <exception cref="IOException">The hosts file cannot be read or the new file cannot be prepared.</exception>
     public static async Task<int> UpdateAsync(IReadOnlyList<string> hostNames)
     {
+        if (MockMachine.IsActive)
+        {
+            // The real hosts file is neither read nor written from the mock machine.
+            await Task.Yield();
+            return 0;
+        }
+
         string current = File.Exists(HostsPath) ? await File.ReadAllTextAsync(HostsPath) : "";
         if (HostsInBlock(current).SequenceEqual(hostNames, StringComparer.OrdinalIgnoreCase))
         {

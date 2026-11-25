@@ -35,7 +35,22 @@ public sealed class TrayController : IDisposable
         TrayIcon.SetIcons(application, new TrayIcons { _trayIcon });
 
         viewModel.Modules.CollectionChanged += OnModulesChanged;
+        viewModel.PropertyChanged += OnViewModelChanged;
         RebuildMenu();
+    }
+
+    /// <summary>
+    /// Rebuilds the menu when the found updates change, so "Updates available" comes and goes; with the panel
+    /// hidden in the tray, the menu and the tooltip are where an update can be noticed.
+    /// </summary>
+    /// <param name="sender">The main view model.</param>
+    /// <param name="e">Only a change of the updates matters.</param>
+    private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.ComponentUpdates))
+        {
+            RebuildMenu();
+        }
     }
 
     /// <summary>Shows the main window, restored and in front, after it was hidden to the tray or minimized.</summary>
@@ -53,6 +68,7 @@ public sealed class TrayController : IDisposable
     public void Dispose()
     {
         _viewModel.Modules.CollectionChanged -= OnModulesChanged;
+        _viewModel.PropertyChanged -= OnViewModelChanged;
         StopWatchingModules();
         _trayIcon.IsVisible = false;
         _trayIcon.Dispose();
@@ -60,7 +76,10 @@ public sealed class TrayController : IDisposable
 
     private void OnModulesChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildMenu();
 
-    /// <summary>Builds the menu: Show, one start/stop entry per installed module, then Quit.</summary>
+    /// <summary>
+    /// Builds the menu: Show, "Updates available" while there are any, one start/stop entry per installed module,
+    /// Start all and Stop all, then Quit.
+    /// </summary>
     private void RebuildMenu()
     {
         StopWatchingModules();
@@ -69,6 +88,21 @@ public sealed class TrayController : IDisposable
         var showItem = new NativeMenuItem(Loc.T("Tray.ShowControlPanel"));
         showItem.Click += (_, _) => ShowWindow();
         menu.Add(showItem);
+        if (_viewModel.HasComponentUpdates)
+        {
+            var updatesItem = new NativeMenuItem(Loc.T("Tray.UpdatesAvailable", _viewModel.ComponentUpdates.Count));
+            updatesItem.Click += async (_, _) =>
+            {
+                ShowWindow();
+                if (_window is MainWindow main)
+                {
+                    // Xdebug alone is installed in the PHP window; everything else in Versions.
+                    bool isOnlyXdebug = _viewModel.ComponentUpdates.All(update => update.IsInPhpWindow);
+                    await (isOnlyXdebug ? main.OpenPhpSettingsAsync() : main.OpenVersionsAsync());
+                }
+            };
+            menu.Add(updatesItem);
+        }
         menu.Add(new NativeMenuItemSeparator());
 
         foreach (ModuleViewModel module in _viewModel.Modules.Where(candidate => candidate.IsInstalled))
@@ -84,6 +118,14 @@ public sealed class TrayController : IDisposable
             module.PropertyChanged += OnModuleChanged;
             module.ActionCommand.CanExecuteChanged += OnActionAvailabilityChanged;
         }
+
+        menu.Add(new NativeMenuItemSeparator());
+        var startAllItem = new NativeMenuItem(Loc.T("Main.StartAll"));
+        startAllItem.Click += async (_, _) => await _viewModel.StartAllAsync();
+        menu.Add(startAllItem);
+        var stopAllItem = new NativeMenuItem(Loc.T("Main.StopAll"));
+        stopAllItem.Click += async (_, _) => await _viewModel.StopAllAsync();
+        menu.Add(stopAllItem);
 
         menu.Add(new NativeMenuItemSeparator());
         var quitItem = new NativeMenuItem(Loc.T("Common.Quit"));
@@ -143,7 +185,7 @@ public sealed class TrayController : IDisposable
         }
     }
 
-    /// <summary>The tooltip: the app's name and which modules run.</summary>
+    /// <summary>The tooltip: the app's name, which modules run, and the updates that were found.</summary>
     private void UpdateToolTip()
     {
         List<string> running = _viewModel.Modules
@@ -153,7 +195,15 @@ public sealed class TrayController : IDisposable
         string state = running.Count == 0
             ? Loc.T("Tray.NothingRunning")
             : Loc.T("Tray.ModulesRunning", string.Join(", ", running));
-        _trayIcon.ToolTipText = $"{BuildInfo.AppName}\n{state}";
+        string text = $"{BuildInfo.AppName}\n{state}";
+        if (_viewModel.HasComponentUpdates)
+        {
+            // "Updates available: PHP 8.5.13, MariaDB 12.3.5"
+            string updates = string.Join(", ", _viewModel.ComponentUpdates.Select(update =>
+                $"{update.Component} {update.Latest}"));
+            text += "\n" + Loc.T("Tray.UpdatesLine", updates);
+        }
+        _trayIcon.ToolTipText = text;
     }
 
     /// <summary>A module's menu entry, such as "Start Apache", "Stop MySQL" or "Apache: Starting…".</summary>

@@ -1,64 +1,198 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:XamppControl.ViewModels"
-        xmlns:db="using:XamppControl.Databases"
+        xmlns:v="using:XamppControl.Views"
         x:Class="XamppControl.Views.DatabasesWindow"
         x:DataType="vm:DatabasesViewModel"
         Title="{DynamicResource Common.Databases}"
-        Width="760" Height="560" MinWidth="560" MinHeight="360"
+        Width="900" Height="600" MinWidth="740" MinHeight="480"
         WindowStartupLocation="CenterOwner">
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="16">
+    <Window.Styles>
+        <!-- The database badge: a wash of the accent, gray for XAMPP's own and empty databases -->
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="{DynamicResource UpdatePillBrush}" />
+        </Style>
+        <Style Selector="Border.badge.quiet">
+            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+        </Style>
+        <Style Selector="v|Glyph.db">
+            <Setter Property="Foreground" Value="{DynamicResource LinkBrush}" />
+        </Style>
+        <Style Selector="v|Glyph.db.quiet">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+            <Setter Property="Accent" Value="{DynamicResource MutedBrush}" />
+        </Style>
 
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,8,Auto,8,Auto" Margin="0,0,0,12">
-            <TextBlock Grid.Column="0" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
-                       Text="{DynamicResource Databases.BackUpADatabaseTo}" />
-            <Button Grid.Column="1" Classes="tool" Content="{DynamicResource Databases.ImportSql}" Click="Import_Click" IsEnabled="{Binding IsIdle}" />
-            <Button Grid.Column="3" Classes="tool" Content="{DynamicResource Databases.OpenDumpFolder}" Command="{Binding OpenDumpFolderCommand}" />
-            <Button Grid.Column="5" Classes="tool" Content="{DynamicResource Common.Refresh}" Command="{Binding RefreshCommand}" />
+        <!-- The size bar: how large a database is next to the largest one -->
+        <Style Selector="Border.bar">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Opacity" Value="0.55" />
+        </Style>
+        <Style Selector="Border.bar.quiet">
+            <Setter Property="Background" Value="{DynamicResource FaintBrush}" />
+        </Style>
+        <Style Selector="TextBlock.size.quiet">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+        </Style>
+
+        <!-- The two figures in the detail pane -->
+        <Style Selector="Border.tile">
+            <Setter Property="Background" Value="{DynamicResource HeaderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource RowLineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,9" />
+        </Style>
+
+        <Style Selector="Button.top">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="13,0" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+        <!-- Search, and the actions that aren't about one database -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,10,Auto,8,Auto,8,Auto" Margin="0,0,0,12">
+            <TextBox Grid.Column="0" Text="{Binding Filter}" Height="34" VerticalContentAlignment="Center"
+                     PlaceholderText="{DynamicResource Databases.SearchPlaceholder}" />
+            <Button Grid.Column="2" Classes="tool top" Content="{DynamicResource Databases.ImportSql}" Click="Import_Click"
+                    IsEnabled="{Binding IsIdle}" ToolTip.Tip="{DynamicResource Databases.ImportsRunAsRootA}" />
+            <Button Grid.Column="4" Classes="tool top" Content="{DynamicResource Databases.OpenDumpFolder}"
+                    Command="{Binding OpenDumpFolderCommand}" />
+            <Button Grid.Column="6" Classes="tool top" Content="{DynamicResource Common.Refresh}" Command="{Binding RefreshCommand}" />
         </Grid>
 
-        <Border Grid.Row="1" Classes="card">
-            <DockPanel>
-                <Border DockPanel.Dock="Top" Height="34" Padding="12,0" Background="{DynamicResource HeaderBrush}" CornerRadius="8,8,0,0"
-                        BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
-                    <Grid ColumnDefinitions="*,110,100,Auto">
-                        <TextBlock Grid.Column="0" Classes="colhead" Text="{DynamicResource Databases.DATABASE}" />
-                        <TextBlock Grid.Column="1" Classes="colhead" Text="{DynamicResource Databases.TABLES}" />
-                        <TextBlock Grid.Column="2" Classes="colhead" Text="{DynamicResource Databases.SIZE}" />
-                        <TextBlock Grid.Column="3" Classes="colhead" Text="{DynamicResource Common.ACTIONS}" MinWidth="200" />
-                    </Grid>
-                </Border>
-                <ScrollViewer>
-                    <ItemsControl ItemsSource="{Binding Databases}" IsEnabled="{Binding IsIdle}" Margin="0,0,10,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="db:DatabaseInfo">
-                                <Border Padding="12,8" BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1">
-                                    <Grid ColumnDefinitions="*,110,100,Auto">
-                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold"
-                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1" Classes="mono" Text="{Binding TableText}" VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Size}" VerticalAlignment="Center" />
-                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" MinWidth="200">
-                                            <Button Classes="tool" Content="{DynamicResource Databases.Export}" Click="Export_Click" />
-                                            <Button Classes="tool" Content="{DynamicResource Databases.ImportInto}" Click="ImportInto_Click" />
-                                            <Button Classes="tool" Content="{DynamicResource Databases.Drop}" Click="Drop_Click" />
+        <Grid Grid.Row="1" ColumnDefinitions="*,12,300">
+
+            <!-- The databases -->
+            <Border Grid.Column="0" Classes="card" ClipToBounds="True">
+                <Panel>
+                    <ListBox Classes="rows" ItemsSource="{Binding Databases}" SelectedItem="{Binding Selected}"
+                             SelectionMode="Single" IsEnabled="{Binding IsIdle}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DatabaseRow">
+                                <Border BorderBrush="{DynamicResource RowLineBrush}" BorderThickness="0,0,0,1" Background="Transparent">
+                                    <Grid ColumnDefinitions="3,11,Auto,12,*,12,120,10,76,14" MinHeight="58">
+                                        <!-- The accent bar of the chosen entry -->
+                                        <Border Grid.Column="0" Background="{DynamicResource AccentBrush}"
+                                                IsVisible="{Binding $parent[ListBoxItem].IsSelected}" />
+
+                                        <Border Grid.Column="2" Classes="badge" Classes.quiet="{Binding IsQuiet}" Width="36" Height="36"
+                                                CornerRadius="9" VerticalAlignment="Center">
+                                            <v:Glyph Classes="db" Classes.quiet="{Binding IsQuiet}" Width="18" Height="18"
+                                                     Data="{StaticResource IconDatabase}" Tint="{StaticResource IconDatabaseTint}" />
+                                        </Border>
+
+                                        <StackPanel Grid.Column="4" VerticalAlignment="Center" Spacing="1" ClipToBounds="True">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                <Border Classes="tag" IsVisible="{Binding IsXampp}">
+                                                    <TextBlock Text="XAMPP" />
+                                                </Border>
+                                                <Border Classes="tag" IsVisible="{Binding IsEmpty}">
+                                                    <TextBlock Text="{DynamicResource Databases.TagEmpty}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding TableText}" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
                                         </StackPanel>
+
+                                        <!-- 120 wide: DatabaseRow.BarWidth is a share of this track -->
+                                        <Border Grid.Column="6" Height="6" CornerRadius="3" VerticalAlignment="Center"
+                                                Background="{DynamicResource ControlHoverBrush}">
+                                            <Border Classes="bar" Classes.quiet="{Binding IsQuiet}" Width="{Binding BarWidth}"
+                                                    CornerRadius="3" HorizontalAlignment="Left" />
+                                        </Border>
+
+                                        <TextBlock Grid.Column="8" Classes="size" Classes.quiet="{Binding IsQuiet}" Text="{Binding Size}"
+                                                   FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Text="{Binding EmptyText}" IsVisible="{Binding HasEmptyText}" TextWrapping="Wrap" TextAlignment="Center"
+                               Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Margin="32" />
+                </Panel>
+            </Border>
+
+            <!-- The chosen database -->
+            <Border Grid.Column="2" Classes="card">
+                <ScrollViewer IsVisible="{Binding HasSelection}" IsEnabled="{Binding IsIdle}" VerticalScrollBarVisibility="Auto">
+                    <!-- A content control with a template, so the pane's bindings are checked against the database -->
+                    <ContentControl Content="{Binding Selected}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="vm:DatabaseRow">
+                                <!-- The middle row takes the spare height, which keeps Drop at the bottom, away from the rest -->
+                                <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+                                    <StackPanel Grid.Row="0">
+                                        <Border Classes="badge" Classes.quiet="{Binding IsQuiet}" Width="44" Height="44" CornerRadius="11"
+                                                HorizontalAlignment="Left">
+                                            <v:Glyph Classes="db" Classes.quiet="{Binding IsQuiet}" Width="22" Height="22"
+                                                     Data="{StaticResource IconDatabase}" Tint="{StaticResource IconDatabaseTint}" />
+                                        </Border>
+                                        <SelectableTextBlock Text="{Binding Name}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"
+                                                             Margin="0,10,0,0" />
+                                        <TextBlock Text="{Binding Collation}" IsVisible="{Binding HasCollation}" FontSize="12"
+                                                   Foreground="{DynamicResource MutedBrush}" Margin="0,2,0,0"
+                                                   ToolTip.Tip="{DynamicResource Databases.CollationTip}" />
+
+                                        <Grid ColumnDefinitions="*,8,*" Margin="0,16,0,0">
+                                            <Border Grid.Column="0" Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding TableCount}" FontSize="18" FontWeight="Bold" />
+                                                    <TextBlock Text="{Binding TableWord}" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Grid.Column="2" Classes="tile">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Size}" FontSize="18" FontWeight="Bold" />
+                                                    <TextBlock Text="{DynamicResource Databases.OnDisk}" FontSize="11"
+                                                               Foreground="{DynamicResource MutedBrush}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
+                                        <TextBlock Classes="field" Text="{DynamicResource Databases.LastExport}" Margin="0,16,0,0" />
+                                        <TextBlock Text="{Binding LastExportText}" FontSize="12" FontWeight="Medium" Margin="0,2,0,0" />
+                                        <SelectableTextBlock Text="{Binding LastExportFile}" IsVisible="{Binding HasLastExport}"
+                                                             FontFamily="Cascadia Mono, Consolas, Courier New" FontSize="11"
+                                                             Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" Margin="0,2,0,0" />
+
+                                        <StackPanel Spacing="8" Margin="0,20,0,0">
+                                            <Button Classes="accent wide" Content="{DynamicResource Databases.ExportToSql}" Click="Export_Click" />
+                                            <Button Classes="tool wide" Content="{Binding ImportLabel}" Click="ImportInto_Click"
+                                                    ToolTip.Tip="{DynamicResource Databases.ImportsRunAsRootA}" />
+                                            <Button Classes="tool wide" Content="{DynamicResource Databases.OpenInPhpMyAdmin}"
+                                                    Click="PhpMyAdmin_Click" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="2" Spacing="8" Margin="0,20,0,0">
+                                        <!-- What the second click deletes -->
+                                        <Border IsVisible="{Binding HasDropWarning}" Background="{DynamicResource StopBgBrush}"
+                                                BorderBrush="{DynamicResource StopBorderBrush}" BorderThickness="1" CornerRadius="8"
+                                                Padding="12,9">
+                                            <TextBlock Text="{Binding DropWarning}" FontSize="12" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource StopFgBrush}" />
+                                        </Border>
+                                        <Button Classes="tool wide end" Content="{Binding DropLabel}" Click="Drop_Click" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
                 </ScrollViewer>
-            </DockPanel>
-        </Border>
+            </Border>
+        </Grid>
 
-        <TextBlock Grid.Row="2" Text="{Binding Status}" TextWrapping="Wrap" Margin="0,12,0,0" />
-
-        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-            <TextBlock Grid.Column="0" Classes="muted" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
-                       Text="{DynamicResource Databases.ImportsRunAsRootA}" />
-            <Button Grid.Column="1" Classes="tool" Content="{DynamicResource Common.Close}" Width="90" Click="Close_Click" IsEnabled="{Binding IsIdle}" />
+        <!-- What the last action did, and what is listed -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,16,Auto" Margin="2,10,0,0">
+            <TextBlock Grid.Column="0" Text="{Binding Status}" FontSize="12" TextWrapping="Wrap" />
+            <TextBlock Grid.Column="2" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
         </Grid>
     </Grid>
 </Window>

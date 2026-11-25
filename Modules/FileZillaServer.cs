@@ -30,6 +30,11 @@ public static class FileZillaServer
     /// <returns>The folder holding filezilla-server.exe; null when 1.x isn't installed or off Windows.</returns>
     public static string? FindInstallFolder()
     {
+        if (MockMachine.IsActive)
+        {
+            return null;
+        }
+
         if (!OperatingSystem.IsWindows())
         {
             return null;

@@ -35,7 +35,7 @@ public partial class LogOptionsWindow : Window
         FontSizeBox.SelectedItem = _fontSizes.Contains(settings.LogFontSize) ? settings.LogFontSize : DefaultFontSize;
         MaxLinesBox.Text = settings.MaxLogLines.ToString();
         LogToFileBox.IsChecked = settings.LogToFile;
-        LogPathText.Text = AppSettings.LogFilePath;
+        LogPathText.Text = MockMachine.Pretty(AppSettings.LogFilePath);
     }
 
     private void OpenFolder_Click(object? sender, RoutedEventArgs e)

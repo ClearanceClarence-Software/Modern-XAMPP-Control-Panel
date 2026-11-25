@@ -108,6 +108,12 @@ public static class MailpitUpdater
     /// <exception cref="InvalidOperationException">The release has no Windows x64 zip.</exception>
     public static async Task<MailpitRelease> GetLatestAsync()
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return MockMachine.Mailpit;
+        }
+
         using var request = new HttpRequestMessage(HttpMethod.Get, LatestApi);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));

@@ -13,12 +13,17 @@ public sealed class UpdatesViewModel : ObservableObject
     private const string LogSource = "update";
 
     private readonly MainViewModel _main;
+    private readonly Dictionary<string, string> _sizes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _sizesAsked = new(StringComparer.OrdinalIgnoreCase);
 
     private string _phpInstalled = "";
     private string _mariaInstalled = "";
     private PhpBranch? _selectedPhp;
     private MariaDbMajor? _selectedMajor;
     private MariaDbRelease? _mariaLatest;
+    private MariaDbRelease? _mariaActiveLatest;
+    private bool _hasLastRunSucceeded;
+    private string? _mariaSeriesAsked;
     private string _phpAvailable = Loc.T("Updates.Checking");
     private string _mariaAvailable = Loc.T("Updates.Checking");
     private bool _isBusy;
@@ -275,6 +280,195 @@ public sealed class UpdatesViewModel : ObservableObject
         UpdateMariaAvailable();
         UpdateFileZillaAvailable();
         UpdateMailpitAvailable();
+        MarkActiveUpdates();
+
+        // After a switch to another series the row needs that series' newest release; a no-op when it is known.
+        _ = LoadMariaActiveLatestAsync();
+        _ = LoadSizesAsync();
+    }
+
+    /// <summary>The newest build of the active PHP's own branch, from the loaded feed; null when not listed.</summary>
+    private PhpBranch? ActivePhpBranch =>
+        PhpBranches.FirstOrDefault(branch => branch.Branch == VersionUtil.MajorMinor(_phpVersion ?? ""));
+
+    /// <summary>
+    /// Puts "Update to x.y.z" on the active PHP and MariaDB rows when their own branch or series has a newer
+    /// build, and takes it off when they are current.
+    /// </summary>
+    private void MarkActiveUpdates()
+    {
+        Mark(PhpVersions, _phpVersion, ActivePhpBranch?.Version);
+        Mark(MariaVersions, _mariaVersion, _mariaActiveLatest?.Version);
+
+        void Mark(ObservableCollection<InstalledVersion> rows, string? installed, string? latest)
+        {
+            // Only a newer build of the same branch counts: 8.5.13 for 8.5.12, never 8.6.0.
+            // And only when that build isn't already installed and parked; then "Switch to" is the way.
+            List<string> versions = rows.Select(row => row.Version).ToList();
+            bool isNew = latest is not null && VersionUtil.IsPatchOf(latest, installed) && !versions.Contains(latest);
+            string? updateTo = isNew ? latest : null;
+            for (int index = 0; index < rows.Count; index++)
+            {
+                InstalledVersion row = rows[index];
+
+                // A parked build with a newer build of its own branch installed is a leftover of an update.
+                string? replacedBy = row.IsActive
+                    ? null
+                    : versions.Where(other => VersionUtil.IsPatchOf(other, row.Version))
+                        .OrderByDescending(VersionUtil.Parse)
+                        .FirstOrDefault();
+                InstalledVersion marked = row with
+                {
+                    UpdateTo = row.IsActive ? updateTo : null,
+                    ReplacedBy = replacedBy,
+                    SizeText = _sizes.GetValueOrDefault(row.Path, ""),
+                };
+                if (marked != row)
+                {
+                    rows[index] = marked;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Measures the parked builds' folders in the background and puts the sizes on their rows, so it shows what
+    /// removing an old build frees. Each folder is measured once per window.
+    /// </summary>
+    private async Task LoadSizesAsync()
+    {
+        List<string> folders = PhpVersions.Concat(MariaVersions)
+            .Where(row => !row.IsActive && !_sizes.ContainsKey(row.Path) && _sizesAsked.Add(row.Path))
+            .Select(row => row.Path)
+            .ToList();
+        try
+        {
+            foreach (string folder in folders)
+            {
+                long bytes = MockMachine.IsActive
+                    ? MockMachine.PretendSize(folder)
+                    : await Task.Run(() => FileTools.FolderSize(folder));
+                _sizes[folder] = FileTools.FormatSize(bytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Runs fire-and-forget, so nothing may escape; a folder removed meanwhile just shows no size.
+            _main.Debug(LogSource, "Couldn't measure a version folder: " + ex.Message);
+        }
+
+        if (folders.Count > 0)
+        {
+            MarkActiveUpdates();
+        }
+    }
+
+    /// <summary>Loads the newest release of the active MariaDB's own series, for its row's update button.</summary>
+    private async Task LoadMariaActiveLatestAsync()
+    {
+        string series = VersionUtil.MajorMinor(_mariaVersion ?? "");
+        if (_mariaVersion is null || _mariaSeriesAsked == series)
+        {
+            return;
+        }
+
+        // Asked once per series and window, whether it answers or not.
+        _mariaSeriesAsked = series;
+        try
+        {
+            _mariaActiveLatest = await ReleaseFeeds.GetMariaDbLatestAsync(series);
+            MarkActiveUpdates();
+        }
+        catch (Exception ex)
+        {
+            // Runs fire-and-forget, so nothing may escape; a series the feed no longer lists (an old XAMPP's
+            // 10.4) or no network simply means the row gets no update button.
+            _main.Debug(LogSource, $"No newer MariaDB {series} found: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// The active row's update button: installs the newest build of the branch or series that is active, whatever
+    /// the "Install another version" list is set to.
+    /// </summary>
+    /// <param name="component">PHP or MariaDB.</param>
+    /// <returns>The build the update replaced, as <see cref="InstallAndFindSupersededAsync"/> gives it.</returns>
+    public Task<InstalledVersion?> UpdateActiveAsync(Component component)
+    {
+        if (component == Component.Php)
+        {
+            // Without the active branch in the feed there is nothing to update to; never fall back on the list.
+            if (ActivePhpBranch is not { } branch)
+            {
+                return Task.FromResult<InstalledVersion?>(null);
+            }
+            SelectedPhp = branch;
+            return InstallAndFindSupersededAsync(component, InstallPhpLatestAsync);
+        }
+
+        return InstallAndFindSupersededAsync(
+            component,
+            () => _mariaActiveLatest is { } release ? InstallMariaAsync(release) : Task.CompletedTask);
+    }
+
+    /// <summary>
+    /// Runs an install and tells which build it superseded: the one that was active before, when the new active
+    /// build is a newer one of the same branch or series (8.5.12 after an update to 8.5.13). The window then asks
+    /// whether to remove it.
+    /// </summary>
+    /// <param name="component">PHP or MariaDB.</param>
+    /// <param name="install">The install to run.</param>
+    /// <returns>
+    /// The superseded build, now parked; null when the install failed, changed nothing, or moved to another
+    /// branch (then the old branch is a version of its own, not a leftover).
+    /// </returns>
+    public async Task<InstalledVersion?> InstallAndFindSupersededAsync(Component component, Func<Task> install)
+    {
+        ObservableCollection<InstalledVersion> rows = component == Component.Php ? PhpVersions : MariaVersions;
+        string? before = rows.FirstOrDefault(row => row.IsActive)?.Version;
+
+        // A copy of the same version may already be parked; the superseded build is the one parked by this run.
+        HashSet<string> parkedBefore = rows.Where(row => !row.IsActive).Select(row => row.Path)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _hasLastRunSucceeded = false;
+        await install();
+
+        string? after = rows.FirstOrDefault(row => row.IsActive)?.Version;
+        InstalledVersion? parked = before is not null && VersionUtil.IsPatchOf(after, before)
+            ? rows.FirstOrDefault(row => !row.IsActive && row.Version == before && !parkedBefore.Contains(row.Path))
+            : null;
+        if (parked is not null && !_hasLastRunSucceeded)
+        {
+            // The new build is active but something went wrong after the swap (Apache didn't start): no question
+            // then, and the log says where the old build is, which the install left unsaid for the question.
+            _main.Write(LogSource, $"{parked.Title} stays installed in \"{parked.Path}\"; you can switch back any time.");
+            return null;
+        }
+        return parked;
+    }
+
+    /// <summary>Says that the superseded build was kept, after the window's question was answered with Keep.</summary>
+    /// <param name="version">The parked build from <see cref="InstallAndFindSupersededAsync"/>.</param>
+    public void KeepSuperseded(InstalledVersion version)
+    {
+        // The install's own message left this open until the question was answered.
+        Status = Loc.T("Updates.StaysInstalled", version.Title);
+        _main.Write(LogSource, $"{version.Title} stays installed in \"{version.Path}\"; you can switch back any time.");
+    }
+
+    /// <summary>
+    /// Removes the build an update superseded, after the window's question was answered with Remove. The
+    /// "switch back" button goes with it, since there is nothing left to switch back to.
+    /// </summary>
+    /// <param name="version">The parked build from <see cref="InstallAndFindSupersededAsync"/>.</param>
+    public void RemoveSuperseded(InstalledVersion version)
+    {
+        if (IsBusy || version.IsActive)
+        {
+            return;
+        }
+
+        RemoveNow(version);
     }
 
     /// <summary>Sets <see cref="MailpitAvailable"/> and the button text from the release GitHub reported.</summary>
@@ -432,6 +626,15 @@ public sealed class UpdatesViewModel : ObservableObject
         }
 
         _pendingRemove = null;
+        RemoveNow(version);
+    }
+
+    /// <summary>Deletes a parked build and reports the outcome in the status line and the log.</summary>
+    /// <param name="version">The build to delete; for MariaDB its databases go with it.</param>
+    private void RemoveNow(InstalledVersion version)
+    {
+        // A "switch back" offered by the last install may point at this very build; it goes with it.
+        SetRollback(null, "");
         try
         {
             VersionStore.Remove(version);
@@ -553,6 +756,7 @@ public sealed class UpdatesViewModel : ObservableObject
             SelectedPhp = branches.FirstOrDefault(branch => branch.Branch == currentBranch)
                           ?? branches.FirstOrDefault();
             UpdatePhpAvailable();
+            MarkActiveUpdates();
             if (branches.Count == 0)
             {
                 PhpAvailable = Loc.T("Updates.NoThreadSafeBuildsFound");
@@ -661,13 +865,15 @@ public sealed class UpdatesViewModel : ObservableObject
     /// <returns>
     /// A task that completes when the update has finished or failed; the outcome is in <see cref="Status"/>.
     /// </returns>
-    public Task InstallMariaLatestAsync() => RunAsync(async ctx =>
-    {
-        if (_mariaLatest is not { } release)
-        {
-            return UpdateResult.Fail(Loc.T("Updates.ChooseMariaSeriesFirst"));
-        }
+    public Task InstallMariaLatestAsync() => _mariaLatest is { } release
+        ? InstallMariaAsync(release)
+        : RunAsync(_ => Task.FromResult(UpdateResult.Fail(Loc.T("Updates.ChooseMariaSeriesFirst"))));
 
+    /// <summary>Downloads one MariaDB release, verifies its checksum and installs it.</summary>
+    /// <param name="release">The release to install.</param>
+    /// <returns>A task that completes when the update has finished or failed.</returns>
+    private Task InstallMariaAsync(MariaDbRelease release) => RunAsync(async ctx =>
+    {
         string? zip = await DownloadAsync(
             ctx,
             $"MariaDB {release.Version}",
@@ -818,7 +1024,9 @@ public sealed class UpdatesViewModel : ObservableObject
 
         try
         {
+            _hasLastRunSucceeded = false;
             UpdateResult result = await work(ctx);
+            _hasLastRunSucceeded = result.Success;
             Status = result.Message;
             _main.Write(LogSource, result.Message, result.Success ? LogLevel.Ok : LogLevel.Error);
             SetRollback(result.Rollback, result.RollbackLabel ?? Loc.T("Updates.RollBack"));
@@ -836,6 +1044,16 @@ public sealed class UpdatesViewModel : ObservableObject
             ShowProgress = false;
             RefreshInstalled();
         }
+    }
+
+    /// <summary>
+    /// For the screenshot scene only: shows the window as it is right after switching PHP, with the result line
+    /// and the button that switches back.
+    /// </summary>
+    internal void PoseSwitched()
+    {
+        Status = Loc.T("Updates.PhpNowActive", "8.4.27", "8.3.29");
+        SetRollback(() => Task.CompletedTask, Loc.T("Updates.SwitchBackToPhp", "8.3.29"));
     }
 
     /// <summary>Sets or clears the rollback the dialog offers.</summary>

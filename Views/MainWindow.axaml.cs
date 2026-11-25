@@ -20,6 +20,7 @@ public partial class MainWindow : Window
 {
     private MainViewModel? _subscribedViewModel;
     private bool _isClosingConfirmed;
+    private bool _isUpdateWindowOpen;
     private bool _isClosingInProgress;
 
     /// <summary>Sets up the title, icon and logo, and asks for the XAMPP folder on open when none is found.</summary>
@@ -93,7 +94,9 @@ public partial class MainWindow : Window
     {
         base.OnClosing(e);
         bool isShuttingDown = e.CloseReason == WindowCloseReason.OSShutdown;
-        if (_isClosingConfirmed || isShuttingDown || ViewModel is not { } viewModel)
+        // The mock machine quits without asking, except in the scene that shows the question.
+        bool isMockQuit = MockMachine.IsActive && MockMachine.Options?.Scene != "quit";
+        if (_isClosingConfirmed || isShuttingDown || isMockQuit || ViewModel is not { } viewModel)
         {
             return;
         }
@@ -172,7 +175,9 @@ public partial class MainWindow : Window
     /// <returns>A task that completes when XAMPP is found or the user chose to continue without it.</returns>
     private async Task ExplainMissingXamppAsync()
     {
-        while (ViewModel is { HasXampp: false } viewModel && IsVisible)
+        // The "no-xampp" scene shows the banner alone; every other start explains what is missing.
+        bool isBannerScene = MockMachine.Options?.Scene == "no-xampp";
+        while (ViewModel is { HasXampp: false } viewModel && IsVisible && !isBannerScene)
         {
             MissingXamppChoice choice = await XamppMissingWindow.AskAsync(
                 this, XamppPaths.SearchedFolders(viewModel.Settings), viewModel.Settings.Browser);
@@ -338,24 +343,88 @@ public partial class MainWindow : Window
         await new SitesWindow { DataContext = new SitesViewModel(viewModel) }.ShowDialog(this);
     }
 
-    private async void PhpSettings_Click(object? sender, RoutedEventArgs e)
+    private async void PhpSettings_Click(object? sender, RoutedEventArgs e) => await OpenPhpSettingsAsync();
+
+    private async void Updates_Click(object? sender, RoutedEventArgs e) => await OpenVersionsAsync();
+
+    /// <summary>Opens the PHP window and, when it closes, clears the Xdebug notice if Xdebug was updated in it.</summary>
+    /// <returns>A task that completes when the window has closed.</returns>
+    internal async Task OpenPhpSettingsAsync()
     {
-        if (ViewModel is not { } viewModel)
+        if (ViewModel is not { } viewModel || _isUpdateWindowOpen)
         {
             return;
         }
 
-        await new PhpSettingsWindow { DataContext = new PhpSettingsViewModel(viewModel) }.ShowDialog(this);
+        _isUpdateWindowOpen = true;
+        try
+        {
+            await new PhpSettingsWindow { DataContext = new PhpSettingsViewModel(viewModel) }.ShowDialog(this);
+        }
+        finally
+        {
+            _isUpdateWindowOpen = false;
+        }
+        viewModel.RefreshComponentUpdates();
     }
 
-    private async void Updates_Click(object? sender, RoutedEventArgs e)
+    /// <summary>Opens the Versions window and brings the update notices in step when it closes.</summary>
+    /// <returns>A task that completes when the window has closed and the notices are current.</returns>
+    internal async Task OpenVersionsAsync()
     {
-        if (ViewModel is not { } viewModel)
+        if (ViewModel is not { } viewModel || _isUpdateWindowOpen)
         {
             return;
         }
 
-        await new UpdatesWindow { DataContext = new UpdatesViewModel(viewModel) }.ShowDialog(this);
+        _isUpdateWindowOpen = true;
+        try
+        {
+            await new UpdatesWindow { DataContext = new UpdatesViewModel(viewModel) }.ShowDialog(this);
+        }
+        finally
+        {
+            _isUpdateWindowOpen = false;
+        }
+
+        // An update installed in there clears its notice at once; a switch to another PHP or MariaDB branch
+        // needs the feeds asked again, about the branch that is active now.
+        viewModel.RefreshComponentUpdates();
+        await viewModel.CheckForComponentUpdatesAsync(isQuiet: true);
+    }
+
+    // The "↑ 8.5.13" on a module row: straight to the window that installs it.
+    private async void UpdateHint_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not { } viewModel || (sender as Control)?.DataContext is not ModuleViewModel module)
+        {
+            return;
+        }
+
+        if (viewModel.ComponentUpdateFor(module.Name) is { IsInPhpWindow: true })
+        {
+            await OpenPhpSettingsAsync();
+        }
+        else
+        {
+            await OpenVersionsAsync();
+        }
+    }
+
+    private async void StartAll_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.StartAllAsync();
+        }
+    }
+
+    private async void StopAll_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.StopAllAsync();
+        }
     }
 
     private async void AppUpdate_Click(object? sender, RoutedEventArgs e)
@@ -396,6 +465,10 @@ public partial class MainWindow : Window
         if (this.TryFindResource(iconKey, ActualThemeVariant, out object? icon) && icon is Geometry geometry)
         {
             ThemeIcon.Data = geometry;
+        }
+        if (this.TryFindResource(iconKey + "Tint", ActualThemeVariant, out object? tint) && tint is Geometry area)
+        {
+            ThemeIcon.Tint = area;
         }
         ToolTip.SetTip(ThemeToggle, IsDark ? Loc.T("Main.SwitchToTheLightTheme") : Loc.T("Main.SwitchToTheDarkTheme"));
     }

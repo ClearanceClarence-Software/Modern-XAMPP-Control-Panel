@@ -11,7 +11,7 @@ public static class StartMenu
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), BuildInfo.AppName + ".lnk");
 
     /// <summary>True when the shortcut file exists.</summary>
-    public static bool Exists => File.Exists(ShortcutPath);
+    public static bool Exists => !MockMachine.IsActive && File.Exists(ShortcutPath);
 
     /// <summary>Creates or replaces the shortcut so it starts the running exe.</summary>
     /// <returns>True when the shortcut exists afterwards; false off Windows, without an exe path, or on failure.</returns>
@@ -56,6 +56,11 @@ public static class StartMenu
     /// <returns>True when no shortcut is left.</returns>
     public static bool Remove()
     {
+        if (MockMachine.IsActive)
+        {
+            return true;
+        }
+
         try
         {
             File.Delete(ShortcutPath);

@@ -19,6 +19,13 @@ internal static class Program
         }
 
         CrashReport.Install();
+
+        // Hidden developer switches: --mock runs the panel on a pretend PC, --scene poses a screenshot scene on it.
+        if (MockOptions.Parse(args) is { } mockOptions)
+        {
+            MockMachine.Start(mockOptions);
+        }
+
         try
         {
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

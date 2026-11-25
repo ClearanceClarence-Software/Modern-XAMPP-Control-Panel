@@ -1,14 +1,16 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using XamppControl.Core;
 using XamppControl.ViewModels;
 
 namespace XamppControl.Views;
 
 /// <summary>
-/// Lists the listening TCP sockets and their processes; the caller sets a <see cref="NetstatViewModel"/> as data
-/// context.
+/// Lists the programs that listen on a TCP port, with the chosen one's details beside the list; the caller sets a
+/// <see cref="NetstatViewModel"/> as data context.
 /// </summary>
 public partial class NetstatWindow : Window
 {
@@ -24,48 +26,86 @@ public partial class NetstatWindow : Window
 
     private NetstatViewModel? ViewModel => DataContext as NetstatViewModel;
 
-    private void SortPort_Click(object? sender, RoutedEventArgs e) => ViewModel?.SortBy("Port");
+    private void ScopeAll_Click(object? sender, RoutedEventArgs e) => SetScope(NetstatScope.All);
 
-    private void SortAddress_Click(object? sender, RoutedEventArgs e) => ViewModel?.SortBy("Address");
+    private void ScopeXampp_Click(object? sender, RoutedEventArgs e) => SetScope(NetstatScope.Xampp);
 
-    private void SortPid_Click(object? sender, RoutedEventArgs e) => ViewModel?.SortBy("Pid");
+    private void ScopeBlocking_Click(object? sender, RoutedEventArgs e) => SetScope(NetstatScope.Blocking);
 
-    private void SortName_Click(object? sender, RoutedEventArgs e) => ViewModel?.SortBy("Name");
-
-    private void OpenUrl_Click(object? sender, RoutedEventArgs e)
+    private void SetScope(NetstatScope scope)
     {
-        if (RowOf(sender) is { } row)
+        if (ViewModel is { } viewModel)
         {
-            ViewModel?.OpenInBrowser(row);
+            viewModel.Scope = scope;
+        }
+    }
+
+    private void System_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            viewModel.ShowSystem = !viewModel.ShowSystem;
+        }
+    }
+
+    // A double-click opens a program with a web port, the quickest way to "what is on 8025?"; on MariaDB it
+    // opens phpMyAdmin.
+    private async void Programs_DoubleTapped(object? sender, TappedEventArgs e)
+    {
+        // Only on an entry: the scrollbar and the empty area below the list are not a program.
+        bool isOnEntry = (e.Source as Control)?.FindAncestorOfType<ListBoxItem>(includeSelf: true) is not null;
+        if (!isOnEntry || ViewModel is not { Selected: { } program } viewModel)
+        {
+            return;
+        }
+
+        if (program.HasUrl)
+        {
+            viewModel.OpenInBrowser(program);
+        }
+        else if (program.IsDatabaseServer)
+        {
+            await viewModel.OpenPhpMyAdminAsync(() => ConfirmWindow.AskToStartApacheAsync(this));
+        }
+    }
+
+    private void Open_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { Selected: { } program } viewModel)
+        {
+            viewModel.OpenInBrowser(program);
+        }
+    }
+
+    private async void PhpMyAdmin_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.OpenPhpMyAdminAsync(() => ConfirmWindow.AskToStartApacheAsync(this));
         }
     }
 
     private void Folder_Click(object? sender, RoutedEventArgs e)
     {
-        if (RowOf(sender) is { } row)
+        if (ViewModel?.Selected is { } program)
         {
-            NetstatViewModel.OpenFolder(row);
+            NetstatViewModel.OpenFolder(program);
         }
     }
 
     private async void Copy_Click(object? sender, RoutedEventArgs e)
     {
-        if (RowOf(sender) is { } row && Clipboard is { } clipboard)
+        if (ViewModel?.Selected is { } program && Clipboard is { } clipboard)
         {
-            await clipboard.SetTextAsync(row.Line);
+            await clipboard.SetTextAsync(program.Details);
         }
     }
 
     private async void End_Click(object? sender, RoutedEventArgs e)
     {
-        if (RowOf(sender) is { } row && ViewModel is { } viewModel)
+        if (ViewModel is { Selected: { } program } viewModel)
         {
-            await viewModel.EndProcessAsync(row);
+            await viewModel.EndProcessAsync(program);
         }
     }
-
-    /// <summary>The row a button inside a row template belongs to.</summary>
-    /// <param name="sender">The clicked button.</param>
-    /// <returns>Its data context as a row; null for anything else.</returns>
-    private static NetstatRow? RowOf(object? sender) => (sender as Control)?.DataContext as NetstatRow;
 }

@@ -29,7 +29,9 @@ public partial class AboutWindow : Window
         VersionLine.Text = BuildInfo.Version;
         RuntimeLine.Text = $"{BuildInfo.Runtime}, {BuildInfo.AvaloniaVersion}";
         OsLine.Text = Environment.OSVersion.VersionString;
-        PathLine.Text = Environment.ProcessPath ?? "";
+        PathLine.Text = MockMachine.IsActive
+            ? MockMachine.PrettyRoot + @"\XamppControl.exe"
+            : Environment.ProcessPath ?? "";
         CopyrightText.Text = BuildInfo.Copyright;
     }
 

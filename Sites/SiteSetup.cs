@@ -146,6 +146,12 @@ public static partial class SiteSetup
     /// <param name="sites">The sites whose folders are checked.</param>
     private static void CreateMissingFolders(MainViewModel main, IReadOnlyList<Site> sites)
     {
+        if (MockMachine.IsActive)
+        {
+            // The mock sites name folders on the real disk; none is ever created there.
+            return;
+        }
+
         foreach (Site site in sites.Where(site => !Directory.Exists(site.Folder)))
         {
             Directory.CreateDirectory(site.Folder);

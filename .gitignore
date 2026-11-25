@@ -7,3 +7,6 @@ obj/
 
 # Release packages from tools/release.ps1
 artifacts/
+
+# The website as built by site/build.py
+_site/

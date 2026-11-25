@@ -112,7 +112,12 @@ public static partial class MariaDbUpdater
             await StartAgainAsync(ctx, wasRunning);
             return UpdateResult.Fail(swapFailure);
         }
-        ctx.Log($"MariaDB {oldVersion} stays installed, with its own copy of your databases, in \"{backup}\".");
+        // After a patch of the same series the window asks whether the old build should go, and logs the answer.
+        bool isPatch = VersionUtil.IsPatchOf(newVersion, oldVersion);
+        if (!isPatch)
+        {
+            ctx.Log($"MariaDB {oldVersion} stays installed, with its own copy of your databases, in \"{backup}\".");
+        }
 
         // A local function so the rollback keeps this install's root, folders and versions even if the
         // XAMPP folder setting changes before the user clicks it.
@@ -171,7 +176,9 @@ public static partial class MariaDbUpdater
 
         await ctx.Main.ReloadModulesAsync();
         return new UpdateResult(true,
-            Loc.T("Updates.MariaInstalledAndActive", newVersion, oldVersion),
+            isPatch
+                ? Loc.T("Updates.MariaInstalledActiveOnly", newVersion)
+                : Loc.T("Updates.MariaInstalledAndActive", newVersion, oldVersion),
             RollBackAsync,
             rollbackLabel);
     }

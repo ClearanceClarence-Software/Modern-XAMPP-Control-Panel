@@ -7,7 +7,8 @@ namespace XamppControl.Databases;
 /// <param name="Name">The schema name.</param>
 /// <param name="Tables">How many tables it has.</param>
 /// <param name="SizeBytes">Data plus indexes in bytes, as information_schema reports them.</param>
-public sealed record DatabaseInfo(string Name, int Tables, long SizeBytes)
+/// <param name="Collation">The default collation, e.g. "utf8mb4_general_ci"; empty when the server didn't say.</param>
+public sealed record DatabaseInfo(string Name, int Tables, long SizeBytes, string Collation = "")
 {
     /// <summary>The size for the list, e.g. "12.0 MB".</summary>
     public string Size => FileTools.FormatSize(SizeBytes);
@@ -16,15 +17,64 @@ public sealed record DatabaseInfo(string Name, int Tables, long SizeBytes)
     public string TableText => Loc.Plural("Databases.Tables", Tables);
 }
 
+/// <summary>A dump file in the dump folder.</summary>
+/// <param name="Path">Full path of the .sql file.</param>
+/// <param name="Written">When it was last written, in local time.</param>
+public sealed record DumpFile(string Path, DateTime Written)
+{
+    /// <summary>The file name without its folder.</summary>
+    public string Name => System.IO.Path.GetFileName(Path);
+}
+
 /// <summary>Lists, dumps and restores databases with the MariaDB command-line clients of the active install.</summary>
 public static class DatabaseTools
 {
+    // "_20261125-104008": what ExportAsync puts between the database name and ".sql".
+    private const int StampLength = 16;
+
     private static readonly string[] _systemSchemas = ["information_schema", "performance_schema", "mysql", "sys"];
 
     /// <summary>The folder dumps are written to.</summary>
     /// <param name="root">The XAMPP folder.</param>
     /// <returns>root\mysql_dumps; it may not exist yet.</returns>
     public static string DumpFolder(string root) => Path.Combine(root, "mysql_dumps");
+
+    /// <summary>The newest dump that Export wrote for a database.</summary>
+    /// <param name="root">The XAMPP folder.</param>
+    /// <param name="database">The schema name.</param>
+    /// <returns>
+    /// The newest "name_timestamp.sql" in the dump folder; null when there is none or the folder can't be read.
+    /// </returns>
+    public static DumpFile? LastExport(string root, string database)
+    {
+        if (MockMachine.IsActive)
+        {
+            return MockMachine.LastExport(database);
+        }
+
+        string prefix = FileTools.Safe(database) + "_";
+        int stemLength = prefix.Length - 1 + StampLength;
+        try
+        {
+            if (!Directory.Exists(DumpFolder(root)))
+            {
+                return null;
+            }
+
+            // "shop_*" also finds "shop_old_...", so the length must match the name plus one timestamp.
+            return new DirectoryInfo(DumpFolder(root))
+                .EnumerateFiles(prefix + "*.sql")
+                .Where(file => file.Name.Length == stemLength + file.Extension.Length)
+                .OrderByDescending(file => file.LastWriteTime)
+                .Select(file => new DumpFile(file.FullName, file.LastWriteTime))
+                .FirstOrDefault();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // The line is a nicety; a folder that can't be read just means no "last export" is shown.
+            return null;
+        }
+    }
 
     /// <summary>The client exe of the active install.</summary>
     /// <param name="root">The XAMPP folder.</param>
@@ -42,19 +92,25 @@ public static class DatabaseTools
     /// <param name="root">The XAMPP folder.</param>
     /// <param name="connectionArgs">The client arguments that connect as root.</param>
     /// <param name="environment">The client environment, carrying the root password.</param>
-    /// <returns>The databases sorted by name, without the system schemas.</returns>
+    /// <returns>The databases sorted by name with their default collation, without the system schemas.</returns>
     /// <exception cref="InvalidOperationException">The client is missing or the query failed; the message says why.</exception>
     public static async Task<List<DatabaseInfo>> ListAsync(
         string root,
         string connectionArgs,
         IDictionary<string, string> environment)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return MockMachine.Databases();
+        }
+
         string client = ClientExe(root) ?? throw new InvalidOperationException(Loc.T("Databases.NoMariadbExe"));
         const string query = "SELECT s.schema_name, COUNT(t.table_name), " +
-            "COALESCE(SUM(t.data_length + t.index_length), 0) " +
+            "COALESCE(SUM(t.data_length + t.index_length), 0), s.default_collation_name " +
             "FROM information_schema.schemata s " +
             "LEFT JOIN information_schema.tables t ON t.table_schema = s.schema_name " +
-            "GROUP BY s.schema_name ORDER BY s.schema_name";
+            "GROUP BY s.schema_name, s.default_collation_name ORDER BY s.schema_name";
         Shell.RunResult result = await Shell.RunAsync(
             client,
             $"{connectionArgs} --batch --skip-column-names -e \"{query}\"",
@@ -73,7 +129,8 @@ public static class DatabaseTools
             bool isUserSchema = columns.Length >= 3 && !_systemSchemas.Contains(columns[0], StringComparer.OrdinalIgnoreCase);
             if (isUserSchema && int.TryParse(columns[1], out int tables) && long.TryParse(columns[2], out long bytes))
             {
-                databases.Add(new DatabaseInfo(columns[0], tables, bytes));
+                string collation = columns.Length > 3 ? columns[3] : "";
+                databases.Add(new DatabaseInfo(columns[0], tables, bytes, collation));
             }
         }
         return databases;

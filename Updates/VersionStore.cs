@@ -25,6 +25,36 @@ public sealed record InstalledVersion(Component Component, string Version, strin
 
     /// <summary>True when the build is parked and can be switched to.</summary>
     public bool CanSwitch => !IsActive;
+
+    /// <summary>
+    /// On the active build: the newest version of the same branch or series when it is newer ("8.5.13" for an
+    /// active 8.5.12); null when the build is current, parked, or the feed has not answered.
+    /// </summary>
+    public string? UpdateTo { get; init; }
+
+    /// <summary>True when <see cref="UpdateTo"/> is set; shows the row's update button.</summary>
+    public bool HasUpdate => UpdateTo is not null;
+
+    /// <summary>The update button's text, e.g. "Update to 8.5.13".</summary>
+    public string UpdateLabel => UpdateTo is null ? "" : Loc.T("Updates.UpdateTo", UpdateTo);
+
+    /// <summary>
+    /// On a parked build: the newer installed build of the same branch or series that replaced it ("8.5.13" on a
+    /// parked 8.5.12); null when no such build is installed. Such a build is only needed to switch back.
+    /// </summary>
+    public string? ReplacedBy { get; init; }
+
+    /// <summary>True when <see cref="ReplacedBy"/> is set; shows the "replaced by" mark.</summary>
+    public bool IsReplaced => ReplacedBy is not null;
+
+    /// <summary>The mark's text, e.g. "replaced by 8.5.13".</summary>
+    public string ReplacedLabel => ReplacedBy is null ? "" : Loc.T("Updates.ReplacedBy", ReplacedBy);
+
+    /// <summary>The disk space of a parked build's folder, e.g. "142 MB"; empty until it has been measured.</summary>
+    public string SizeText { get; init; } = "";
+
+    /// <summary>The line under the title: the folder, and the disk space once it is known.</summary>
+    public string DetailLine => SizeText.Length > 0 ? $"{Detail}   ·   {SizeText}" : Detail;
 }
 
 /// <summary>

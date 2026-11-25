@@ -73,6 +73,11 @@ public static class LocalCertificates
     /// <returns>True when its certificate is in the current user's Trusted Root store.</returns>
     public static bool IsTrusted(X509Certificate2 authority)
     {
+        if (MockMachine.IsActive)
+        {
+            return true;
+        }
+
         using var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
         store.Open(OpenFlags.ReadOnly);
         X509Certificate2Collection storedCertificates = store.Certificates;
@@ -98,6 +103,13 @@ public static class LocalCertificates
     /// <returns>True when it was added or was already there; false when the user answered No.</returns>
     public static bool Trust(X509Certificate2 authority)
     {
+        if (MockMachine.IsActive)
+        {
+            // The real certificate store is never changed from the mock machine.
+            MockMachine.IsAuthorityTrusted = true;
+            return true;
+        }
+
         using var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
         store.Open(OpenFlags.ReadWrite);
         using X509Certificate2 publicPart = X509CertificateLoader.LoadCertificate(authority.RawData);

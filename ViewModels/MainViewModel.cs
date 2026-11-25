@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text.Json;
 using Avalonia.Threading;
 using XamppControl.Core;
@@ -11,7 +12,11 @@ namespace XamppControl.ViewModels;
 public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 {
     private readonly DispatcherTimer _pollTimer;
+    private readonly DispatcherTimer _updateTimer;
+    private readonly HashSet<ComponentUpdate> _announcedUpdates = [];
     private readonly object _logFileLock = new();
+    private IReadOnlyList<ComponentUpdate> _componentUpdates = [];
+    private LatestComponents? _latestComponents;
     private bool _isRefreshing;
     private string _root = "";
     private string _subtitle = "";
@@ -45,6 +50,10 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
         _pollTimer.Tick += async (_, _) => await RefreshAsync(quiet: false);
 
+        // A panel left open for days still hears about updates.
+        _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(24) };
+        _updateTimer.Tick += async (_, _) => await CheckDailyAsync();
+
         _ = StartupAsync();
     }
 
@@ -71,7 +80,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     }
 
     /// <summary>The banner shown while <see cref="HasXampp"/> is false; names the folder that holds no XAMPP.</summary>
-    public string MissingXamppText => Loc.T("Main.NothingToControlAt", Root);
+    public string MissingXamppText => Loc.T("Main.NothingToControlAt", MockMachine.Pretty(Root));
 
     /// <summary>The header's second line: "PHP version · folder", or the folder alone when php.exe has none.</summary>
     public string Subtitle
@@ -204,6 +213,18 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         IsAppUpdateProgressIndeterminate = true;
         try
         {
+            if (MockMachine.IsActive)
+            {
+                // Only played: the bar runs and the install gives up, without touching the staging folder.
+                AppUpdateStatus = Loc.T("Updates.Downloading", release.Version);
+                await MockMachine.PlayDownloadAsync(fraction =>
+                {
+                    IsAppUpdateProgressIndeterminate = fraction is null;
+                    AppUpdateProgress = (fraction ?? 0) * 100;
+                });
+                return false;
+            }
+
             string newExe = await AppUpdater.DownloadAsync(
                 release,
                 status: text => AppUpdateStatus = text,
@@ -268,9 +289,15 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         }
 
         string? phpVersion = XamppPaths.FileVersion(Path.Combine(Root, "php", "php.exe"));
-        Subtitle = phpVersion is null ? Root : $"PHP {phpVersion} · {Root}";
+        Subtitle = MockMachine.Pretty(phpVersion is null ? Root : $"PHP {phpVersion} · {Root}");
         OnPropertyChanged(nameof(HasXampp));
         OnPropertyChanged(nameof(MissingXamppText));
+        OnPropertyChanged(nameof(ComponentUpdateTip));
+        OnPropertyChanged(nameof(XdebugUpdateTip));
+        foreach (ModuleViewModel module in Modules)
+        {
+            module.RaiseUpdateHintChanged();
+        }
     }
 
     /// <summary>
@@ -308,8 +335,13 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         }
 
         _pollTimer.Start();
+        _updateTimer.Start();
 
-        await AutoStartModulesAsync();
+        // The mock machine's Autostart ticks are for the Config window; its scenes start the modules themselves.
+        if (!MockMachine.IsActive)
+        {
+            await AutoStartModulesAsync();
+        }
 
         Write("main", "Control Panel Ready");
 
@@ -322,8 +354,277 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         if (Settings.CheckForAppUpdates)
         {
             await CheckForAppUpdateAsync(isManual: false);
+            await CheckForComponentUpdatesAsync();
         }
     }
+
+    /// <summary>Newer builds of the installed PHP, MariaDB and Mailpit; empty until the startup check has run.</summary>
+    public IReadOnlyList<ComponentUpdate> ComponentUpdates
+    {
+        get => _componentUpdates;
+        private set
+        {
+            _componentUpdates = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasComponentUpdates));
+            OnPropertyChanged(nameof(HasVersionUpdates));
+            OnPropertyChanged(nameof(ComponentUpdateCount));
+            OnPropertyChanged(nameof(ComponentUpdateTip));
+            OnPropertyChanged(nameof(HasXdebugUpdate));
+            OnPropertyChanged(nameof(XdebugUpdateTip));
+            foreach (ModuleViewModel module in Modules)
+            {
+                module.RaiseUpdateHintChanged();
+            }
+        }
+    }
+
+    /// <summary>True when <see cref="ComponentUpdates"/> has entries.</summary>
+    public bool HasComponentUpdates => ComponentUpdates.Count > 0;
+
+    /// <summary>The updates the Versions window installs: PHP, MariaDB and Mailpit.</summary>
+    private IEnumerable<ComponentUpdate> VersionUpdates => ComponentUpdates.Where(update => !update.IsInPhpWindow);
+
+    /// <summary>True when Versions has an update to install; shows the count on its button.</summary>
+    public bool HasVersionUpdates => VersionUpdates.Any();
+
+    /// <summary>The number on the Versions button.</summary>
+    public string ComponentUpdateCount => VersionUpdates.Count().ToString(CultureInfo.CurrentCulture);
+
+    /// <summary>True when a newer Xdebug exists for the active PHP; shows a mark on the PHP button.</summary>
+    public bool HasXdebugUpdate => ComponentUpdates.Any(update => update.IsInPhpWindow);
+
+    /// <summary>The PHP button's tooltip while a newer Xdebug exists; null otherwise, so no tooltip shows.</summary>
+    public string? XdebugUpdateTip =>
+        ComponentUpdates.FirstOrDefault(update => update.IsInPhpWindow) is { } update ? DescribeUpdate(update) : null;
+
+    /// <summary>The Versions button's tooltip: one line per newer build; null without any, so no tooltip shows.</summary>
+    public string? ComponentUpdateTip
+    {
+        get
+        {
+            List<string> lines = VersionUpdates.Select(DescribeUpdate).ToList();
+            if (NewPhpBranchText is { } news)
+            {
+                lines.Add(news);
+            }
+            return lines.Count > 0 ? string.Join("\n", lines) : null;
+        }
+    }
+
+    /// <summary>
+    /// The news that a whole new PHP branch exists ("PHP 8.6 is out…"); null when the installed branch is the
+    /// newest. It is news, not an update: it shows in the log and the Versions tooltip, never as a count or on a row.
+    /// </summary>
+    public string? NewPhpBranchText
+    {
+        get
+        {
+            string? installed = XamppPaths.FileVersion(Path.Combine(Root, "php", "php.exe"));
+            if (_latestComponents?.PhpNewBranch is not { } newest || installed is null
+                || VersionUtil.Parse(VersionUtil.MajorMinor(newest)) <= VersionUtil.Parse(VersionUtil.MajorMinor(installed)))
+            {
+                return null;
+            }
+            return Loc.T("Main.NewPhpBranchIsOut", VersionUtil.MajorMinor(newest), newest, VersionUtil.MajorMinor(installed));
+        }
+    }
+
+    /// <summary>The newer build that belongs to a module's row.</summary>
+    /// <param name="module">The module's display name.</param>
+    /// <returns>The update, or null when the row's component is current or was never checked.</returns>
+    public ComponentUpdate? ComponentUpdateFor(string module) =>
+        ComponentUpdates.FirstOrDefault(update => update.Module == module);
+
+    /// <summary>The sentence for one newer build, as the tooltips show it.</summary>
+    /// <param name="update">The newer build.</param>
+    /// <returns>"An update for PHP 8.5 is available: 8.5.13 (you have 8.5.12). Open Versions to install it."</returns>
+    public static string DescribeUpdate(ComponentUpdate update) => Loc.T(
+        update.IsInPhpWindow ? "Main.XdebugIsAvailable" : "Main.ComponentIsAvailable",
+        update.Label,
+        update.Latest,
+        update.Installed);
+
+    /// <summary>
+    /// Asks the release feeds for patch releases of the installed PHP, MariaDB and Mailpit, and says what it
+    /// finds in the log, on the Versions button and on the module rows. Offline, it finds nothing.
+    /// </summary>
+    /// <param name="isQuiet">
+    /// True changes the notices without writing to the log; used after the Versions window closes, when another
+    /// PHP or MariaDB may be active and the feeds must be asked about that one.
+    /// </param>
+    /// <returns>A task that completes when the feeds have answered or failed.</returns>
+    public async Task CheckForComponentUpdatesAsync(bool isQuiet = false)
+    {
+        if (!HasXampp || !MockMachine.ChecksComponentUpdates || !Settings.CheckForAppUpdates)
+        {
+            _latestComponents = null;
+            ComponentUpdates = [];
+            return;
+        }
+
+        Debug("main", "Checking for new PHP, MariaDB, Mailpit and Xdebug versions");
+        LatestComponents latest;
+        try
+        {
+            latest = await ComponentUpdateCheck.FetchAsync(Root);
+
+            // A feed that didn't answer this time (offline) keeps what it said before; Compare ignores an
+            // answer that is about another branch than the one installed now.
+            if (_latestComponents is { } old)
+            {
+                latest = latest with
+                {
+                    Php = latest.Php ?? old.Php,
+                    PhpNewBranch = latest.PhpNewBranch ?? old.PhpNewBranch,
+                    MariaDb = latest.MariaDb ?? old.MariaDb,
+                    Mailpit = latest.Mailpit ?? old.Mailpit,
+                    Xdebug = latest.Xdebug ?? old.Xdebug,
+                };
+            }
+            _latestComponents = latest;
+            RefreshComponentUpdates();
+        }
+        catch (Exception ex)
+        {
+            // Runs from a timer and from click handlers, where nothing may escape: a version file that can't be
+            // read or a folder that vanished only means no notices this time.
+            Debug("main", "Checking for new versions failed: " + ex.Message);
+            return;
+        }
+
+        // With debug output on, the log says what each feed answered, so a missing notice can be explained.
+        Debug("main", $"Newest in the feeds: PHP {latest.Php ?? "(no answer)"} (newer branch: " +
+            $"{latest.PhpNewBranch ?? "none"}), MariaDB " +
+            $"{latest.MariaDb ?? "(no answer)"}, Mailpit {latest.Mailpit ?? "(no answer)"}, Xdebug " +
+            $"{latest.Xdebug ?? "(not installed or no answer)"}");
+        if (ComponentUpdates.Count == 0)
+        {
+            Debug("main", "Nothing newer than what is installed");
+        }
+        if (isQuiet)
+        {
+            return;
+        }
+
+        // Each update is said once per run: the daily re-check only writes what it has not written before.
+        foreach (ComponentUpdate update in ComponentUpdates.Where(update => _announcedUpdates.Add(update)))
+        {
+            Write("update",
+                $"An update for {update.Label} is available: {update.Latest} (you have {update.Installed}). " +
+                $"Open {(update.IsInPhpWindow ? "PHP" : "Versions")} to install it.",
+                LogLevel.Ok);
+        }
+
+        // A new branch is news, not an update of the PHP in use: the log says it once per branch, ever; after
+        // that it only stays in the Versions button's tooltip.
+        if (latest.PhpNewBranch is { } newest && NewPhpBranchText is not null
+            && Settings.AnnouncedPhpBranch != VersionUtil.MajorMinor(newest))
+        {
+            Write("update",
+                $"PHP {VersionUtil.MajorMinor(newest)} is out ({newest}). Your PHP keeps working as it is; " +
+                "Versions can install the new one next to it.");
+            Settings.AnnouncedPhpBranch = VersionUtil.MajorMinor(newest);
+            try
+            {
+                Settings.Save();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Not being able to remember it only means the line is written again at the next start.
+                Debug("main", "Couldn't save the settings: " + ex.Message);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The daily look for updates while the panel stays open: the panel's own and the installed components'.
+    /// Runs only with "Check for new versions" on; what was already said is not said again.
+    /// </summary>
+    /// <returns>A task that completes when both checks have finished.</returns>
+    private async Task CheckDailyAsync()
+    {
+        if (!Settings.CheckForAppUpdates)
+        {
+            return;
+        }
+
+        try
+        {
+            if (AppUpdate is null)
+            {
+                await CheckForAppUpdateAsync(isManual: false);
+            }
+            await CheckForComponentUpdatesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Called from a timer, where an exception would end the panel; a failed look is tried again tomorrow.
+            Debug("main", "Update check failed: " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Starts what "Start all" stands for: the modules ticked as Autostart in Config, or Apache and MySQL when
+    /// none is ticked. Modules that already run, are busy or are not installed are left alone.
+    /// </summary>
+    /// <returns>A task that completes when every start attempt has finished.</returns>
+    public async Task StartAllAsync()
+    {
+        List<string> ticked = ModuleCatalog.Names.Where(Settings.IsAutoStart).ToList();
+        IEnumerable<string> names = ticked.Count > 0 ? ticked : ["Apache", "MySQL"];
+        foreach (string name in names)
+        {
+            if (Find(name) is { IsInstalled: true } module)
+            {
+                await module.StartIfStoppedAsync();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Opens phpMyAdmin in the browser; Apache serves it, so a stopped Apache is offered to be started first.
+    /// </summary>
+    /// <param name="database">A database to open in it; null opens phpMyAdmin's start page.</param>
+    /// <param name="confirmStartApache">Asks whether to start Apache; only called when it isn't running.</param>
+    /// <returns>
+    /// False when Apache is missing or didn't come up when started; true otherwise, also when the user declined.
+    /// </returns>
+    public async Task<bool> OpenPhpMyAdminAsync(string? database, Func<Task<bool>> confirmStartApache)
+    {
+        if (Find("Apache") is not { IsInstalled: true } apache)
+        {
+            return false;
+        }
+        if (!apache.IsRunning)
+        {
+            if (!await confirmStartApache())
+            {
+                return true;
+            }
+
+            await apache.StartIfStoppedAsync();
+            if (!apache.IsRunning)
+            {
+                return false;
+            }
+        }
+
+        int port = Settings.Services.ApachePort;
+        string host = port == 80 ? "localhost" : $"localhost:{port}";
+        string page = database is null ? "" : $"index.php?db={Uri.EscapeDataString(database)}";
+        Shell.OpenUrl($"http://{host}/phpmyadmin/{page}", Settings.Browser);
+        return true;
+    }
+
+    /// <summary>
+    /// Compares the installed versions with what the last check found, without asking the feeds again; called
+    /// after the Versions window closes, so an installed update clears its notice.
+    /// </summary>
+    public void RefreshComponentUpdates() =>
+        ComponentUpdates = _latestComponents is { } latest && HasXampp
+            ? ComponentUpdateCheck.Compare(Root, latest)
+            : [];
 
     /// <summary>The About window's "Check for updates": the same check, with the outcome as one line.</summary>
     /// <returns>"vX.Y.Z is available", "You have the newest version", or why the check failed.</returns>
@@ -348,6 +649,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 
         if (newerReleases.Count == 0)
         {
+            AppUpdate = null;
             if (isManual)
             {
                 Write("update", $"You have the newest version ({BuildInfo.Version}).");
@@ -431,7 +733,6 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         }
     }
 
-
     /// <summary>
     /// Makes the Start menu match the setting: creates the shortcut when it is wanted and missing or points at an
     /// exe that has since moved, and removes it when it is no longer wanted.
@@ -439,6 +740,11 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     /// <returns>A task that completes when the shortcut is in step; failures are logged, never thrown.</returns>
     private async Task SyncStartMenuShortcutAsync()
     {
+        if (MockMachine.IsActive)
+        {
+            return;
+        }
+
         string exe = Environment.ProcessPath ?? "";
         if (!Settings.StartMenuShortcut)
         {
@@ -480,6 +786,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
         Settings.CopyFrom(edited);
         Settings.Save();
         AppTheme.Apply(Settings.Theme);
+        AppTheme.ApplyIcons(Settings.DuotoneIcons);
         if (isLanguageChanged)
         {
             // Open windows switch at once; text that code built earlier (status lines) follows as it is rebuilt.
@@ -491,6 +798,10 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
 
         // Rebuild modules so new paths, ports, service names and user-defined files take effect.
         await ReloadModulesAsync();
+
+        // Another XAMPP folder has other versions, and unticking "Check for new versions" clears the notices.
+        _latestComponents = null;
+        await CheckForComponentUpdatesAsync(isQuiet: true);
 
         Write("main", "Configuration saved", LogLevel.Ok);
     }
@@ -886,7 +1197,7 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     /// <param name="level">Picks the color; <see cref="LogLevel.Debug"/> is written even with debug output off.</param>
     public void Write(string source, string message, LogLevel level = LogLevel.Info)
     {
-        var entry = new LogEntry(source, message, level);
+        var entry = new LogEntry(source, MockMachine.Pretty(message), level);
 
         if (Settings.LogToFile)
         {
@@ -996,7 +1307,15 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     {
         foreach (ModuleViewModel module in RunningModules())
         {
-            await module.StopForMaintenanceAsync();
+            try
+            {
+                await module.StopForMaintenanceAsync();
+            }
+            catch (Exception ex)
+            {
+                // Called from buttons and the tray menu, where nothing may escape; the other modules still stop.
+                Write(module.Driver.Tag, $"Couldn't stop {module.Name}: {ex.Message}", LogLevel.Error);
+            }
         }
     }
 
@@ -1005,5 +1324,6 @@ public sealed class MainViewModel : ObservableObject, IModuleHost, IDisposable
     {
         Loc.Changed -= OnLanguageChanged;
         _pollTimer.Stop();
+        _updateTimer.Stop();
     }
 }

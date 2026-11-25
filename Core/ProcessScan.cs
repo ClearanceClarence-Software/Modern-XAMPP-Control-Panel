@@ -15,6 +15,11 @@ public static class ProcessScan
     /// <returns>The matching PIDs in ascending order; empty when none run.</returns>
     public static List<int> FindPids(IEnumerable<string> names, string? folder)
     {
+        if (MockMachine.IsActive)
+        {
+            return MockMachine.FindPids(names);
+        }
+
         var pids = new List<int>();
         foreach (string name in names)
         {
@@ -43,6 +48,11 @@ public static class ProcessScan
     /// <returns>The name; null when the process has exited or cannot be queried.</returns>
     public static string? NameOf(int pid)
     {
+        if (MockMachine.IsActive)
+        {
+            return MockMachine.ProcessName(pid);
+        }
+
         try
         {
             using var process = Process.GetProcessById(pid);
@@ -65,6 +75,11 @@ public static class ProcessScan
     /// </returns>
     public static string? PathOf(int pid)
     {
+        if (MockMachine.IsActive)
+        {
+            return MockMachine.ProcessPath(pid);
+        }
+
         if (!OperatingSystem.IsWindows())
         {
             return null;
@@ -94,6 +109,12 @@ public static class ProcessScan
     /// <param name="pid">The process ID of the tree's root.</param>
     public static void KillTree(int pid)
     {
+        if (MockMachine.IsActive)
+        {
+            // Mock PIDs may belong to real programs on this PC; nothing is ever killed in demo mode.
+            return;
+        }
+
         try
         {
             using var process = Process.GetProcessById(pid);

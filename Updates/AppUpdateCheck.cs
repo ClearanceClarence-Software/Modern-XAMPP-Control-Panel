@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using XamppControl.Core;
 
 namespace XamppControl.Updates;
 
@@ -41,6 +42,12 @@ public static partial class AppUpdateCheck
     /// <exception cref="JsonException">The answer is not JSON.</exception>
     public static async Task<List<AppRelease>> FindNewerAsync(string currentVersion)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return MockMachine.NewerAppReleases();
+        }
+
         using var request = new HttpRequestMessage(HttpMethod.Get, ReleasesApi);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));

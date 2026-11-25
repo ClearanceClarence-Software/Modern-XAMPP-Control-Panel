@@ -8,7 +8,10 @@ using XamppControl.ViewModels;
 
 namespace XamppControl.Views;
 
-/// <summary>Follows server log files live through the <see cref="LogViewerViewModel"/> set as data context.</summary>
+/// <summary>
+/// Shows the server logs: the files in a side list, the chosen one's lines with a timeline above them. The caller
+/// sets a <see cref="LogViewerViewModel"/> as data context.
+/// </summary>
 public partial class LogViewerWindow : Window
 {
     private LogViewerViewModel? _subscribed;
@@ -36,6 +39,7 @@ public partial class LogViewerWindow : Window
         if (_subscribed is not null)
         {
             _subscribed.Lines.CollectionChanged += OnLinesChanged;
+            _subscribed.JumpRequested += OnJumpRequested;
         }
     }
 
@@ -45,16 +49,18 @@ public partial class LogViewerWindow : Window
         if (_subscribed is not null)
         {
             _subscribed.Lines.CollectionChanged -= OnLinesChanged;
+            _subscribed.JumpRequested -= OnJumpRequested;
             _subscribed = null;
         }
     }
 
-    /// <summary>Keeps the newest line in view as lines arrive.</summary>
+    /// <summary>Keeps the newest line in view as lines arrive, while Follow is on.</summary>
     /// <param name="sender">The view model's line collection.</param>
     /// <param name="e">Additions and rebuilds scroll to the end; a cleared view has nothing to scroll to.</param>
     private void OnLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Remove || ViewModel is not { Lines.Count: > 0 } viewModel)
+        if (e.Action == NotifyCollectionChangedAction.Remove
+            || ViewModel is not { IsFollowing: true, Lines.Count: > 0 } viewModel)
         {
             return;
         }
@@ -69,9 +75,53 @@ public partial class LogViewerWindow : Window
     /// <param name="newest">The line that was last when the scroll was requested.</param>
     private void ScrollToEnd(LogLine newest)
     {
-        if (ViewModel is { Lines.Count: > 0 } viewModel && ReferenceEquals(viewModel.Lines[^1], newest))
+        if (ViewModel is { IsFollowing: true, Lines.Count: > 0 } viewModel
+            && ReferenceEquals(viewModel.Lines[^1], newest))
         {
             LinesList.ScrollIntoView(newest);
+        }
+    }
+
+    /// <summary>Shows and selects the line a click on the timeline asked for.</summary>
+    /// <param name="line">The first line of the clicked bar.</param>
+    private void OnJumpRequested(LogLine line)
+    {
+        LinesList.SelectedItems?.Clear();
+        LinesList.SelectedItem = line;
+        LinesList.ScrollIntoView(line);
+    }
+
+    private void AllLevels_Click(object? sender, RoutedEventArgs e) => SetProblemsOnly(false);
+
+    private void ProblemsOnly_Click(object? sender, RoutedEventArgs e) => SetProblemsOnly(true);
+
+    private void SetProblemsOnly(bool isProblemsOnly)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            viewModel.IsProblemsOnly = isProblemsOnly;
+        }
+    }
+
+    private void Follow_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        viewModel.IsFollowing = !viewModel.IsFollowing;
+        if (viewModel is { IsFollowing: true, Lines.Count: > 0 })
+        {
+            LinesList.ScrollIntoView(viewModel.Lines[^1]);
+        }
+    }
+
+    private void Bucket_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel && sender is Control { DataContext: LogBucket bucket })
+        {
+            viewModel.JumpTo(bucket);
         }
     }
 

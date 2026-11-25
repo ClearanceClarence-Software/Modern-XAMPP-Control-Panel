@@ -99,7 +99,8 @@ public sealed class SiteRow : ObservableObject
     /// <summary>Opens a command prompt in the site's folder with php and mysql on PATH.</summary>
     public RelayCommand TerminalCommand { get; }
 
-    private bool HasFolder() => Folder.Trim().Length > 0 && Directory.Exists(Folder.Trim());
+    private bool HasFolder() =>
+        Folder.Trim().Length > 0 && (MockMachine.IsActive || Directory.Exists(Folder.Trim()));
 
     /// <summary>The row as a site to save, with the host name trimmed and lowercase and the folder trimmed.</summary>
     /// <returns>A new <see cref="Site"/>.</returns>
@@ -259,6 +260,14 @@ public sealed class SitesViewModel : ObservableObject
     /// <summary>Reads whether the authority exists and is trusted, and updates the sentence and the button.</summary>
     private void RefreshTrustStatus()
     {
+        if (MockMachine.IsActive)
+        {
+            bool isMockTrusted = MockMachine.IsAuthorityTrusted;
+            TrustStatus = Loc.T(isMockTrusted ? "Sites.WindowsTrustsTheAuthority" : "Sites.WindowsDoesntTrustTheAuthority");
+            CanTrust = !isMockTrusted;
+            return;
+        }
+
         if (!File.Exists(LocalCertificates.AuthorityPfxPath))
         {
             TrustStatus = Loc.T("Sites.AuthorityIsCreatedFirstTime");

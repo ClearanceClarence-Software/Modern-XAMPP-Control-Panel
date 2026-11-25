@@ -44,21 +44,21 @@ The same rule applies inside a lambda. A one-letter parameter looks harmless on 
 **Don't**
 
 ```csharp
-var ordered = rows.OrderBy(r => r.Address.Contains(':')).ThenBy(r => r.Address, StringComparer.Ordinal).ThenBy(r => r.Port).ToList();
+var shown = _allPrograms.Where(p => p.Matches(filter)).OrderBy(p => p.Title, StringComparer.CurrentCultureIgnoreCase).ThenBy(p => p.Pid).ToList();
 ```
 
 **Do**
 
 ```csharp
-// NetstatViewModel.BuildRows
-var ordered = rows
-    .OrderBy(row => row.Address.Contains(':'))
-    .ThenBy(row => row.Address, StringComparer.Ordinal)
-    .ThenBy(row => row.Port)
+// NetstatViewModel.ApplyView, shortened
+List<NetstatProgram> shown = _allPrograms
+    .Where(program => program.Matches(filter))
+    .OrderBy(program => program.Title, StringComparer.CurrentCultureIgnoreCase)
+    .ThenBy(program => program.Pid)
     .ToList();
 ```
 
-For comparisons and sorts the pair is `(first, second)` or `(left, right)`. For a dictionary entry, `entry` or `pair`. For the things this app handles, the thing's name: `module`, `listener`, `row`, `build`, `branch`, `userFile`, `line`. A filter over modules that picks some of them uses `candidate`.
+For comparisons and sorts the pair is `(first, second)` or `(left, right)`. For a dictionary entry, `entry` or `pair`. For the things this app handles, the thing's name: `module`, `listener`, `row`, `program`, `socket`, `build`, `branch`, `userFile`, `line`. A filter over modules that picks some of them uses `candidate`.
 
 ### Parameters
 
@@ -292,7 +292,7 @@ Stating the positive (`isThreadSafeX64`, `isOwnedByXampp`) and testing its negat
 
 ### A `switch` dispatches; it does not do the work
 
-A `switch` statement or expression maps a value to an action or a result. When a case needs more than a line or two, the case calls a method and the method holds the work. The `switch` expressions in `NetstatRow`, `LogEntry` and `NetstatViewModel.ProcessDisplayName` are the shape to keep: one line per case, nothing to scroll.
+A `switch` statement or expression maps a value to an action or a result. When a case needs more than a line or two, the case calls a method and the method holds the work. The `switch` expressions in `LogEntry`, `ModuleViewModel.UpdateHint` and `NetstatViewModel.ProcessDisplayName` are the shape to keep: one line per case, nothing to scroll.
 
 ```csharp
 // NetstatViewModel.ProcessDisplayName
@@ -392,12 +392,30 @@ foreach (ModuleViewModel module in Modules.Where(candidate => candidate.IsInstal
 The status poll runs every 1.5 seconds and the Netstat window refreshes every 3. Anything that reads the process list, the TCP tables, a file or the network goes through `Task.Run` or an async API, and only the results are applied on the UI thread. Copy any field the background work needs into a local first, so the two threads never share it:
 
 ```csharp
-// NetstatViewModel.RefreshAsync
+// NetstatViewModel.RefreshAsync, shortened
 // Copied so the background thread never reads fields the UI thread writes.
 Dictionary<string, Listener> previousListeners = _previousListeners;
 bool isFirstRefresh = _isFirstRefresh;
-(List<NetstatRow> rows, Dictionary<string, Listener> currentListeners) =
-    await Task.Run(() => BuildRows(previousListeners, isFirstRefresh));
+Dictionary<int, string> modulePorts = ModulePorts();
+(List<NetstatProgram> programs, Dictionary<string, Listener> currentListeners) = await Task.Run(() =>
+{
+    (List<NetstatRow> rows, Dictionary<string, Listener> current) = BuildRows(previousListeners, isFirstRefresh, modulePorts);
+    return (GroupByProgram(rows), current);
+});
+_previousListeners = currentListeners;
+_allPrograms = programs;
+ApplyView();
+```
+
+A timer's handler is `async void` underneath, so nothing may escape it: the refresh catches what the read can throw and
+shows it in the status line, and the next round tries again. And a list that refreshes on a timer redraws only when
+what it would show has changed, or it flickers and loses the reader's place:
+
+```csharp
+// NetstatViewModel.ApplyView
+bool isSame = !isForced
+    && shown.Count == Programs.Count
+    && shown.Zip(Programs, (next, current) => next.Signature == current.Signature).All(same => same);
 ```
 
 ---
@@ -475,10 +493,15 @@ Naming the result of a long call (`sizeQueryResult`) also keeps the `if` that te
 A chain of more than two operators goes one per line, each starting with the dot.
 
 ```csharp
-// MainViewModel.PidList
-module.Pids.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-    .Select(line => int.TryParse(line, out int pid) ? pid : 0)
-    .Where(pid => pid > 0)
+// NetstatProgram constructor
+AllPorts = live
+    .GroupBy(socket => socket.Port)
+    .OrderBy(group => group.Key)
+    .Select(group => new PortChip(
+        group.Key.ToString(CultureInfo.InvariantCulture),
+        group.First().Service,
+        IsXampp,
+        group.Any(socket => socket.IsBlocking)))
     .ToList();
 ```
 
@@ -700,7 +723,7 @@ One sentence, present tense, no "This method". It says what comes back or what c
 
 ```csharp
 /// <summary>Installs a MariaDB build from a zip as the active mysql folder, keeping the old one.</summary>
-/// <summary>Reads the listening sockets on a background thread and replaces <see cref="Rows"/> with them.</summary>
+/// <summary>Reads the listening sockets on a background thread and groups them into programs.</summary>
 /// <summary>Clears read-only on a file, or on every file below a folder, so it can be moved or deleted.</summary>
 ```
 
@@ -857,7 +880,7 @@ The reader already sees the name and the type. The tag adds the unit, the range,
 
 ```csharp
 // NetstatViewModel constructor
-/// <param name="root">The XAMPP folder; processes whose executable path starts with it count as XAMPP's.</param>
+/// <param name="main">The panel; supplies the XAMPP folder, the modules' ports, the browser and the log.</param>
 ```
 
 The questions each tag should answer, where they apply:
@@ -1018,6 +1041,40 @@ The call site then reads `KillTreeQuietly(process);` with no `try` in sight. `Fi
 
 ---
 
+## Windows and styles
+
+The tool windows share one shape: a list on the left, the chosen entry's details and actions on the right (Netstat, Databases), or a side list with the content beside it (Logs). Build a new window from the same parts instead of inventing a look for it.
+
+### A look used by two windows lives in the theme
+
+`Styles\Theme.axaml` holds what more than one window uses: `ListBox.rows` (a list with an accent bar on the chosen entry), `Border.tag` (a small gray label beside a name), `Button.seg` (a segment of a switch), `Button.wide` and `Button.end` (the full-width actions of a detail pane), `TextBlock.field` (a field name). A window's own `<Window.Styles>` is for what only that window draws: Netstat's port labels, the Logs window's level labels and timeline bars. When a second window needs a style, move it to the theme; do not copy it.
+
+### Colors come from the theme's brushes
+
+Every color in a window is a `{DynamicResource ...Brush}`, so the light and the dark theme both work. A new color is added to both theme dictionaries, as `WarnBgBrush` was. The exception is a color that identifies a thing rather than a state and must stay the same in both themes, such as a log file's dot or a program's badge; those are `Brush.Parse` constants in the view model, with a comment saying what they are for.
+
+### The main action is `Button.accent`, once per pane
+
+One button per dialog or pane carries the accent color: the thing the user most likely came to do (Export, Apply, Install). Everything else is `Button.tool`. Fluent has an `accent` class of its own that paints in the Windows accent color; the theme overrides it on the button's inner presenter, so set colors there too if you ever restyle it.
+
+### A detail pane binds through a template
+
+Compiled bindings check a binding against the `x:DataType` in scope. For the chosen entry's pane, use a `ContentControl` with `Content="{Binding Selected}"` and a `DataTemplate` with its own `x:DataType`, not a `DataContext` set next to an `x:DataType` on the same element:
+
+```xml
+<ContentControl Content="{Binding Selected}">
+    <ContentControl.ContentTemplate>
+        <DataTemplate x:DataType="vm:DatabaseRow">
+            <TextBlock Text="{Binding Name}" />
+        </DataTemplate>
+    </ContentControl.ContentTemplate>
+</ContentControl>
+```
+
+### A destructive action asks in place
+
+A destructive action takes two clicks on the same button. In the Databases window the first click on Drop says what will be lost, in red, right above the button, and the button's text becomes "Yes, drop shop"; choosing another entry takes the question back. New destructive actions follow that pattern. Netstat's End process still asks in the status line at the bottom, which is easy to miss; move it to the pane when that window is next changed.
+
 ## What a rename must not touch
 
 A change that is "only renames" can still break the app at runtime or break existing installs. Before renaming anything that is not a local, a parameter or a private member, search the whole repository, including `.axaml`, the workflow and the PowerShell tools.
@@ -1058,4 +1115,5 @@ Before a pull request, run `dotnet format --verify-no-changes` and `dotnet build
 - Does every `catch` that swallows say why? Does every method of substance have a one-sentence summary?
 - Does every documented method have a `<param>` per parameter in order, a `<returns>` when it returns, a `<typeparam>` when generic? Does each tag say something the name does not?
 - Does any comment describe the code as it used to be?
+- Does a new window reuse the theme's shared styles and brushes, and work in the dark theme?
 - Did a rename touch XAML, settings keys, folder names, feed names, the release script or P/Invoke?

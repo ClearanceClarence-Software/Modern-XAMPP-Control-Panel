@@ -124,6 +124,11 @@ public static class Shell
     /// <param name="workingDirectory">The folder the batch file runs in.</param>
     public static void StartVisibleBatch(string bat, string workingDirectory)
     {
+        if (MockMachine.IsActive)
+        {
+            return;
+        }
+
         var startInfo = new ProcessStartInfo("cmd.exe", $"/c \"{bat}\"")
         {
             UseShellExecute = true,
@@ -139,6 +144,11 @@ public static class Shell
     /// <returns>The started process, which the caller disposes; null when no process was started.</returns>
     public static Process? StartHidden(string exe, string arguments, string workingDirectory)
     {
+        if (MockMachine.IsActive)
+        {
+            return null;
+        }
+
         var startInfo = new ProcessStartInfo(exe, arguments)
         {
             UseShellExecute = false,
@@ -190,6 +200,13 @@ public static class Shell
         TimeSpan timeout,
         IDictionary<string, string>? environment = null)
     {
+        if (MockMachine.IsActive)
+        {
+            // The mock machine runs no programs; callers see a failed command, or Apache's canned config test.
+            await Task.Yield();
+            return MockMachine.Run(exe, arguments);
+        }
+
         var startInfo = new ProcessStartInfo(exe, arguments)
         {
             UseShellExecute = false,
@@ -257,6 +274,12 @@ public static class Shell
         string workingDirectory,
         bool showWindow = false)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return -1;
+        }
+
         var startInfo = new ProcessStartInfo(exe, arguments)
         {
             UseShellExecute = true,

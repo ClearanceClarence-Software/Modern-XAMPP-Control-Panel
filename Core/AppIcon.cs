@@ -5,8 +5,9 @@ using Avalonia.Platform;
 namespace XamppControl.Core;
 
 /// <summary>
-/// The panel's own icon (a server rack), from Assets\app.png and app.ico. Without them the app falls back to its
-/// built-in stack glyph.
+/// The panel's own icon (three floating slabs with a status light: the stack, running), from Assets\app.png and
+/// app.ico. app.svg is the drawing; app-small.svg is the simplified one the .ico uses at 32 px and below.
+/// Without them the app falls back to its built-in stack glyph.
 /// </summary>
 public static class AppIcon
 {

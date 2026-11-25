@@ -62,6 +62,16 @@ public partial class ConfirmWindow : Window
         return choice ?? ConfirmChoice.Cancel;
     }
 
+    /// <summary>Asks whether to start Apache so phpMyAdmin, which Apache serves, can be opened.</summary>
+    /// <param name="owner">The window to block.</param>
+    /// <returns>True when the user chose to start Apache.</returns>
+    public static async Task<bool> AskToStartApacheAsync(Window owner) =>
+        await AskAsync(
+            owner,
+            Loc.T("Databases.ApacheNeededTitle"),
+            Loc.T("Databases.ApacheNeededText"),
+            Loc.T("Databases.StartApacheAndOpen")) == ConfirmChoice.Primary;
+
     private void Primary_Click(object? sender, RoutedEventArgs e) => Close(ConfirmChoice.Primary);
 
     private void Secondary_Click(object? sender, RoutedEventArgs e) => Close(ConfirmChoice.Secondary);

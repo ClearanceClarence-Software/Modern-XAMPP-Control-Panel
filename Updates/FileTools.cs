@@ -232,6 +232,27 @@ public static class FileTools
     /// <returns>A timestamp that sorts in time order.</returns>
     public static string Stamp() => DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
+    /// <summary>The total size of the files in a folder and its subfolders.</summary>
+    /// <param name="folder">The folder to measure.</param>
+    /// <returns>The size in bytes; files that vanish or can't be read while measuring count as zero.</returns>
+    public static long FolderSize(string folder)
+    {
+        long total = 0;
+        var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
+        foreach (string file in Directory.EnumerateFiles(folder, "*", options))
+        {
+            try
+            {
+                total += new FileInfo(file).Length;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // A file removed or locked mid-count; the total is an indication, not an invoice.
+            }
+        }
+        return total;
+    }
+
     /// <summary>A byte count for the log, in GB or MB with one decimal, or whole KB below 1 MB.</summary>
     /// <param name="bytes">The size in bytes; the units are binary (1 KB is 1024 bytes).</param>
     /// <returns>The size with its unit, e.g. "1.5 GB", "12.0 MB" or "640 KB".</returns>

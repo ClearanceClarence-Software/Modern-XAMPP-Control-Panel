@@ -119,11 +119,20 @@ public sealed class AppSettings
     /// <summary>True hides the main window to the tray icon when it is minimized.</summary>
     public bool MinimizeToTray { get; set; } = true;
 
+    /// <summary>True draws the icons two-tone, with a soft wash of the accent color; false as plain line icons.</summary>
+    public bool DuotoneIcons { get; set; } = true;
+
     /// <summary>True checks GitHub for a newer version of the panel when it starts.</summary>
     public bool CheckForAppUpdates { get; set; } = true;
 
     /// <summary>True keeps a shortcut to the panel in the Start menu, so Windows search finds it.</summary>
     public bool StartMenuShortcut { get; set; }
+
+    /// <summary>
+    /// The newest PHP branch the log has announced as news ("8.6"), so each new branch is said once and not at
+    /// every start; null until one was announced.
+    /// </summary>
+    public string? AnnouncedPhpBranch { get; set; }
 
     /// <summary>The exe the Start menu shortcut points at; when the exe has moved, the shortcut is rewritten.</summary>
     public string ShortcutTarget { get; set; } = "";
@@ -162,9 +171,11 @@ public sealed class AppSettings
     public bool? AutoStartMySql { get; set; }
 
     /// <summary>The settings folder, %AppData%\XamppControl; it may not exist yet.</summary>
-    public static string Folder => System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "XamppControl");
+    public static string Folder => MockMachine.IsActive
+        ? System.IO.Path.Combine(System.IO.Path.GetTempPath(), "XamppControl", "mock", "settings")
+        : System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "XamppControl");
 
     private static string FilePath => System.IO.Path.Combine(Folder, "settings.json");
 
@@ -181,6 +192,11 @@ public sealed class AppSettings
     /// <returns>The stored settings; defaults when the file is missing, unreadable or corrupt.</returns>
     public static AppSettings Load()
     {
+        if (MockMachine.IsActive)
+        {
+            return MockMachine.Settings();
+        }
+
         AppSettings settings = ReadFile();
         MigrateAutoStart(settings);
 
@@ -236,6 +252,12 @@ public sealed class AppSettings
     /// <summary>Writes these settings to settings.json, creating the folder when needed.</summary>
     public void Save()
     {
+        if (MockMachine.IsActive)
+        {
+            // The mock machine never touches the real settings file.
+            return;
+        }
+
         Directory.CreateDirectory(Folder);
         File.WriteAllText(FilePath, JsonSerializer.Serialize(this, SettingsJson.Default.AppSettings));
     }
@@ -263,6 +285,7 @@ public sealed class AppSettings
         Language = other.Language;
         StartMinimized = other.StartMinimized;
         MinimizeToTray = other.MinimizeToTray;
+        DuotoneIcons = other.DuotoneIcons;
         CheckForAppUpdates = other.CheckForAppUpdates;
         StartMenuShortcut = other.StartMenuShortcut;
         ShortcutTarget = other.ShortcutTarget;

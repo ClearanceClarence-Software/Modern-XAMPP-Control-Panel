@@ -3,6 +3,75 @@
 All notable changes to Modern XAMPP Control Panel. The release script copies the section for each version into
 its GitHub release.
 
+## [0.5.0] - 2026-11-25
+
+### Added
+
+- **Updates for the installed PHP, MariaDB, Mailpit and Xdebug are announced.** At startup, and once a day
+  while the panel stays open, it asks the release feeds for newer builds of what is installed ("An update for
+  PHP 8.5 is available: 8.5.13"). What it finds shows as a count on the Versions button, as a clickable
+  "↑ 8.5.13" next to the version on the module's row, in the tray icon's tooltip and menu, and as one line in
+  the log; installing it clears the notice. A newer Xdebug is marked on the PHP button, where it is installed.
+  A whole new PHP branch (8.6, 9.0) is news, not an update: the log says it once per branch, after that it
+  only stays in the Versions tooltip. All of it follows the existing "Check for new versions" setting and
+  stays silent when offline.
+- **"Update to 8.5.13" on the active row.** In Versions, the active PHP and MariaDB rows get an update button
+  when their own branch or series has a newer build; one click downloads, verifies and installs it, and the
+  build it replaces stays installed to switch back to.
+- **"Remove the previous one?" after an update.** When an update stays within the branch (8.5.12 to 8.5.13),
+  Versions asks whether to remove the build it replaced, since the new one likely fixes bugs or security
+  issues in it. For MariaDB the question says that the old build's copy of the databases goes with it.
+- **Old builds are easier to clean up.** In Versions, a parked build shows the disk space its folder takes,
+  and one that has a newer build of its own branch installed is marked "replaced by 8.5.13".
+- **Start all and Stop all**, in the header of the module list and in the tray menu. Start all starts the
+  modules ticked as Autostart in Config, or Apache and MySQL when none is ticked.
+- **Pretend PC and screenshot tool**, built like SpaceSharp's. `XamppControl.exe --mock` runs the panel against
+  a made-up XAMPP in the temp folder; nothing on the PC is started, stopped, downloaded or saved.
+  `--scene <name> --shot <file.png>` poses one of 42 scenes on it (the main window in every state, several
+  PHP and MariaDB versions installed side by side, a download in progress, the options windows, the dialogs),
+  captures the window off the screen with its title bar, and exits; `tools\screenshots.ps1` takes them, and
+  accepts wildcards such as `versions*`. See `docs/screenshots.md`.
+
+### Changed
+
+- **Netstat, redesigned.** One entry per program instead of one row per socket, with its ports as labels and
+  a detail pane beside the list: path, ports, addresses, who can reach it, and the actions (open in the
+  browser, show in folder, copy, end process). XAMPP's programs come first, Windows' own stay folded away
+  until asked for, and the list only redraws when something changed. MariaDB's entry has "Open phpMyAdmin".
+- **Logs, redesigned.** All log files sit in a side list, each with a badge counting its errors (or warnings)
+  from the last 24 hours, so you see which log to open. Lines are split into time, a colored level and the
+  message instead of one raw string; errors are tinted, routine notices grayed. A "Problems" switch hides
+  everything but warnings and errors. A timeline above the lines shows when they were written, red where
+  there were errors, and a click on a bar jumps there. "Follow" keeps the newest line in view and can be
+  switched off to read in peace.
+- **Databases, redesigned.** The same shape as Netstat: a searchable list with a size bar per database, and
+  the chosen one beside it with its table count, size, collation and last export. Export, import, "Open in
+  phpMyAdmin" and Drop live in that pane instead of three buttons on every row. Drop still takes two clicks,
+  and now says what it deletes right above the button. XAMPP's own `phpmyadmin` database and empty ones are
+  labeled and grayed, so yours stand out.
+- **phpMyAdmin with Apache stopped.** "Open in phpMyAdmin" in Databases and Netstat offers to start Apache
+  first when it isn't running, then opens the page.
+- **A new icon.** Three floating slabs with a green status light: the stack (Apache, MariaDB, PHP), running.
+  It no longer looks like XAMPP's own orange square, so the two can sit side by side on the taskbar. Sizes of
+  32 px and below use a simplified drawing.
+- **A website.** `site/` holds a multi-page site for GitHub Pages: the tour, every feature, the download with
+  the newest release, the changelog, the reference, and step-by-step guides for the XAMPP errors people search
+  for (MySQL shutdown unexpectedly, port 80 in use, changing the PHP version, HTTPS on localhost). It is built
+  from the README, `docs/guides` and this changelog by `site/build.py`, so nothing is written twice, and
+  published by the Website workflow on every push to main.
+- **New README and brand images.** The README walks through the features with real screenshots;
+  `tools\screenshots.ps1` takes that showcase set by default, in the light theme (`-Set all` for every
+  scene). The header and the social preview are built around the main window's screenshot by
+  `tools\brand.ps1`, from the pages in `docs\brand`.
+- **New icons, drawn for the panel.** A two-tone set of its own: line work in the text color over a soft wash
+  of the panel's orange, with its own pictures (a hex nut for Config, linked nodes for Netstat, a lifebuoy
+  for Help, a power button for Quit). Config has a "Two-tone icons" box; unticked, they are plain line icons.
+
+### Fixed
+
+- **Main buttons are the panel's orange everywhere.** The main button of a dialog or pane could show in the
+  Windows accent color (blue) until the mouse was over it.
+
 ## [0.4.0] - 2026-11-16
 
 ### Added
@@ -142,6 +211,7 @@ First release: the XAMPP-style panel with clean MySQL/MariaDB shutdown, explaine
 conflict finder, Netstat, XAMPP-style configuration, and installing, switching and rolling back PHP and
 MariaDB versions.
 
+[0.5.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.5.0
 [0.4.0]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.4.0
 [0.3.2]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.2
 [0.3.1]: https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/tag/v0.3.1

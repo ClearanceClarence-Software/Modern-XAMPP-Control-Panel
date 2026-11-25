@@ -2,12 +2,14 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using XamppControl.Core;
-using XamppControl.Databases;
 using XamppControl.ViewModels;
 
 namespace XamppControl.Views;
 
-/// <summary>Exports, imports and drops databases through the <see cref="DatabasesViewModel"/> set as data context.</summary>
+/// <summary>
+/// Lists the databases with the chosen one's details and actions beside the list; the caller sets a
+/// <see cref="DatabasesViewModel"/> as data context.
+/// </summary>
 public partial class DatabasesWindow : Window
 {
     /// <summary>Sets up the window, reads the databases on open and blocks closing while work runs.</summary>
@@ -36,7 +38,7 @@ public partial class DatabasesWindow : Window
 
     private async void Export_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is { } viewModel && sender is Control { DataContext: DatabaseInfo database })
+        if (ViewModel is { Selected: { } database } viewModel)
         {
             await viewModel.ExportAsync(database);
         }
@@ -44,7 +46,7 @@ public partial class DatabasesWindow : Window
 
     private async void ImportInto_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is not { } viewModel || sender is not Control { DataContext: DatabaseInfo database })
+        if (ViewModel is not { Selected: { } database } viewModel)
         {
             return;
         }
@@ -70,13 +72,19 @@ public partial class DatabasesWindow : Window
 
     private async void Drop_Click(object? sender, RoutedEventArgs e)
     {
-        if (ViewModel is { } viewModel && sender is Control { DataContext: DatabaseInfo database })
+        if (ViewModel is { Selected: { } database } viewModel)
         {
             await viewModel.DropAsync(database);
         }
     }
 
-    private void Close_Click(object? sender, RoutedEventArgs e) => Close();
+    private async void PhpMyAdmin_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { Selected: { } database } viewModel)
+        {
+            await viewModel.OpenInPhpMyAdminAsync(database, () => ConfirmWindow.AskToStartApacheAsync(this));
+        }
+    }
 
     /// <summary>Asks for one .sql file, starting in the dump folder.</summary>
     /// <param name="title">The picker's title bar text.</param>

@@ -32,7 +32,8 @@ public static class AppUpdater
     }
 
     /// <summary>True when this build can replace itself: on Windows, running as a plain exe.</summary>
-    public static bool CanSelfUpdate => OperatingSystem.IsWindows() && CurrentExe is not null;
+    public static bool CanSelfUpdate =>
+        MockMachine.IsActive || (OperatingSystem.IsWindows() && CurrentExe is not null);
 
     /// <summary>Downloads a release's zip, verifies it and unpacks the new exe into the staging folder.</summary>
     /// <param name="release">The release to install; it must have a <see cref="AppRelease.ZipUrl"/>.</param>

@@ -61,7 +61,7 @@ public partial class SettingsWindow : Window
     {
         EditorBox.Text = settings.Editor;
         BrowserBox.Text = settings.Browser;
-        RootBox.Text = settings.XamppRoot ?? currentRoot;
+        RootBox.Text = MockMachine.Pretty(settings.XamppRoot ?? currentRoot);
     }
 
     /// <summary>Checks the box of every module that starts with the panel.</summary>
@@ -90,6 +90,7 @@ public partial class SettingsWindow : Window
             0);
         StartMinimizedBox.IsChecked = settings.StartMinimized;
         MinimizeToTrayBox.IsChecked = settings.MinimizeToTray;
+        DuotoneIconsBox.IsChecked = settings.DuotoneIcons;
         CheckUpdatesBox.IsChecked = settings.CheckForAppUpdates;
 
         // The file is the truth: a shortcut the user deleted by hand shows as off.
@@ -99,12 +100,15 @@ public partial class SettingsWindow : Window
         DebugBox.IsChecked = settings.ShowDebug;
     }
 
+    /// <summary>For the screenshot scene: opens the Language list.</summary>
+    internal void OpenLanguageList() => LanguageBox.IsDropDownOpen = true;
+
     /// <summary>Says under the folder box whether it holds a XAMPP installation, in red when it does not.</summary>
     private void UpdateRootHint()
     {
         string path = RootBox.Text?.Trim() ?? "";
         bool isEmpty = path.Length == 0;
-        bool isRootAccepted = isEmpty || XamppPaths.IsXampp(path);
+        bool isRootAccepted = isEmpty || XamppPaths.IsXampp(MockMachine.Real(path));
 
         if (isEmpty)
         {
@@ -183,7 +187,7 @@ public partial class SettingsWindow : Window
     private void Save_Click(object? sender, RoutedEventArgs e)
     {
         string root = RootBox.Text?.Trim() ?? "";
-        if (root.Length > 0 && !XamppPaths.IsXampp(root))
+        if (root.Length > 0 && !XamppPaths.IsXampp(MockMachine.Real(root)))
         {
             UpdateRootHint();
             RootBox.Focus();
@@ -226,6 +230,7 @@ public partial class SettingsWindow : Window
         _settings.Language = _languageCodes[Math.Clamp(LanguageBox.SelectedIndex, 0, _languageCodes.Count - 1)];
         _settings.StartMinimized = StartMinimizedBox.IsChecked == true;
         _settings.MinimizeToTray = MinimizeToTrayBox.IsChecked == true;
+        _settings.DuotoneIcons = DuotoneIconsBox.IsChecked == true;
         _settings.CheckForAppUpdates = CheckUpdatesBox.IsChecked == true;
         _settings.StartMenuShortcut = StartMenuBox.IsChecked == true;
         _settings.TomcatOutputWindow = TomcatWindowBox.IsChecked == true;

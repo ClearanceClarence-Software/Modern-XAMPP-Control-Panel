@@ -14,6 +14,12 @@ public static partial class XamppPaths
     /// </returns>
     public static string Resolve(AppSettings settings)
     {
+        if (MockMachine.IsActive)
+        {
+            // Whatever the settings say, the mock machine never leaves its own folder for a real XAMPP.
+            return MockMachine.IsXamppMissing ? MockMachine.MissingRoot : MockMachine.Root;
+        }
+
         foreach (string candidate in Candidates(settings))
         {
             if (IsXampp(candidate))
@@ -30,7 +36,9 @@ public static partial class XamppPaths
     /// <param name="settings">Supplies the configured root.</param>
     /// <returns>The folders <see cref="Resolve"/> tries, in order, without duplicates.</returns>
     public static List<string> SearchedFolders(AppSettings settings) =>
-        Candidates(settings).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        MockMachine.IsActive
+            ? [MockMachine.PrettyRoot, @"C:\Tools\XamppControl", @"C:\Tools"]
+            : Candidates(settings).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
     /// <summary>The folders <see cref="Resolve"/> tries, in order, without trailing separators.</summary>
     /// <param name="settings">Supplies the configured root, which comes first when set.</param>
@@ -70,6 +78,11 @@ public static partial class XamppPaths
     /// </returns>
     public static string? FileVersion(string? exePath)
     {
+        if (MockMachine.IsActive && exePath is not null)
+        {
+            return MockMachine.FileVersion(exePath);
+        }
+
         if (exePath is null || !File.Exists(exePath))
         {
             return null;

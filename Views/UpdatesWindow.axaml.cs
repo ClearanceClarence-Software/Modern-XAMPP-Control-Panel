@@ -51,7 +51,9 @@ public partial class UpdatesWindow : Window
     {
         if (ViewModel is { } viewModel)
         {
-            await viewModel.InstallPhpLatestAsync();
+            await AskToRemoveAsync(
+                viewModel,
+                await viewModel.InstallAndFindSupersededAsync(Component.Php, viewModel.InstallPhpLatestAsync));
         }
     }
 
@@ -59,7 +61,9 @@ public partial class UpdatesWindow : Window
     {
         if (ViewModel is { } viewModel && await PickZipAsync(Loc.T("Updates.ChoosePhpZip")) is { } zip)
         {
-            await viewModel.InstallPhpFromZipAsync(zip);
+            await AskToRemoveAsync(
+                viewModel,
+                await viewModel.InstallAndFindSupersededAsync(Component.Php, () => viewModel.InstallPhpFromZipAsync(zip)));
         }
     }
 
@@ -67,7 +71,9 @@ public partial class UpdatesWindow : Window
     {
         if (ViewModel is { } viewModel)
         {
-            await viewModel.InstallMariaLatestAsync();
+            await AskToRemoveAsync(
+                viewModel,
+                await viewModel.InstallAndFindSupersededAsync(Component.MariaDb, viewModel.InstallMariaLatestAsync));
         }
     }
 
@@ -75,11 +81,30 @@ public partial class UpdatesWindow : Window
     {
         if (ViewModel is { } viewModel && await PickZipAsync(Loc.T("Updates.ChooseMariaZip")) is { } zip)
         {
-            await viewModel.InstallMariaFromZipAsync(zip);
+            await AskToRemoveAsync(
+                viewModel,
+                await viewModel.InstallAndFindSupersededAsync(
+                    Component.MariaDb, () => viewModel.InstallMariaFromZipAsync(zip)));
         }
     }
 
     private void FileZillaDownload_Click(object? sender, RoutedEventArgs e) => ViewModel?.OpenFileZillaDownloadPage();
+
+    /// <summary>For the screenshot scenes: scrolls a section to the top of the window.</summary>
+    /// <param name="section">"mariadb" or "tools" (FileZilla Server and Mailpit); anything else stays at PHP.</param>
+    internal void ScrollToSection(string section)
+    {
+        Border? card = section switch
+        {
+            "mariadb" => MariaCard,
+            "tools" => FileZillaCard,
+            _ => null,
+        };
+        if (card is not null && Sections is not null)
+        {
+            Sections.Offset = new Avalonia.Vector(0, card.Bounds.Top);
+        }
+    }
 
     private void MailpitPage_Click(object? sender, RoutedEventArgs e) => ViewModel?.OpenMailpitPage();
 
@@ -127,6 +152,47 @@ public partial class UpdatesWindow : Window
         if (ViewModel is { } viewModel && (sender as Control)?.DataContext is InstalledVersion version)
         {
             await viewModel.SwitchAsync(version);
+        }
+    }
+
+    private async void Update_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } viewModel && (sender as Control)?.DataContext is InstalledVersion version)
+        {
+            await AskToRemoveAsync(viewModel, await viewModel.UpdateActiveAsync(version.Component));
+        }
+    }
+
+    /// <summary>
+    /// After an update within the same branch: asks whether the build it replaced should go, since the new one
+    /// likely fixes bugs or security issues in it.
+    /// </summary>
+    /// <param name="viewModel">The window's view model.</param>
+    /// <param name="superseded">The replaced build; null (nothing was superseded) asks nothing.</param>
+    /// <returns>A task that completes when the question is answered and the build removed or kept.</returns>
+    private async Task AskToRemoveAsync(UpdatesViewModel viewModel, InstalledVersion? superseded)
+    {
+        if (superseded is null)
+        {
+            return;
+        }
+
+        bool isMaria = superseded.Component == Component.MariaDb;
+        string active = (isMaria ? viewModel.MariaVersions : viewModel.PhpVersions)
+            .FirstOrDefault(row => row.IsActive)?.Title ?? "";
+        ConfirmChoice choice = await ConfirmWindow.AskAsync(
+            this,
+            Loc.T("Updates.RemovePreviousTitle", superseded.Title),
+            Loc.T(isMaria ? "Updates.RemovePreviousMaria" : "Updates.RemovePreviousPhp", active, superseded.Title),
+            Loc.T("Updates.RemoveVersion", superseded.Title),
+            Loc.T("Updates.KeepIt"));
+        if (choice == ConfirmChoice.Primary)
+        {
+            viewModel.RemoveSuperseded(superseded);
+        }
+        else
+        {
+            viewModel.KeepSuperseded(superseded);
         }
     }
 

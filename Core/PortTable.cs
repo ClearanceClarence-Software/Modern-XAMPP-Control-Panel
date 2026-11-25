@@ -38,6 +38,11 @@ public static class PortTable
     /// <returns>The sockets in table order; empty off Windows or when a table cannot be read.</returns>
     public static List<Listener> ListAll()
     {
+        if (MockMachine.IsActive)
+        {
+            return MockMachine.Listeners();
+        }
+
         var listeners = new List<Listener>();
         if (!OperatingSystem.IsWindows())
         {

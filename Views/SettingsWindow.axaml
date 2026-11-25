@@ -93,6 +93,8 @@
                         <UniformGrid Columns="2">
                             <CheckBox x:Name="StartMinimizedBox" Content="{DynamicResource Settings.StartMinimized}" />
                             <CheckBox x:Name="MinimizeToTrayBox" Content="{DynamicResource Settings.MinimizeToTheTray}" />
+                            <CheckBox x:Name="DuotoneIconsBox" Content="{DynamicResource Settings.TwoToneIcons}"
+                                      ToolTip.Tip="{DynamicResource Settings.TwoToneIconsTip}" />
                             <CheckBox x:Name="CheckUpdatesBox" Content="{DynamicResource Settings.CheckForNewVersions}" />
                             <CheckBox x:Name="StartMenuBox" Content="{DynamicResource Settings.ShowInStartMenu}"
                                       ToolTip.Tip="{DynamicResource Settings.ShowInStartMenuTip}" />

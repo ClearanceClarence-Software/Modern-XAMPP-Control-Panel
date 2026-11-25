@@ -83,6 +83,12 @@ public static partial class ReleaseFeeds
     /// <exception cref="HttpRequestException">The folder listing, read as the fallback, cannot be read.</exception>
     public static async Task<List<PhpBranch>> GetPhpBranchesAsync()
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return MockMachine.PhpBranches();
+        }
+
         List<PhpBranch> branches;
         try
         {
@@ -198,6 +204,12 @@ public static partial class ReleaseFeeds
     /// </returns>
     public static async Task<string?> GetPhpSha256Async(string fileName)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return null;
+        }
+
         try
         {
             string checksums = await GetStringAsync(PhpBase + "sha256sum.txt");
@@ -230,6 +242,12 @@ public static partial class ReleaseFeeds
     /// <exception cref="OperationCanceledException">The page doesn't answer within 20 seconds.</exception>
     public static async Task<string?> GetFileZillaServerLatestAsync()
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return "1.12.6";
+        }
+
         string page = await GetStringAsync("https://filezilla-project.org/download.php?show_all=1&type=server");
         Match latest = FileZillaLatest().Match(page);
         return latest.Success ? latest.Groups["v"].Value : null;
@@ -240,7 +258,7 @@ public static partial class ReleaseFeeds
     /// <summary>Stable release series, newest first.</summary>
     /// <returns>Every series whose release_status is Stable; empty when the feed has no major_releases array.</returns>
     public static async Task<List<MariaDbMajor>> GetMariaDbMajorsAsync() =>
-        ParseMariaDbMajors(await GetStringAsync(MariaDbApi));
+        MockMachine.IsActive ? MockMachine.MariaDbMajors() : ParseMariaDbMajors(await GetStringAsync(MariaDbApi));
 
     /// <summary>Reads the stable release series from the MariaDB REST API's root document.</summary>
     /// <param name="json">The document: an object with a "major_releases" array.</param>
@@ -279,6 +297,12 @@ public static partial class ReleaseFeeds
     /// <exception cref="InvalidOperationException">The series' latest release has no Windows x64 zip.</exception>
     public static async Task<MariaDbRelease> GetMariaDbLatestAsync(string major)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return MockMachine.MariaDbLatest(major);
+        }
+
         using var document = JsonDocument.Parse(await GetStringAsync($"{MariaDbApi}{major}/latest/"));
         return FindWindowsZip(document.RootElement)
             ?? throw new InvalidOperationException(Loc.T("Updates.NoWindowsZipForMaria", major));
@@ -362,6 +386,13 @@ public static partial class ReleaseFeeds
         Action<double?> progress,
         CancellationToken ct = default)
     {
+        if (MockMachine.IsActive)
+        {
+            // The progress bar runs, then the download ends with an error: nothing is fetched or installed.
+            await MockMachine.PlayDownloadAsync(progress);
+            return;
+        }
+
         string destinationFolder = Path.GetDirectoryName(destination)
             ?? throw new ArgumentException("The destination must be a file inside a folder.", nameof(destination));
         Directory.CreateDirectory(destinationFolder);
@@ -467,6 +498,16 @@ public static partial class VersionUtil
         Match match = VersionNumber().Match(text);
         return match.Success ? match.Value : null;
     }
+
+    /// <summary>
+    /// Whether a version is a newer build of the same branch as another: 8.5.13 of 8.5.12, not 8.6.0. After such
+    /// an update the old build is a leftover, and the Versions window asks whether to remove it.
+    /// </summary>
+    /// <param name="newVersion">The version installed.</param>
+    /// <param name="oldVersion">The version it replaced.</param>
+    /// <returns>True when both have the same major.minor and the new one is higher.</returns>
+    public static bool IsPatchOf(string? newVersion, string? oldVersion) =>
+        MajorMinor(newVersion) == MajorMinor(oldVersion) && Parse(newVersion) > Parse(oldVersion);
 
     /// <summary>"8.4" from "8.4.27"</summary>
     /// <param name="version">Any text containing a dotted number; null or text without one gives "0.0".</param>

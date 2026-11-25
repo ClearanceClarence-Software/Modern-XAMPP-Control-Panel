@@ -51,6 +51,31 @@ public sealed class ModuleViewModel : ObservableObject
     /// <summary>The version under the name, empty when unknown, or "Not installed".</summary>
     public string Subtitle { get; }
 
+    /// <summary>
+    /// The newer build next to the version: "↑ 12.3.4", or "↑ PHP 8.5.13" on Apache's row, whose own version is
+    /// Apache's; empty when the row's component is current.
+    /// </summary>
+    public string UpdateHint => _main.ComponentUpdateFor(Name) switch
+    {
+        null => "",
+        { Module: "Apache" } update => $"↑ {update.Component} {update.Latest}",
+        { } update => $"↑ {update.Latest}",
+    };
+
+    /// <summary>True when <see cref="UpdateHint"/> has something to show.</summary>
+    public bool HasUpdateHint => UpdateHint.Length > 0;
+
+    /// <summary>The hint's tooltip: the full sentence; null without a hint.</summary>
+    public string? UpdateTip => _main.ComponentUpdateFor(Name) is { } update ? MainViewModel.DescribeUpdate(update) : null;
+
+    /// <summary>Tells the row that the newer builds changed.</summary>
+    public void RaiseUpdateHintChanged()
+    {
+        OnPropertyChanged(nameof(UpdateHint));
+        OnPropertyChanged(nameof(HasUpdateHint));
+        OnPropertyChanged(nameof(UpdateTip));
+    }
+
     /// <summary>True when the module's folder exists in the XAMPP installation.</summary>
     public bool IsInstalled => Driver.IsInstalled;
 
@@ -269,6 +294,11 @@ public sealed class ModuleViewModel : ObservableObject
         IsBusy = true;
         try
         {
+            if (MockMachine.IsActive)
+            {
+                MockMachine.SetRunning(Name, false);
+                return true;
+            }
             return await Driver.StopAsync(_main);
         }
         finally
@@ -286,7 +316,14 @@ public sealed class ModuleViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            await Driver.StartAsync(_main);
+            if (MockMachine.IsActive)
+            {
+                MockMachine.SetRunning(Name, true);
+            }
+            else
+            {
+                await Driver.StartAsync(_main);
+            }
         }
         finally
         {
@@ -340,7 +377,11 @@ public sealed class ModuleViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            if (ForceStopPending)
+            if (MockMachine.IsActive)
+            {
+                await RunMockActionAsync(wasRunning);
+            }
+            else if (ForceStopPending)
             {
                 await ForceStopModuleAsync();
             }
@@ -368,6 +409,32 @@ public sealed class ModuleViewModel : ObservableObject
             IsBusy = false;
             await _main.RefreshAsync(quiet: false);
         }
+    }
+
+    /// <summary>
+    /// Start and Stop on the mock machine: writes the lines a real start or stop would and flips the module's state,
+    /// without running anything.
+    /// </summary>
+    /// <param name="wasRunning">True stops the module; false starts it.</param>
+    /// <returns>A task that completes after a short, start-like pause.</returns>
+    private async Task RunMockActionAsync(bool wasRunning)
+    {
+        if (!wasRunning && MockMachine.HasConfigError && Name == "Apache")
+        {
+            // The real start: the config test answers with the mock machine's syntax error and explains it.
+            await Driver.StartAsync(_main);
+            return;
+        }
+
+        _main.Write(Driver.Tag, $"Attempting to {(wasRunning ? "stop" : "start")} {Name} app...");
+        await Task.Delay(MockMachine.ActionDelay);
+        if (!wasRunning && MockMachine.HasPortConflict && Name == "Apache")
+        {
+            // The conflict shot: Windows holds 80 and 443, so the normal port check explains it.
+            await _main.PortsAreFreeAsync(this);
+            return;
+        }
+        MockMachine.SetRunning(Name, !wasRunning);
     }
 
     /// <summary>Kills the module's processes and leaves the force stop state.</summary>
@@ -460,7 +527,8 @@ public sealed class ModuleViewModel : ObservableObject
     /// <returns>The existing entries in the same order; a missing file or folder is left out.</returns>
     private List<FileLink> Links(IEnumerable<(string Label, string Relative)> entries) =>
         entries
-            .Select(entry => (entry.Label, Path: Path.Combine(_main.Root, entry.Relative)))
+            // On the mock machine a user file is saved as C:\xampp\...; Real maps it into the mock folder.
+            .Select(entry => (entry.Label, Path: MockMachine.Real(Path.Combine(_main.Root, entry.Relative))))
             .Where(resolved => File.Exists(resolved.Path) || Directory.Exists(resolved.Path))
             // The editor is read on each click, so a change in Config applies without rebuilding the menu.
             .Select(existing => new FileLink(existing.Label, existing.Path, () => _main.Settings.Editor))

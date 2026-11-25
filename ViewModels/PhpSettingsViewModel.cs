@@ -96,7 +96,7 @@ public sealed class PhpSettingsViewModel : ObservableObject
         _main = main;
         IniPath = Path.Combine(main.Root, "php", "php.ini");
         string? phpVersion = XamppPaths.FileVersion(Path.Combine(main.Root, "php", "php.exe"));
-        Title = phpVersion is null ? IniPath : $"PHP {phpVersion}   ·   {IniPath}";
+        Title = MockMachine.Pretty(phpVersion is null ? IniPath : $"PHP {phpVersion}   ·   {IniPath}");
         Load();
     }
 

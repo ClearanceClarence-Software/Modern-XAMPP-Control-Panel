@@ -63,7 +63,7 @@ public static class Loc
     }
 
     /// <summary>The text for a count: the key with ".One" for exactly one, ".Other" otherwise; {0} is the count.</summary>
-    /// <param name="key">The key without its ".One"/".Other" ending, e.g. "Databases.Count".</param>
+    /// <param name="key">The key without its ".One"/".Other" ending, e.g. "Databases.Tables".</param>
     /// <param name="count">The number that picks the form and fills {0}.</param>
     /// <param name="args">Further values for {1}, {2}...</param>
     /// <returns>The formatted text.</returns>

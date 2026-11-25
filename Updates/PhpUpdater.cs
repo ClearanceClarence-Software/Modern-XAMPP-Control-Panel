@@ -82,7 +82,12 @@ public static partial class PhpUpdater
             await StartApacheAgainAsync(ctx, apacheWasRunning);
             return UpdateResult.Fail(swapFailure);
         }
-        ctx.Log($"PHP {oldVersion} stays installed in \"{backup}\"; you can switch back any time.");
+        // After a patch of the same branch the window asks whether the old build should go, and logs the answer.
+        bool isPatch = VersionUtil.IsPatchOf(newVersion, oldVersion);
+        if (!isPatch)
+        {
+            ctx.Log($"PHP {oldVersion} stays installed in \"{backup}\"; you can switch back any time.");
+        }
 
         await CarryOverXamppFilesAsync(ctx, backup, phpDir);
         DisableMissingExtensions(ctx, phpDir, newVersion);
@@ -128,7 +133,9 @@ public static partial class PhpUpdater
 
         await ctx.Main.ReloadModulesAsync();
         return new UpdateResult(true,
-            Loc.T("Updates.PhpInstalledAndActive", newVersion, oldVersion),
+            isPatch
+                ? Loc.T("Updates.PhpInstalledActiveOnly", newVersion)
+                : Loc.T("Updates.PhpInstalledAndActive", newVersion, oldVersion),
             RollBackAsync,
             rollbackLabel);
     }

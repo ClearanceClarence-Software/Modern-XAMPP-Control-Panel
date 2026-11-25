@@ -49,6 +49,13 @@ public static class ElevatedHelper
     /// <returns>The exit code; -1 when the command could not start; -2 when the user declined the prompt.</returns>
     public static async Task<int> RunAsync(string exe, string arguments, string workingDirectory)
     {
+        if (MockMachine.IsActive)
+        {
+            // Nothing is run elevated on the mock machine.
+            await Task.Yield();
+            return -1;
+        }
+
         if (!OperatingSystem.IsWindows())
         {
             return -1;

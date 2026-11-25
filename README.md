@@ -15,6 +15,8 @@
 <p align="center">
   <a href="https://github.com/ClearanceClarence-Software/Modern-XAMPP-Control-Panel/releases/latest"><b>Download for Windows</b></a>
   &nbsp;·&nbsp;
+  <a href="https://clearanceclarence-software.github.io/Modern-XAMPP-Control-Panel/">Website</a>
+  &nbsp;·&nbsp;
   <a href="#features">Features</a>
   &nbsp;·&nbsp;
   <a href="#quick-start">Quick start</a>
@@ -43,8 +45,59 @@ folder that you didn't ask for.
 <br>
 
 <p align="center">
-  <img src="docs/assets/features.png" alt="Six things the panel does: clean MySQL shutdown, readable errors, HTTPS local sites, PHP and MariaDB versions, Xdebug Mailpit and databases, port conflicts solved" width="100%">
+  <img src="docs/assets/screenshots/main-light.png" alt="The main window with Apache, MySQL and Mailpit running" width="88%">
 </p>
+
+## A quick tour
+
+Every picture here is the app itself, taken by `tools\screenshots.ps1` on a pretend PC.
+
+<table>
+<tr>
+<td width="38%" valign="top"><h3>It tells you when there is an update</h3>At startup, and once a day, the panel looks for newer builds of the PHP, MariaDB, Mailpit and Xdebug you have installed. A count on Versions and an arrow on the row are the whole notice; a click takes you there.</td>
+<td><img src="docs/assets/screenshots/new-versions-light.png" alt="It tells you when there is an update" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>Several PHP versions, side by side</h3>Install another PHP from the official builds (checksum verified), switch between installed versions in seconds, and update the active one with one button. The version you leave stays installed until you remove it.</td>
+<td><img src="docs/assets/screenshots/versions-light.png" alt="Several PHP versions, side by side" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>MariaDB too, with your data</h3>A new MariaDB starts with a copy of your databases after a clean shutdown and <code>mariadb-upgrade</code>. The previous version keeps its own copy, so switching back gives you exactly what you had.</td>
+<td><img src="docs/assets/screenshots/versions-mariadb-light.png" alt="MariaDB too, with your data" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>Port conflicts, solved</h3>When something else holds port 80 or 443, the panel names it and offers the fix: stop it, or move Apache to a free port and update the config for you.</td>
+<td><img src="docs/assets/screenshots/port-conflict-light.png" alt="Port conflicts, solved" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>See what listens where</h3>Every program that listens on a port, with what the port is for. XAMPP's own are marked, anything standing in the way of Apache or MySQL is called out, and the chosen program's details and actions sit beside the list.</td>
+<td><img src="docs/assets/screenshots/netstat-light.png" alt="See what listens where" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>Errors you can read</h3>Apache's config is tested before it starts. A typo shows up as the file and the line, not as "Apache shutdown unexpectedly".</td>
+<td><img src="docs/assets/screenshots/config-error-light.png" alt="Errors you can read" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>Local sites with HTTPS</h3>Give a folder a name like <code>shop.test</code>. The panel writes the virtual host, the hosts entry and a certificate from a local authority Windows trusts, so the browser shows the padlock.</td>
+<td><img src="docs/assets/screenshots/sites-light.png" alt="Local sites with HTTPS" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>PHP settings and Xdebug</h3>The settings people actually change, extensions as checkboxes, and Xdebug installed with one click in the build that matches your PHP.</td>
+<td><img src="docs/assets/screenshots/php-light.png" alt="PHP settings and Xdebug" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>Databases at a glance</h3>Every database with its size, and the chosen one beside the list: tables, collation and its last export. Export to a plain <code>.sql</code> file in <code>mysql_dumps</code>, import, drop, or open it in phpMyAdmin.</td>
+<td><img src="docs/assets/screenshots/databases-light.png" alt="Databases at a glance" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>Logs in one place</h3>Every server log in one window, each with a count of its recent errors. Lines are split into time, level and message, and a timeline shows when things went wrong.</td>
+<td><img src="docs/assets/screenshots/logs-light.png" alt="Logs in one place" width="100%"></td>
+</tr>
+<tr>
+<td width="38%" valign="top"><h3>Options that stay out of the way</h3>Theme, language, autostart, tray, editor and browser. Everything is stored in one settings file; nothing in your XAMPP folder moves unless you ask.</td>
+<td><img src="docs/assets/screenshots/config-light.png" alt="Options that stay out of the way" width="100%"></td>
+</tr>
+</table>
 
 ## Why switch
 
@@ -57,7 +110,9 @@ folder that you didn't ask for.
 | Local sites | Edit `httpd-vhosts.conf` and the hosts file by hand | `https://myproject.test` in one click, with a certificate Windows trusts |
 | php.ini | Open it in Notepad | Common settings, every extension, and Xdebug with one button |
 | Mail from PHP | Goes nowhere, or everywhere | Mailpit catches it at `localhost:8025` |
-| Databases | phpMyAdmin | Export, import and drop from the panel |
+| Databases | phpMyAdmin | Sizes, export, import and drop from the panel, with phpMyAdmin one click away |
+| Logs | One file at a time, in Notepad | One window: every log, lines split into time and level, errors counted |
+| Updates for PHP and MariaDB | You find out yourself | Announced in the panel, installed with one click |
 | Admin prompts | Every service action | Once per session |
 | Look and feel | 2010s VCL, one theme | Light and dark, tray icon, same familiar layout |
 
@@ -94,6 +149,8 @@ control panel keeps working; the two can be used side by side.
 - **Tray icon.** Shows what runs, starts and stops modules from its menu, keeps the panel out of
   the taskbar when minimized.
 - **One admin prompt per session.** Service actions and the hosts file reuse a single elevation.
+- **Start all and Stop all.** In the header of the module list and in the tray menu. Start all starts the
+  modules ticked as Autostart, or Apache and MySQL when none is.
 - **Quit asks.** Closing with Apache or MySQL running offers a clean stop or leaving them running.
 - **Updates itself.** The header shows when a newer version exists; What's new lists every release since
   yours and installs the newest with one click (signed zip, checksum verified, the exe swapped on restart).
@@ -113,10 +170,13 @@ control panel keeps working; the two can be used side by side.
 - **Port conflicts found and fixed.** Before a module starts, the panel names the program and PID
   holding each port. A dialog offers to end that program, stop IIS when Windows itself holds the
   port, or move Apache to 8080/4433 (MySQL to 3307) with the config files and settings updated.
-- **Netstat.** Every listening socket with what the port is for (Apache, MySQL, HTTP, Remote
-  Desktop…), who can reach it, and a warning when a foreign program blocks a stopped module. Filter,
-  sort, pause, and Open / Folder / Copy / End per row.
-- **Logs window.** Follows Apache, PHP and MariaDB logs live, like `tail -f`, with a filter.
+- **Netstat.** Every program that listens on a port, one entry each, with what its ports are for
+  (Apache, MySQL, HTTP, Remote Desktop…), who can reach it, and a warning when a foreign program
+  blocks a stopped module. Select one for its details and to open it in the browser, show its
+  folder, copy, or end it. Search, or narrow to XAMPP's programs or the blocking ones.
+- **Logs window.** Every server log in one side list, each with a count of its recent errors. The
+  chosen log is followed live, like `tail -f`, with each line split into time, level and message, a
+  filter, a "Problems" switch, and a timeline that shows when things went wrong and jumps there.
 </details>
 
 <details open>
@@ -134,8 +194,9 @@ control panel keeps working; the two can be used side by side.
   compiler) from PECL, turns it on in debug mode on port 9003, and off again when you want speed.
 - **Mail catcher.** Installs [Mailpit](https://github.com/axllent/mailpit) and points `mail()` at
   it. Every message shows at `http://localhost:8025` instead of leaving your computer.
-- **Databases.** List with sizes, export to a timestamped `.sql` (routines, events and triggers
-  included), import into a new or existing database, drop.
+- **Databases.** A searchable list with sizes, and the chosen database beside it: tables, collation
+  and its last export. Export to a timestamped `.sql` (routines, events and triggers included), import
+  into a new or existing database, open it in phpMyAdmin, drop.
 </details>
 
 <details open>
@@ -145,12 +206,16 @@ control panel keeps working; the two can be used side by side.
 - **PHP and MariaDB.** Install a new version straight from windows.php.net or
   downloads.mariadb.org (SHA-256 verified) or from a zip, switch between installed versions in
   seconds, switch back after any install or switch, remove what you no longer need.
+- **Updates are announced.** At startup and once a day the panel looks for newer builds of the PHP,
+  MariaDB, Mailpit and Xdebug you have installed. A count on the Versions button and an arrow on the
+  module's row say so; "Update to 8.5.13" on the active row installs it, and the panel then asks
+  whether to remove the build it replaced. A whole new PHP branch is mentioned once, not nagged about.
 - **FileZilla Server.** XAMPP still ships FileZilla Server 0.9.41 from 2012. The Versions window
   runs the official 1.x installer you downloaded and the FileZilla row then controls the new
   server. (1.x can't read 0.9's settings, so FTP users are set up again in its Admin program.)
 - **XAMPP-style configuration.** Editor, browser, XAMPP folder, autostart per module, start
-  minimized, minimize to tray, update check, port check on startup, debug output, Service and Port
-  Settings, User Defined Files and Log Options.
+  minimized, minimize to tray, update check, port check on startup, debug output, two-tone or plain
+  icons, Service and Port Settings, User Defined Files and Log Options.
 </details>
 
 ## How versions work
@@ -200,6 +265,9 @@ dumps, the Databases window and upgrades. It is stored in plain text in `setting
 fine for a local development machine but worth knowing.
 
 ## Troubleshooting
+
+Coming from the stock panel with a database that won't start? See
+[XAMPP: "Error: MySQL shutdown unexpectedly"](docs/guides/mysql-shutdown-unexpectedly.md) for the fix, step by step.
 
 <details>
 <summary><b>MySQL won't stop cleanly</b></summary>
@@ -271,7 +339,14 @@ dotnet test XamppControl.slnx
 ```
 
 and make sure none of them reports anything. The tests in `tests/` cover the parsers (release feeds,
-`php.ini`, virtual hosts, the hosts file, port rewriting); add one when you change those.
+`php.ini`, virtual hosts, the hosts file, port rewriting, server log lines); add one when you change those.
+
+## Screenshots
+
+`.\tools\screenshots.ps1` retakes the pictures in this README from the app itself, posed on a pretend PC, without
+touching your XAMPP; `.\tools\brand.ps1` then renders the header and the social preview around the main window's
+screenshot. `XamppControl.exe --mock` opens the pretend PC to click around in. See
+[docs/screenshots.md](docs/screenshots.md).
 
 ## Translating
 

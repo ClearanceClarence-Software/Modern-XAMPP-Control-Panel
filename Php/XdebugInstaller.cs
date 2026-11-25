@@ -28,6 +28,12 @@ public static partial class XdebugInstaller
     /// <returns>The build's version, branch and compiler; null when php.exe is missing or says nothing usable.</returns>
     public static async Task<PhpBuildInfo?> ReadPhpBuildAsync(string phpDir)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return new PhpBuildInfo("8.4.27", "8.4", "vs17");
+        }
+
         string phpExe = Path.Combine(phpDir, "php.exe");
         if (!File.Exists(phpExe))
         {
@@ -65,6 +71,12 @@ public static partial class XdebugInstaller
     /// <exception cref="InvalidOperationException">The listing names no stable 3.x release.</exception>
     public static async Task<List<string>> ListVersionsAsync()
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return ["3.5.3"];
+        }
+
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
         string listing = await ReleaseFeeds.Http.GetStringAsync(PeclWindowsBuilds, timeout.Token);
         List<string> versions = ParseVersions(listing);
@@ -94,6 +106,12 @@ public static partial class XdebugInstaller
     /// <exception cref="HttpRequestException">downloads.php.net cannot be reached at all.</exception>
     public static async Task<string?> FindBuildAsync(IEnumerable<string> versions, PhpBuildInfo php)
     {
+        if (MockMachine.IsActive)
+        {
+            await Task.Yield();
+            return versions.FirstOrDefault();
+        }
+
         foreach (string version in versions)
         {
             using var request = new HttpRequestMessage(HttpMethod.Head, ZipUrl(version, php));
