@@ -1,11 +1,11 @@
-# Builds the website into artifacts\site and serves it at http://localhost:8080 for a look before pushing.
+# Builds the website into artifacts\site and serves it at http://localhost:8080 for a look before publishing.
 #
 #   .\tools\site.ps1            build and serve (Ctrl+C stops it)
 #   .\tools\site.ps1 -NoServe   build only
 #
 # Needs Python 3.10 or newer (python.org or "winget install Python.Python.3.13"); the "markdown" package is
-# installed on first use. The published site is built the same way by .github\workflows\pages.yml on every push
-# to main, so this script is only for looking.
+# installed on first use. Nothing publishes the site by itself: to publish, copy what is in artifacts\site to the
+# root of the website branch and push it (see site\README.md).
 param(
     [switch] $NoServe,
     [int] $Port = 8080

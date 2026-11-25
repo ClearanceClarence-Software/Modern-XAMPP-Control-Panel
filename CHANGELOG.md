@@ -58,7 +58,7 @@ its GitHub release.
   the newest release, the changelog, the reference, and step-by-step guides for the XAMPP errors people search
   for (MySQL shutdown unexpectedly, port 80 in use, changing the PHP version, HTTPS on localhost). It is built
   from the README, `docs/guides` and this changelog by `site/build.py`, so nothing is written twice, and
-  published by the Website workflow on every push to main.
+  published from its own branch.
 - **New README and brand images.** The README walks through the features with real screenshots;
   `tools\screenshots.ps1` takes that showcase set by default, in the light theme (`-Set all` for every
   scene). The header and the social preview are built around the main window's screenshot by
